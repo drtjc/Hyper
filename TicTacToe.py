@@ -4,6 +4,7 @@ from typing import NamedTuple
 from pprint import pprint
 
 import hypercube as hc
+from helper import underline
 
 
 class TicTacToe():

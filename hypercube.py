@@ -53,6 +53,7 @@ Cell = Tuple[int]
 Scopes = DefaultDict[Cell, Lines]  
 Structure = Tuple[np.ndarray, Lines, Scopes]
 
+
 def num_lines(d: int, n: int) -> int: 
     """ Calculate the number of lines in a hypercube.  
 
