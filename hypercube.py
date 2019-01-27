@@ -25,11 +25,17 @@ The term line is used to refer to any m-agonal in general.
 A cell apppears in multiple lines, which are refered to as the 
 scope of the cell.
 
-The combination of hypercube, lines and cell scopes is referred to
+The combination of lines and cell scopes is referred to
 as the structure of the hypercube.
 
-This module uses a numpy.ndarray to represent celled hypercubes.
-An array of d dimensions may be referred to as a d-array.
+This module essentially has 2 classes of functions:
+1. Those that use a numpy ndarray to implement the underlying
+hypercube. These functions have the suffix _np. An array of d dimensions 
+may be referred to as a d-array
+2. Those that do not implement the undelying hypercube but
+provide information as coordinates that can be used with
+a user-implementation of the hypercube. These funtions have
+the suffix _coord.
 """
 
 
@@ -121,7 +127,7 @@ def num_lines(d: int, n: int) -> int:
     return count
 
 
-def get_diagonals() -> Callable[[Line], Lines]:
+def get_diagonals_np() -> Callable[[Line], Lines]:
     """ Returns a function that calculates the d-agonals of a d-array. 
     The returned function has the following structure:
 
@@ -150,7 +156,7 @@ def get_diagonals() -> Callable[[Line], Lines]:
     <BLANKLINE>
            [[4, 5],
             [6, 7]]])
-    >>> diagonals = get_diagonals()
+    >>> diagonals = get_diagonals_np()
     >>> diags = diagonals(arr)
     >>> diags
     [array([0, 7]), array([1, 6]), array([4, 3]), array([5, 2])]
@@ -163,7 +169,7 @@ def get_diagonals() -> Callable[[Line], Lines]:
     >>> arr = np.arange(2)
     >>> arr
     array([0, 1])
-    >>> diagonals = get_diagonals()
+    >>> diagonals = get_diagonals_np()
     >>> diags = diagonals(arr)
     >>> diags
     [array([0, 1])]
@@ -173,9 +179,9 @@ def get_diagonals() -> Callable[[Line], Lines]:
 
     Call get_diagonals again in order to clear the list of 
     returned diagonals.
-    >>> get_diagonals()(arr)
+    >>> get_diagonals_np()(arr)
     [array([0, 1])]
-    >>> get_diagonals()(arr)
+    >>> get_diagonals_np()(arr)
     [array([0, 1])]
     """
     
@@ -218,18 +224,18 @@ def get_diagonals() -> Callable[[Line], Lines]:
 
     diags = []
     
-    def diagonals(arr: np.ndarray) -> Lines:
+    def diagonals_np(arr: np.ndarray) -> Lines:
         if arr.ndim == 1:
             diags.append(arr)
         else:
-            diagonals(arr.diagonal())
-            diagonals(np.flip(arr, 0).diagonal())
+            diagonals_np(arr.diagonal())
+            diagonals_np(np.flip(arr, 0).diagonal())
         return diags
 
-    return diagonals
+    return diagonals_np
 
 
-def get_lines(arr: np.ndarray, flatten: bool = True) -> \
+def get_lines_np(arr: np.ndarray, flatten: bool = True) -> \
               Tuple[Union[Lines, List[Lines]], int]: 
     """ Returns the lines in an array
 
@@ -263,7 +269,7 @@ def get_lines(arr: np.ndarray, flatten: bool = True) -> \
     See Also
     --------
     num_lines
-    get_diagonals
+    get_diagonals_np
 
     Notes
     -----
@@ -278,7 +284,7 @@ def get_lines(arr: np.ndarray, flatten: bool = True) -> \
     >>> arr
     array([[0, 1],
            [2, 3]])
-    >>> lines, count = get_lines(arr)
+    >>> lines, count = get_lines_np(arr)
     >>> lines
     [array([0, 2]), array([1, 3]), array([0, 1]), array([2, 3]), array([0, 3]), array([2, 1])]
     >>> count
@@ -289,7 +295,7 @@ def get_lines(arr: np.ndarray, flatten: bool = True) -> \
     >>> lines
     [array([99,  2]), array([1, 3]), array([99,  1]), array([2, 3]), array([99,  3]), array([2, 1])]
     >>> arr[0, 0] = 0
-    >>> lines, count = get_lines(arr, False)
+    >>> lines, count = get_lines_np(arr, False)
     >>> lines
     [[array([0, 2])], [array([1, 3])], [array([0, 1])], [array([2, 3])], [array([0, 3]), array([2, 1])]]
     >>> count
@@ -312,7 +318,7 @@ def get_lines(arr: np.ndarray, flatten: bool = True) -> \
                 # take a slice of i dimensions given cell
                 sl = slice_ndarray(arr, set(range(d)) - set(i_comb), cell)
                 # get all possible lines from slice
-                diags = get_diagonals()(sl)
+                diags = get_diagonals_np()(sl)
                 count += len(diags)
                 if flatten:
                     lines.extend(diags)
@@ -323,7 +329,7 @@ def get_lines(arr: np.ndarray, flatten: bool = True) -> \
     return lines, count
 
 
-def get_scopes(lines: Lines, d: int) -> Scopes:
+def get_scopes_np(lines: Lines, d: int) -> Scopes:
     """ Calculate the scope of each cell in a hypercube
 
     Parameters
@@ -347,7 +353,7 @@ def get_scopes(lines: Lines, d: int) -> Scopes:
             
     See Also
     --------
-    get_lines
+    get_lines_np
 
     Notes
     -----
@@ -363,10 +369,10 @@ def get_scopes(lines: Lines, d: int) -> Scopes:
     >>> arr
     array([[0, 1],
            [2, 3]])
-    >>> lines, _ = get_lines(arr)
+    >>> lines, _ = get_lines_np(arr)
     >>> lines
     [array([0, 2]), array([1, 3]), array([0, 1]), array([2, 3]), array([0, 3]), array([2, 1])]
-    >>> scopes = get_scopes(lines, 2)
+    >>> scopes = get_scopes_np(lines, 2)
     >>> pprint(scopes) #doctest: +NORMALIZE_WHITESPACE
     defaultdict(<class 'list'>,
                 {(0, 0): [array([0, 2]), array([0, 1]), array([0, 3])],
@@ -393,7 +399,7 @@ def get_scopes(lines: Lines, d: int) -> Scopes:
     return scopes
 
 
-def structure(d: int, n: int) -> Structure:
+def structure_np(d: int, n: int) -> Structure:
     """ Return a celled hypercube, its lines, and the scopes of its cells.
 
     Parameters
@@ -411,14 +417,14 @@ def structure(d: int, n: int) -> Structure:
             
     See Also
     --------
-    get_lines
-    get_scopes
+    get_lines_np
+    get_scopes_np
  
     Examples
     --------
     >>> import numpy as np
     >>> from pprint import pprint
-    >>> struct = structure(2, 2) 
+    >>> struct = structure_np(2, 2) 
     >>> struct[0]
     array([[0, 0],
            [0, 0]])
@@ -437,8 +443,8 @@ def structure(d: int, n: int) -> Structure:
     # populates the arrays with values 0,1,2, ...
     dtype = np.int64 if n ** d > 2 ** 31 else np.int32
     arr = np.arange(n ** d, dtype = dtype).reshape([n] * d)
-    lines, _ = get_lines(arr)
-    scopes = get_scopes(lines, d)
+    lines, _ = get_lines_np(arr)
+    scopes = get_scopes_np(lines, d)
     arr.fill(0)
     return (arr, lines, scopes)
 
@@ -463,7 +469,7 @@ def scopes_size(scopes: Scopes) -> Counter:
     Examples
     --------
     >>> import numpy as np
-    >>> scopes = structure(2, 3)[2] 
+    >>> scopes = structure_np(2, 3)[2] 
     >>> scopes_size(scopes) == Counter({2: 4, 3: 4, 4: 1})
     True
     """
@@ -492,7 +498,7 @@ def scopes_size_cells(scopes: Scopes) -> DefaultDict[int, List[Cell]]:
     --------
     >>> import numpy as np
     >>> from pprint import pprint
-    >>> scopes = structure(2, 3)[2] 
+    >>> scopes = structure_np(2, 3)[2] 
     >>> pprint(scopes_size_cells(scopes))
     defaultdict(<class 'list'>,
                 {2: [(1, 0), (0, 1), (2, 1), (1, 2)],
@@ -508,7 +514,7 @@ def scopes_size_cells(scopes: Scopes) -> DefaultDict[int, List[Cell]]:
 
 
 def slice_ndarray(arr: np.ndarray, axes: Collection[int], 
-                inds: Collection[int]) -> np.ndarray:
+                coords: Collection[int]) -> np.ndarray:
     """ Returns a slice of an array. 
 
     Parameters
@@ -517,8 +523,8 @@ def slice_ndarray(arr: np.ndarray, axes: Collection[int],
         The array to be sliced
     axes : Iterable[int]
         The axes that are fixed
-    inds : Iterable[int]
-        The indices corresponding to the fixed axes
+    coords : Iterable[int]
+        The coordinates corresponding to the fixed axes
 
     Returns
     -------
@@ -528,7 +534,7 @@ def slice_ndarray(arr: np.ndarray, axes: Collection[int],
     Raises
     ------
     ValueError
-        If length of `axes` is not equal to length of `inds`
+        If length of `axes` is not equal to length of `coords`
 
     Examples
     --------
@@ -550,11 +556,11 @@ def slice_ndarray(arr: np.ndarray, axes: Collection[int],
     # create a list of slice objects, one for each dimension of the array
     # Note: slice(None) is the same as ":". E.g. arr[:, 4] = arr[slice(none), 4)]
     sl: List[Union[slice, int]] = [slice(None)] * arr.ndim    
-    if len(axes) != len(inds):
-        raise ValueError("axes and inds must be of the same length")
+    if len(axes) != len(coords):
+        raise ValueError("axes and coords must be of the same length")
     
-    for axis, ind in zip(axes, inds):
-        sl[axis] = ind
+    for axis, coord in zip(axes, coords):
+        sl[axis] = coord
     
     return arr[tuple(sl)]
 
