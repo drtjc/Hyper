@@ -16,7 +16,7 @@ class TicTacToe():
             self.d = d
             self.n = n
             
-            struct = hc.structure_np(d, n)
+            struct = hc.structure_np(d, n, False)
             self.board = struct[0]
             self.lines = struct[1]
             self.num_lines = len(self.lines)
@@ -31,6 +31,15 @@ class TicTacToe():
     def memory(self) -> Memory:
         m = self.board.nbytes, getsizeof(self.lines), getsizeof(self.scopes)
         return self.Memory(*m, sum(m))
+
+    def display_term(self):
+        if self.d == 2:
+            self.display_2D_term()
+        elif self.d == 3:
+            self.display_3D_term()
+        else:
+            raise ValueError("Only 2D or 3D boards can be printed to the terminal")
+        return
 
 
     def display_2D_term(self):
@@ -56,8 +65,6 @@ class TicTacToe():
                     vis += "\n"
         print(vis)
         return
-
-    
     
     def display_3D_term(self):
         
@@ -88,10 +95,11 @@ class TicTacToe():
         return
 
 
+
 if __name__ == "__main__":
  
     dim = 2
-    size = 3
+    size = 7
     tictactoe = TicTacToe(dim, size)
 
     #print(tictactoe.num_lines)
@@ -102,5 +110,5 @@ if __name__ == "__main__":
     #print(hc.scopes_size_cells(tictactoe.scopes))
     #print(hc.scopes_size(tictactoe.scopes))
 
-    tictactoe.display_2D_term()
+    tictactoe.display_term()
     #print(tictactoe.board)
