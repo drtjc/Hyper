@@ -32,21 +32,68 @@ class TicTacToe():
         m = self.board.nbytes, getsizeof(self.lines), getsizeof(self.scopes)
         return self.Memory(*m, sum(m))
 
+    def display_4x4x4_term(self, players = True, settings = True):
+        
+        if self.d != 3:
+            raise ValueError("not a 3d board")
+
+        if self.n != 4:
+            raise ValueError("not a board of 4 cells")
+        
+
+        # iter over cells, flat, turn index into coords.
+        shape = [self.n] * self.d
+        for count, cell in enumerate(np.nditer(self.board)):
+            coord = np.unravel_index(count, shape)
+            print(coord)
+        
+        
+        # print(self.underline("test"))
+        # vis = ""
+        # for cell in self.board.cells_rlc():
+            
+        #     #print(cell.position, end = ' ')
+
+        #     if cell.is_empty:
+        #         cell._value = "B"
+
+        #     if not cell.is_front_face:
+        #         #print("see")
+        #         vis += self.underline(cell.value)
+        #     else:
+        #         #print("hi")
+        #         vis += cell.value
+
+        #     if not cell.is_right_face:
+        #         #print("line")
+        #         vis += "|"
+        #     else:
+        #         #print("here")
+        #         if cell.is_bottom_face:
+        #             #print("bottom)")
+        #             vis += "\n"
+        #         else:
+        #             vis += "  "
+        #             #print("space")    
+
+        # print(vis)
+        return
 
 
 
 
 if __name__ == "__main__":
  
-    dim = 2
-    size = 2
+    dim = 3
+    size = 3
     tictactoe = TicTacToe(dim, size)
 
-    print(tictactoe.num_lines)
+    #print(tictactoe.num_lines)
  
-    print(tictactoe.memory())
-    print(tictactoe.board)
-    print(tictactoe.scopes)
-    print(hc.scopes_size_cells(tictactoe.scopes))
-    print(hc.scopes_size(tictactoe.scopes))
+    #print(tictactoe.memory())
+    #print(tictactoe.board)
+    #print(tictactoe.scopes)
+    #print(hc.scopes_size_cells(tictactoe.scopes))
+    #print(hc.scopes_size(tictactoe.scopes))
 
+    tictactoe.display3D_term()
