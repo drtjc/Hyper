@@ -32,68 +32,47 @@ class TicTacToe():
         m = self.board.nbytes, getsizeof(self.lines), getsizeof(self.scopes)
         return self.Memory(*m, sum(m))
 
-    def display_4x4x4_term(self, players = True, settings = True):
+    def display_3D_term(self, players = True, settings = True):
         
         if self.d != 3:
-            raise ValueError("not a 3d board")
+            raise ValueError("Not a 3d board")
 
-        if self.n != 4:
-            raise ValueError("not a board of 4 cells")
-        
+        vis = ""
+        for r in range(self.n):
+            for p in range(self.n):
+                for c in range(self.n):
 
-        # iter over cells, flat, turn index into coords.
-        shape = [self.n] * self.d
-        for count, cell in enumerate(np.nditer(self.board)):
-            coord = np.unravel_index(count, shape)
-            print(coord)
-        
-        
-        # print(self.underline("test"))
-        # vis = ""
-        # for cell in self.board.cells_rlc():
-            
-        #     #print(cell.position, end = ' ')
+                    s = str(self.board[p,r,c])
+                    
+                    if r != (self.n - 1): # not last row 
+                        vis += underline(s)
+                    else: # last row
+                        vis += s
 
-        #     if cell.is_empty:
-        #         cell._value = "B"
-
-        #     if not cell.is_front_face:
-        #         #print("see")
-        #         vis += self.underline(cell.value)
-        #     else:
-        #         #print("hi")
-        #         vis += cell.value
-
-        #     if not cell.is_right_face:
-        #         #print("line")
-        #         vis += "|"
-        #     else:
-        #         #print("here")
-        #         if cell.is_bottom_face:
-        #             #print("bottom)")
-        #             vis += "\n"
-        #         else:
-        #             vis += "  "
-        #             #print("space")    
-
-        # print(vis)
+                    if c != (self.n - 1): # not last column
+                        vis += "|"
+                    else: # last column
+                        if p == (self.n - 1): # last pillar
+                            vis += "\n"
+                        else: # not last pillar
+                            vis += "  "
+        print(vis)
         return
-
-
 
 
 if __name__ == "__main__":
  
     dim = 3
-    size = 3
+    size = 4
     tictactoe = TicTacToe(dim, size)
 
     #print(tictactoe.num_lines)
  
     #print(tictactoe.memory())
-    #print(tictactoe.board)
+    
     #print(tictactoe.scopes)
     #print(hc.scopes_size_cells(tictactoe.scopes))
     #print(hc.scopes_size(tictactoe.scopes))
 
-    tictactoe.display3D_term()
+    tictactoe.display_3D_term()
+    #print(tictactoe.board)

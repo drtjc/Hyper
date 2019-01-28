@@ -446,7 +446,7 @@ def structure_np(d: int, n: int) -> Structure:
     arr = np.arange(n ** d, dtype = dtype).reshape([n] * d)
     lines, _ = get_lines_np(arr)
     scopes = get_scopes_np(lines, d)
-    arr.fill(0)
+    #arr.fill(0)
     return (arr, lines, scopes)
 
 
@@ -564,60 +564,3 @@ def slice_ndarray(arr: np.ndarray, axes: Collection[int],
         sl[axis] = coord
     
     return arr[tuple(sl)]
-
-
-
-def cell_4x4x4_is_outer(coord):
-    # true if any position element is equal to 0 or 3
-    return any(x in [0, 3] for x in coord)
-
-
-def cell_4x4x4_is_inner(coord):
-    # true if all position elements are equal to 1 or 2
-    return not cell_4x4x4_is_outer(coord)
-
-
-def cell_4x4x4_is_outer_corner(coord):
-    # true if no position element is equal to 1
-    return all(x != 2 for x in coord)
-
-
-def cell_4x4x4_is_outer_outer(coord): # does not include corners
-    if cell_4x4x4_is_outer(coord):
-        # true if pillar = 0 or 3, row = 1 or 2, and column = 0 or 3
-        return coord[0] in [0, 3] and coord[1] in [1, 2] and coord[2] in [0, 3]       
-    else:
-        return False
-
-
-def cell_4x4x4_is_outer_inner(coord):
-    if cell_4x4x4_is_outer(coord):
-        return not cell_4x4x4_is_outer_corner(coord) and not cell_4x4x4_is_outer_outer(coord)
-    else:
-        return False
-
-
-def face_3D_is_left(coord):
-    return coord[2] == 0
-
-
-def face_3D_is_right(coord, n):
-    return coord[2] == n - 1
-
-
-def face_3D_is_back(coord):
-    return coord[1] == 0
-
-
-def face_3D_is_front(coord, n):
-    return coord[1] == n - 1
-
-
-def face_3D_is_top(coord):
-    return coord[0] == 0
-
-
-def face_3D_is_bottom(coord, n):
-    return coord[0] == n - 1
-
-
