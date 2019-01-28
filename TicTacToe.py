@@ -4,7 +4,7 @@ from typing import NamedTuple
 from pprint import pprint
 
 import hypercube as hc
-from helper import underline
+from helper import underline, join_multiline
 
 
 class TicTacToe():
@@ -188,11 +188,64 @@ class TicTacToe():
         return
 
 
+    def db(self, s1, s2):
+        # add two strings together that have \n in them
+        # number of lines
+        #tt = [x.split() for x in spl]
+
+        # even dim in string, odd odd dimension to end of string
+
+        # existing string has n lines and assume last is an empty lime
+
+        # given string of n lines, add new string with n lines)
+        #  need existing string by lines
+        # spl_1 = s1.split('\n')
+        # n_1 = len(spl_1)
+
+        # spl_2 = s2.split('\n')
+        # n_2 = len(spl_2)
+
+        # if n_1 != n_2:
+        #     print("ooooops")
+
+        # m = [x + " " + y for x, y in zip(spl_1, spl_2)]
+        # mm = '\n'.join(m)
+        # print(mm)
+
+        ## XXX
+        ## XXX
+        ## XXX
+        print(join_multiline(s1, s2))
+
+
+    def display_board(self):
+        # number of horizontals is d/2, d even, (d+1)/2, d odd
+        # number of verticals is (d-1)/2, d odd, d/2, d even
+        d = self.d
+        n = self.n
+        h = int(d / 2 if d % 2 == 0 else (d + 1) / 2)
+        v = int(d / 2 if d % 2 == 0 else (d - 1) / 2)
+        print(h)
+        print(v)
+
+        vis = ""
+        for y in range(1, 2 ** v):
+            for j in range(n):
+                for x in range(1, 2 ** h): # take what had before and add d-1 times 
+                    for i in range(n):
+                        vis += "X"
+                        if i == n - 1:
+                            vis += " "
+                vis += "\n"
+                if j == n - 1:
+                    vis += "\n"
+        print(vis)
+
 
 if __name__ == "__main__":
  
     dim = 5
-    size = 2
+    size = 3
     tictactoe = TicTacToe(dim, size)
 
     #print(tictactoe.num_lines)
@@ -204,5 +257,7 @@ if __name__ == "__main__":
     #print(hc.scopes_size(tictactoe.scopes))
 
     #tictactoe.display_term()
-    print(tictactoe.display_order())
+    s1 = "XXX\nXXX\nXXX\n"
+    s2 = "YYY\nYYY\nYYY\n"
+    tictactoe.db(s1, s2)
     #print(tictactoe.board)
