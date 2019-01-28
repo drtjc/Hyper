@@ -400,7 +400,7 @@ def get_scopes_np(lines: Lines, d: int) -> Scopes:
     return scopes
 
 
-def structure_np(d: int, n: int) -> Structure:
+def structure_np(d: int, n: int, zeros: bool = True) -> Structure:
     """ Return a celled hypercube, its lines, and the scopes of its cells.
 
     Parameters
@@ -409,6 +409,8 @@ def structure_np(d: int, n: int) -> Structure:
         The number of dimensions of the hypercube
     n : int
         The number of cells in any dimension
+    zeros: bool, default = True
+        If true, all values in array are 0, else they are 0,1,2,...
  
     Returns
     -------
@@ -437,6 +439,18 @@ def structure_np(d: int, n: int) -> Structure:
                  (0, 1): [array([0, 0]), array([0, 0]), array([0, 0])],
                  (1, 0): [array([0, 0]), array([0, 0]), array([0, 0])],
                  (1, 1): [array([0, 0]), array([0, 0]), array([0, 0])]})
+    >>> struct = structure_np(2, 2, False) 
+    >>> struct[0]
+    array([[0, 1],
+           [2, 3]])
+    >>> struct[1]
+    [array([0, 2]), array([1, 3]), array([0, 1]), array([2, 3]), array([0, 3]), array([2, 1])]
+    >>> pprint(struct[2]) #doctest: +NORMALIZE_WHITESPACE
+    defaultdict(<class 'list'>,
+                {(0, 0): [array([0, 2]), array([0, 1]), array([0, 3])],
+                 (0, 1): [array([1, 3]), array([0, 1]), array([2, 1])],
+                 (1, 0): [array([0, 2]), array([2, 3]), array([2, 1])],
+                 (1, 1): [array([1, 3]), array([2, 3]), array([0, 3])]})
     """
 
     # number of cells is n^d. If this greater than 2^31 then
@@ -446,7 +460,8 @@ def structure_np(d: int, n: int) -> Structure:
     arr = np.arange(n ** d, dtype = dtype).reshape([n] * d)
     lines, _ = get_lines_np(arr)
     scopes = get_scopes_np(lines, d)
-    #arr.fill(0)
+    if zeros:
+        arr.fill(0)
     return (arr, lines, scopes)
 
 

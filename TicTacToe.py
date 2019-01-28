@@ -32,10 +32,37 @@ class TicTacToe():
         m = self.board.nbytes, getsizeof(self.lines), getsizeof(self.scopes)
         return self.Memory(*m, sum(m))
 
-    def display_3D_term(self, players = True, settings = True):
+
+    def display_2D_term(self):
+        
+        if self.d != 2:
+            raise ValueError("Not a 2D board")
+
+        vis = ""
+        for r in range(self.n):
+            for c in range(self.n):
+
+                s = str(self.board[r,c])
+                #s = "X"
+                    
+                if r != (self.n - 1): # not last row 
+                    vis += underline(s)
+                else: # last row
+                    vis += s
+
+                if c != (self.n - 1): # not last column
+                    vis += "|"
+                else: # last column
+                    vis += "\n"
+        print(vis)
+        return
+
+    
+    
+    def display_3D_term(self):
         
         if self.d != 3:
-            raise ValueError("Not a 3d board")
+            raise ValueError("Not a 3D board")
 
         vis = ""
         for r in range(self.n):
@@ -43,6 +70,7 @@ class TicTacToe():
                 for c in range(self.n):
 
                     s = str(self.board[p,r,c])
+                    s = "X"
                     
                     if r != (self.n - 1): # not last row 
                         vis += underline(s)
@@ -62,8 +90,8 @@ class TicTacToe():
 
 if __name__ == "__main__":
  
-    dim = 3
-    size = 4
+    dim = 2
+    size = 3
     tictactoe = TicTacToe(dim, size)
 
     #print(tictactoe.num_lines)
@@ -74,5 +102,5 @@ if __name__ == "__main__":
     #print(hc.scopes_size_cells(tictactoe.scopes))
     #print(hc.scopes_size(tictactoe.scopes))
 
-    tictactoe.display_3D_term()
+    tictactoe.display_2D_term()
     #print(tictactoe.board)
