@@ -188,34 +188,6 @@ class TicTacToe():
         return
 
 
-    def db(self, s1, s2):
-        # add two strings together that have \n in them
-        # number of lines
-        #tt = [x.split() for x in spl]
-
-        # even dim in string, odd odd dimension to end of string
-
-        # existing string has n lines and assume last is an empty lime
-
-        # given string of n lines, add new string with n lines)
-        #  need existing string by lines
-        # spl_1 = s1.split('\n')
-        # n_1 = len(spl_1)
-
-        # spl_2 = s2.split('\n')
-        # n_2 = len(spl_2)
-
-        # if n_1 != n_2:
-        #     print("ooooops")
-
-        # m = [x + " " + y for x, y in zip(spl_1, spl_2)]
-        # mm = '\n'.join(m)
-        # print(mm)
-
-        ## XXX
-        ## XXX
-        ## XXX
-        print(join_multiline(s1, s2))
 
 
     def display_board(self):
@@ -242,9 +214,53 @@ class TicTacToe():
         print(vis)
 
 
+
+def db():
+    
+    disp = ""
+    
+    def dbr(arr):
+        nonlocal disp
+
+
+        d = arr.ndim
+        ind = (0,) * d
+        #disp = disp + str(arr[ind]) + " "
+        
+        for i in range(1, d + 1):
+            ind = (0,) * (d - i) + (slice(1, None, None),) + (Ellipsis,)
+            
+            v = arr[ind]
+            if v.size != 0:
+                if v.ndim % 2 == 0: # even
+                    disp = disp + dbr(v)
+                else: # odd
+                    #disp = join_multiline(disp, dbr(v))
+                    disp = disp + dbr(v)
+            else:
+                disp = disp + '\n'
+
+
+            # turn v into a string, v could ve multiple ' boards
+            # in fact, v will be a i-dimensional array in which first dim is of d-1, and others are dim
+
+            #if v.ndim % 2 == 0: #even
+            #    pass
+                # join vertially (end of string)
+            #else: #odd
+            #    dbr(v)
+                # join horizontally (multiline)
+
+            #print(f'ind = {ind}')
+            #print(v)
+        
+        return disp
+    return dbr
+
+
 if __name__ == "__main__":
  
-    dim = 5
+    dim = 2
     size = 3
     tictactoe = TicTacToe(dim, size)
 
@@ -257,7 +273,6 @@ if __name__ == "__main__":
     #print(hc.scopes_size(tictactoe.scopes))
 
     #tictactoe.display_term()
-    s1 = "XXX\nXXX\nXXX\n"
-    s2 = "YYY\nYYY\nYYY\n"
-    tictactoe.db(s1, s2)
+    s = db()(tictactoe.board)
+    print(s)
     #print(tictactoe.board)
