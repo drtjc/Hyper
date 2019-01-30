@@ -190,78 +190,48 @@ class TicTacToe():
 
 
 
-    def display_board(self):
-        # number of horizontals is d/2, d even, (d+1)/2, d odd
-        # number of verticals is (d-1)/2, d odd, d/2, d even
-        d = self.d
-        n = self.n
-        h = int(d / 2 if d % 2 == 0 else (d + 1) / 2)
-        v = int(d / 2 if d % 2 == 0 else (d - 1) / 2)
-        print(h)
-        print(v)
 
-        vis = ""
-        for y in range(1, 2 ** v):
-            for j in range(n):
-                for x in range(1, 2 ** h): # take what had before and add d-1 times 
-                    for i in range(n):
-                        vis += "X"
-                        if i == n - 1:
-                            vis += " "
-                vis += "\n"
-                if j == n - 1:
-                    vis += "\n"
-        print(vis)
-
-
-
-def db():
-    
+def db2():
     disp = ""
-    
+
     def dbr(arr):
         nonlocal disp
+        print(arr)
 
-
+        if arr.size == 1:
+            print("here")
+            #disp = disp + str(arr)
+            return str(arr)
+        
         d = arr.ndim
-        ind = (0,) * d
-        #disp = disp + str(arr[ind]) + " "
+        print(f'd = {d}')
+
+        # for each d-1 element of arr (of which there are n)
+        sub_arr = [arr[i] for i in range(arr.shape[0])]
+        print(f'sub_arr = {sub_arr}')
+        st = [dbr(a) for a in sub_arr]
+
+        print(f'st = {st}')        
+
+        if d % 2 == 0: # even number of dimensions
+            #t = '\n'.join(st)
+            #print(f'even = {disp.join(t)}')
+            return disp.join('\n'.join(st)) 
+        else: # odd number of dimensions
+            #print(f'odd = {disp.join(join_multiline(st))}')
+            return disp.join(join_multiline(st))
         
-        for i in range(1, d + 1):
-            ind = (0,) * (d - i) + (slice(1, None, None),) + (Ellipsis,)
-            
-            v = arr[ind]
-            if v.size != 0:
-                if v.ndim % 2 == 0: # even
-                    disp = disp + dbr(v)
-                else: # odd
-                    #disp = join_multiline(disp, dbr(v))
-                    disp = disp + dbr(v)
-            else:
-                disp = disp + '\n'
-
-
-            # turn v into a string, v could ve multiple ' boards
-            # in fact, v will be a i-dimensional array in which first dim is of d-1, and others are dim
-
-            #if v.ndim % 2 == 0: #even
-            #    pass
-                # join vertially (end of string)
-            #else: #odd
-            #    dbr(v)
-                # join horizontally (multiline)
-
-            #print(f'ind = {ind}')
-            #print(v)
         
+
         return disp
     return dbr
 
 
+
 if __name__ == "__main__":
  
-    dim = 2
-    size = 3
+    dim = 5
+    size = 2
     tictactoe = TicTacToe(dim, size)
 
     #print(tictactoe.num_lines)
@@ -273,6 +243,14 @@ if __name__ == "__main__":
     #print(hc.scopes_size(tictactoe.scopes))
 
     #tictactoe.display_term()
-    s = db()(tictactoe.board)
+    s = db2()(tictactoe.board)
     print(s)
     #print(tictactoe.board)
+
+
+    #s = ['AAA\nBBB\nCCC\n', 'MMM\nNNN\nOOO\n', 'XXX\nYYY\nZZZ\n']
+    #ss = ['AAA\nBBB\nCCC', 'MMM\nNNN\nOOO', 'XXX\nYYY\nZZZ']
+
+    #ml = join_multiline(s)
+    #print(ml)
+    #pprint(ml)
