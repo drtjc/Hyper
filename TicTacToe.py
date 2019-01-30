@@ -196,33 +196,20 @@ def db2():
 
     def dbr(arr):
         nonlocal disp
-        print(arr)
 
         if arr.size == 1:
-            print("here")
-            #disp = disp + str(arr)
-            return str(arr)
-        
-        d = arr.ndim
-        print(f'd = {d}')
+            return str(arr).ljust(2)
+            #return f'{arr: <{3}}'
 
-        # for each d-1 element of arr (of which there are n)
         sub_arr = [arr[i] for i in range(arr.shape[0])]
-        print(f'sub_arr = {sub_arr}')
-        st = [dbr(a) for a in sub_arr]
-
-        print(f'st = {st}')        
-
-        if d % 2 == 0: # even number of dimensions
-            #t = '\n'.join(st)
-            #print(f'even = {disp.join(t)}')
-            return disp.join('\n'.join(st)) 
-        else: # odd number of dimensions
-            #print(f'odd = {disp.join(join_multiline(st))}')
-            return disp.join(join_multiline(st))
+        #print(f'sub_arr = {sub_arr}')
+        sub_arr_str = [dbr(a) for a in sub_arr]
+        #print(f'sub_arr_str = {sub_arr_str}')
+        if arr.ndim % 2 == 0: # even number of dimensions - display down the screen
+            return disp.join('\n'.join(sub_arr_str)) 
+        else: # odd number of dimensions - display across the screen
+            return disp.join(join_multiline(sub_arr_str))
         
-        
-
         return disp
     return dbr
 
@@ -230,8 +217,8 @@ def db2():
 
 if __name__ == "__main__":
  
-    dim = 5
-    size = 2
+    dim = 3
+    size = 4
     tictactoe = TicTacToe(dim, size)
 
     #print(tictactoe.num_lines)

@@ -29,7 +29,7 @@ def join_multiline(it):
     st = [' '.join(t) for t in tl]
 
     # finally, join each string separated by a new line 
-    return '\n'.join(st).rstrip(' ') 
+    return '\n'.join(st)
     
     #if len(spl_1) != len(spl_2):
     #    raise ValueError("Both strings must have the same number of lines")
