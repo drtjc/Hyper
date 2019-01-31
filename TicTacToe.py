@@ -199,17 +199,31 @@ def db2():
 
         if arr.size == 1:
             return str(arr).ljust(2)
+            #return "_"
+            #return underline("X")
             #return f'{arr: <{3}}'
 
         sub_arr = [arr[i] for i in range(arr.shape[0])]
-        #print(f'sub_arr = {sub_arr}')
+        print(f'sub_arr = {sub_arr}')
         sub_arr_str = [dbr(a) for a in sub_arr]
-        #print(f'sub_arr_str = {sub_arr_str}')
-        if arr.ndim % 2 == 0: # even number of dimensions - display down the screen
-            return disp.join('\n'.join(sub_arr_str)) 
-        else: # odd number of dimensions - display across the screen
-            return disp.join(join_multiline(sub_arr_str))
+        print(f'sub_arr_str = {sub_arr_str}')
         
+        d = arr.ndim
+        print(f'd = {d}')
+        if d % 2 == 0: # even number of dimensions - display down the screen
+            if d == 2:
+                return disp.join('\n'.join(sub_arr_str))
+            else:
+                # need to put in dividing line size of which depends on dim and size
+                return disp.join('\n\n'.join(sub_arr_str))
+        else: # odd number of dimensions - display across the screen
+            if d == 1:
+                return disp.join(join_multiline(sub_arr_str, "|"))
+            else:
+                # space betwnee || depends on dim and size i think
+                return disp.join(join_multiline(sub_arr_str, "  ||  ", 2, "            "))
+        
+                    
         return disp
     return dbr
 
@@ -217,8 +231,8 @@ def db2():
 
 if __name__ == "__main__":
  
-    dim = 3
-    size = 4
+    dim = 6
+    size = 2
     tictactoe = TicTacToe(dim, size)
 
     #print(tictactoe.num_lines)
