@@ -12,9 +12,9 @@ class Error(Exception):
 
 class MoveError(Error):
 
-    def __init__(self, message, arg):
+    def __init__(self, message, cell):
         self.message = message
-        self.arg = arg
+        self.cell = cell
 
 
 
@@ -45,6 +45,7 @@ class TicTacToe():
         self.active_player = 1
         self.active_moves = 0            
 
+        self.moves = []
 
     def clear(self):
         self.board.fill(0)
@@ -64,13 +65,22 @@ class TicTacToe():
 
     def move(self, cell):
         # check is valid move, if not raise error (custom exception??)
-        raise MoveError("hi there", cell)
+        
+        # cell can be a string without commas, if dim less than 10
+        # first non-digit is interpreted as separator for split
+        # can be an iterator
+        if isinstance(cell, str):
+            pass
+        else:
+            pass
+
+
         if self.drop:
             pass
         else:
             # make sure cell has not already been played
             if abs(self.board(cell)) > self._MOVE_BASE:
-                pass
+                raise MoveError("The cell has already been played", cell)
             else:
                 pass
                 ##self.board(cell) = 
