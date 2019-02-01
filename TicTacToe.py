@@ -35,49 +35,38 @@ class TicTacToe():
 
 
 
-def db2(): #maybe take size of arr as parameter?
-    disp = ""
 
-    def dbr(arr):
-        nonlocal disp
 
-        if arr.size == 1:
-            #return str(arr).ljust(3)
-            #return "_"
-            return underline("X")
-            #return f'{arr: <{3}}'
+def dbr(arr):
 
-        sub_arr = [arr[i] for i in range(arr.shape[0])]
-        sub_arr_str = [dbr(a) for a in sub_arr]
-        
-        d = arr.ndim
-        if d % 2 == 0: # even number of dimensions - display down the screen
-            if d == 2:
-                #return disp.join('\n'.join(sub_arr_str))
-                return ''.join('\n'.join(sub_arr_str))
-            else:
-                sp = '\n' + '\n' * int(d / 2 - 1)
-                #return disp.join(sp.join(sub_arr_str))
-                return sp.join(sub_arr_str)
-        else: # odd number of dimensions - display across the screen
-            if d == 1:
-                #print(disp)
-                #print(sub_arr_str)
-                #return disp.join(join_multiline(sub_arr_str, "|")) 
-                return '|'.join(sub_arr_str) ### do underlining here??
-            else:
-                #print(disp)
-                #return disp.join(join_multiline(sub_arr_str, '.' * d))
-                return ''.join(join_multiline(sub_arr_str, '.' * d))
+    if arr.size == 1:
+        return str(arr).rjust(3)
+        #return "_"
+        return underline("X")
+        #return f'{arr: <{3}}'
 
-    return dbr
+    sub_arr = [arr[i] for i in range(arr.shape[0])]
+    sub_arr_str = [dbr(a) for a in sub_arr]
+    
+    d = arr.ndim
+    if d % 2 == 0: # even number of dimensions - display down the screen
+        if d == 2:
+            return ''.join('\n'.join(sub_arr_str))
+        else:
+            sp = '\n' + '\n' * int(d / 2 - 1) # increase space between higher dimesions
+            return sp.join(sub_arr_str)
+    else: # odd number of dimensions - display across the screen
+        if d == 1:
+            return '|'.join(sub_arr_str) ### do underlining here??
+        else:
+            return join_multiline(sub_arr_str, ' ' + '.' * d + ' ', False)
 
 
 
 if __name__ == "__main__":
  
-    dim = 5
-    size = 3
+    dim = 7
+    size = 2
     tictactoe = TicTacToe(dim, size)
 
     #print(tictactoe.num_lines)
@@ -89,7 +78,7 @@ if __name__ == "__main__":
     #print(hc.scopes_size(tictactoe.scopes))
 
     #tictactoe.display_term()
-    s = db2()(tictactoe.board)
+    s = dbr(tictactoe.board)
     print(s)
     #print(tictactoe.board)
 
