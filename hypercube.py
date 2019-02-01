@@ -400,7 +400,7 @@ def get_scopes_np(lines: Lines, d: int) -> Scopes:
     return scopes
 
 
-def structure_np(d: int, n: int, zeros: bool = True) -> Structure:
+def structure_np(d: int, n: int, zeros: bool = True, OFFSET: int = 0) -> Structure:
     """ Return a celled hypercube, its lines, and the scopes of its cells.
 
     Parameters
@@ -411,6 +411,10 @@ def structure_np(d: int, n: int, zeros: bool = True) -> Structure:
         The number of cells in any dimension
     zeros: bool, default = True
         If true, all values in array are 0, else they are 0,1,2,...
+    base: int
+        Tne number of cells is n^d. If this greater than 
+        (2^31 - OFFSET - 1) then we use np.int64 (instead of np.int32)
+        as the dtype  of numpy array.
  
     Returns
     -------
@@ -453,10 +457,10 @@ def structure_np(d: int, n: int, zeros: bool = True) -> Structure:
                  (1, 1): [array([1, 3]), array([2, 3]), array([0, 3])]})
     """
 
-    # number of cells is n^d. If this greater than 2^31 then
-    # we use int64. This is because the the get_scopes function
-    # populates the arrays with values 0,1,2, ...
-    dtype = np.int64 if n ** d > 2 ** 31 else np.int32
+    # number of cells is n^d. If this greater than (2^31 - OFFSET - 1)
+    # then we use int64. This is because the the get_scopes 
+    # function populates the arrays with values 0,1,2, ...
+    dtype = np.int64 if n ** d > 2 ** 31 - OFFSET - 1 else np.int32
     arr = np.arange(n ** d, dtype = dtype).reshape([n] * d)
     lines, _ = get_lines_np(arr)
     scopes = get_scopes_np(lines, d)
@@ -579,3 +583,64 @@ def slice_ndarray(arr: np.ndarray, axes: Collection[int],
         sl[axis] = coord
     
     return arr[tuple(sl)]
+
+
+
+
+def display(arr):
+
+    if arr.size == 1:
+        return str(arr).rjust(3)
+        #return "_"
+        return underline("X")
+        #return f'{arr: <{3}}'
+
+    sub_arr = [arr[i] for i in range(arr.shape[0])]
+    sub_arr_str = [display(a) for a in sub_arr]
+    
+    d = arr.ndim
+    if d % 2 == 0: # even number of dimensions - display down the screen
+        if d == 2:
+            return ''.join('\n'.join(sub_arr_str))
+        else:
+            sp = '\n' + '\n' * int(d / 2 - 1) # increase space between higher dimesions
+            return sp.join(sub_arr_str)
+    else: # odd number of dimensions - display across the screen
+        if d == 1:
+            return '|'.join(sub_arr_str) ### do underlining here??
+        else:
+            return join_multiline(sub_arr_str, ' ' + '.' * d + ' ', False)
+
+
+
+
+def underline(s):
+    try:
+        return ''.join([chr + "\u0332" for chr in str(s)])
+    except:
+        return str
+
+
+
+
+def join_multiline(iter, divider = ' ', divide_empty_lines = False, fill_value = '_'):
+
+    # for each multiline block, split into individual lines
+    spl = [x.split('\n') for x in iter]
+    
+    # create list of tuples with tuple i containing line i from each multiline block
+    tl = [i for i in it.zip_longest(*spl, fillvalue = fill_value)]
+    
+    
+    if divide_empty_lines:
+        st = [divider.join(t) for t in tl]
+    else:
+        st = []
+        for t in tl:
+            if all([x.strip() == '' for x in t]):
+                st.append('')
+            else:
+                st.append(divider.join(t))
+
+    # finally, join each string separated by a new line 
+    return '\n'.join(st)            
