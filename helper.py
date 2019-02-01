@@ -8,7 +8,7 @@ def underline(s):
 
 
 
-def join_multiline(it, divide_1 = ' ',  divide_1_at = None, divide_2 = None):
+def join_multiline_(it, divide_1 = ' ',  divide_1_at = None, divide_2 = None):
 
     # for each multiline block, split into individual lines
     spl = [x.split('\n') for x in it]
@@ -27,6 +27,24 @@ def join_multiline(it, divide_1 = ' ',  divide_1_at = None, divide_2 = None):
     # finally, join each string separated by a new line 
     return '\n'.join(st)
     
+    # TEST IF DIFF LENGTHS
     #if len(spl_1) != len(spl_2):
     #    raise ValueError("Both strings must have the same number of lines")
 
+def join_multiline(it, divide = ' '):
+
+    # for each multiline block, split into individual lines
+    spl = [x.split('\n') for x in it]
+    
+    # create list of tuples with tuple i containing line i from each multiline block
+    tl = [i for i in zip(*spl)]
+    
+    
+    st = [divide.join(t) for t in tl]
+
+    # finally, join each string separated by a new line 
+    return '\n'.join(st)
+    
+    # TEST IF DIFF LENGTHS
+    #if len(spl_1) != len(spl_2):
+    #    raise ValueError("Both strings must have the same number of lines")
