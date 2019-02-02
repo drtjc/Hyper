@@ -590,7 +590,7 @@ def slice_ndarray(arr: np.ndarray, axes: Collection[int],
 def display(arr):
 
     if arr.size == 1:
-        return str(arr).rjust(3)
+        return str(arr).rjust(4)
         #return "_"
         return underline("X")
         #return f'{arr: <{3}}'

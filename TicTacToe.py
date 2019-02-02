@@ -2,7 +2,7 @@ import numpy as np #type: ignore
 import re
 from collections.abc import Sequence
 from sys import getsizeof
-from typing import NamedTuple, List
+from typing import NamedTuple, List, Tuple
 from pprint import pprint
 
 import hypercube as hc
@@ -30,7 +30,7 @@ class TicTacToe():
     def __init__(self, d: int, n: int, moves_per_turn = 1, drop = False) -> None:
 
         try:            
-            struct = hc.structure_np(d, n, False, self._MOVE_BASE)
+            struct = hc.structure_np(d, n, True, self._MOVE_BASE)
         except MemoryError:
             raise MemoryError("The board is too big to fit into available memory")
 
@@ -44,19 +44,19 @@ class TicTacToe():
         self.num_lines = len(self.lines)
         self.scopes = struct[2]
 
-        self.active_player = 1
-        self.active_moves = 0            
+        self.active_player: int = 0
+        self.active_moves: int = 0 # number of moves played by active player in current turn           
 
-        self.moves: List[int] = []
+        # record player 0 moves as positive integers, and player 1 moves as negative integer
+        self.moves: List[Tuple[int]] = [] ##TJC need to specifiy tuple for mypy is d lots of int 
+        self.moves_played: List[int] = [0, 0] # number of moves played in game by each player
 
     def clear(self):
         self.board.fill(0)
 
-
     def memory(self) -> Memory:
         m = self.board.nbytes, getsizeof(self.lines), getsizeof(self.scopes)
         return self.Memory(self.board.dtype, *m, sum(m))
-
 
     def display(self, header = True):
         b = hc.display(self.board) + '\n'
@@ -64,87 +64,86 @@ class TicTacToe():
             b = f'\nd = {self.d}, n = {self.n}\n\n' + b
         print(b)
 
-
-
-    ## have a version of move that does no checking
-    def move(self, cell):
-        # check is valid move, if not raise error (custom exception??)
-        
-        # cell can be a string without commas, if dim less than 10
-        # first non-digit is interpreted as separator for split
-        # can be an iterator
+    def str_to_tuple(self, cell, base = 1):
         if isinstance(cell, str):
-            nd = re.findall(r'\D+', cell) # check to see if there are any non-digits
+            # check to see if there are any non-digits
+            nd = re.findall(r'\D+', cell) 
             if len(nd) == 0: 
-                inds = tuple(ind for ind in cell) # assume that each digit is a dimension
-            else:
-                inds = tuple(int(ind) for ind in re.findall(r'\d+', cell))            
+                if self.d - -1 + base > 9:
+                    raise ValueError("Too many dimensions for each to be specified by single digit")
+                else:
+                    tup = tuple(int(coord) - base for coord in cell) 
+            else: # there are non-digits, use these as separators
+                tup = tuple(int(coord) - base for coord in re.findall(r'\d+', cell)) 
             
-            ## check inds that there are n elements and each is a valid dimension
-        elif isinstance(cell, Sequence):
-            pass
-            # check that there are n elements and each cell is a valid dimension
-            inds = tuple(cell)
+            # check that correct number of coordinates specified
+            if len(tup) != self.d:
+                raise ValueError("Incorrect number of coordinates provided")
+
+            # check that each coordinate is valid
+            if all(t in range(self.n) for t in tup):
+                return tup
+            else:
+                raise ValueError("One or more coordinates are not valid")           
         else:
-            try:
-                v = self.board[cell]
-                inds = cell
-            except:
-                pass
-                ## raise error that not valid non-string 
+            raise TypeError(f'String argument expected, got {type(cell)})')
 
-        # we now have a valid cell (inds variable)
-        print(inds)
-        print(self.board[inds])
- 
+    def move(self, cell, base = 1):
 
+        try:
+            if isinstance(cell, str):
+                t_cell = self.str_to_tuple(cell, base)
+            else:
+                t_cell = tuple(cell)
+            
+            v = self.board[t_cell]
+        except:
+            raise Error("Invalid cell argument was provided")
+
+        # we now have a validly defined cell
         if self.drop:
             pass
         else:
-            # make sure cell has not already been played
-            if abs(self.board(cell)) > self._MOVE_BASE:
-                raise MoveError("The cell has already been played", cell)
-            else:
-                pass
-                ##self.board(cell) = 
-        # record move
-        # check for win
-        # check if time to change active player
-        # return active player
-        pass
+            pass
+
+        if abs(v) > self._MOVE_BASE:
+            # if players whose turn it is is interative then get them
+            # to put another move in rather than raise error
+            raise MoveError("The cell has already been played", cell)
+
+        # we now have an empty cell
+        self.moves_played[self.active_player] += 1
+        sgn = -1 if self.active_player == 1 else 1
+        self.board[t_cell] = sgn * (self.moves_played[self.active_player] + self._MOVE_BASE)
+        self.moves.append(t_cell)
+
+        # can check for win now
+
+        self.active_moves += 1
+        if self.active_moves == self.moves_per_turn:
+            self.active_moves = 0
+            self.active_player = not self.active_player
+ 
+        self.display(False)
+
+
+        def _check_for_win(self):
+            
+
+
+        def undo(self, moves = 1):
+            pass
 
 
 
 if __name__ == "__main__":
  
-    dim = 3
-    size = 4
+    dim = 2
+    size = 3
     ttt = TicTacToe(dim, size)
 
-    ttt.move('0-1,2')
+    ttt.move('22')
+    ttt.move('11')
+    ttt.move('33')
+    ttt.move('22')
 
-
-    #print(ttt.board.dtype)
- 
-    #print(ttt.memory())
-    
-    #print(tictactoe.scopes)
-    #print(hc.scopes_size_cells(tictactoe.scopes))
-    #print(hc.scopes_size(tictactoe.scopes))
-
-    #tictactoe.display_term()
-    #try:
-    #    ttt.move('@')
-    #except MoveError as error:
-    #    print(error.arg)
-    #ttt.display()
-    #print(s)
-    #print(tictactoe.board)
-
-
-    #s = ['AAA\nBBB\nCCC', 'MMM\nNNN', 'XXX\nYYY\nZZZ']
-    #ss = ['AAA\nBBB\nCCC', 'MMM\nNNN\nOOO', 'XXX\nYYY\nZZZ']
-
-    #ml = join_multiline(s)
-    #print(ml)
-    #pprint(ml)
