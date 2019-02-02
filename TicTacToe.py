@@ -1,6 +1,8 @@
 import numpy as np #type: ignore
+import re
+from collections.abc import Sequence
 from sys import getsizeof
-from typing import NamedTuple
+from typing import NamedTuple, List
 from pprint import pprint
 
 import hypercube as hc
@@ -45,7 +47,7 @@ class TicTacToe():
         self.active_player = 1
         self.active_moves = 0            
 
-        self.moves = []
+        self.moves: List[int] = []
 
     def clear(self):
         self.board.fill(0)
@@ -63,6 +65,8 @@ class TicTacToe():
         print(b)
 
 
+
+    ## have a version of move that does no checking
     def move(self, cell):
         # check is valid move, if not raise error (custom exception??)
         
@@ -70,10 +74,29 @@ class TicTacToe():
         # first non-digit is interpreted as separator for split
         # can be an iterator
         if isinstance(cell, str):
+            nd = re.findall(r'\D+', cell) # check to see if there are any non-digits
+            if len(nd) == 0: 
+                inds = tuple(ind for ind in cell) # assume that each digit is a dimension
+            else:
+                inds = tuple(int(ind) for ind in re.findall(r'\d+', cell))            
+            
+            ## check inds that there are n elements and each is a valid dimension
+        elif isinstance(cell, Sequence):
             pass
+            # check that there are n elements and each cell is a valid dimension
+            inds = tuple(cell)
         else:
-            pass
+            try:
+                v = self.board[cell]
+                inds = cell
+            except:
+                pass
+                ## raise error that not valid non-string 
 
+        # we now have a valid cell (inds variable)
+        print(inds)
+        print(self.board[inds])
+ 
 
         if self.drop:
             pass
@@ -92,12 +115,14 @@ class TicTacToe():
 
 
 
-
 if __name__ == "__main__":
  
     dim = 3
     size = 4
     ttt = TicTacToe(dim, size)
+
+    ttt.move('0-1,2')
+
 
     #print(ttt.board.dtype)
  
@@ -108,10 +133,10 @@ if __name__ == "__main__":
     #print(hc.scopes_size(tictactoe.scopes))
 
     #tictactoe.display_term()
-    try:
-        ttt.move('@')
-    except MoveError as error:
-        print(error.arg)
+    #try:
+    #    ttt.move('@')
+    #except MoveError as error:
+    #    print(error.arg)
     #ttt.display()
     #print(s)
     #print(tictactoe.board)
