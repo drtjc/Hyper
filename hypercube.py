@@ -126,7 +126,7 @@ def num_lines(d: int, n: int) -> int:
     76
     """
 
-    count: int = 0
+    count = 0
     for i in range(1, d + 1):
         count += comb(d, i, True) * (n ** (d - i)) * (2 ** (i - 1)) 
     return count
@@ -311,8 +311,8 @@ def get_lines_np(arr: Cube_np, flatten: bool = True) -> \
     
     d = arr.ndim
     n = arr.shape[0]
-    lines: Union[Lines_np, List[Lines_np]] = []
-    count: int = 0
+    lines = []
+    count = 0
 
     # loop over the numbers of dimensions
     for i in range(d): 
@@ -473,7 +473,7 @@ def structure_np(d: int, n: int, zeros: bool = True, OFFSET: int = 0) -> Structu
     return (arr, lines, scopes)
 
 
-def diagonals_coord(d: int, n: int) -> Lines_coord:
+def get_diagonals_coord(d: int, n: int) -> Lines_coord:
     """ Returns the d-agonals coordinates of h(d, n). 
 
     Parameters
@@ -486,7 +486,7 @@ def diagonals_coord(d: int, n: int) -> Lines_coord:
     Returns
     -------
     list :
-        A list of d-gonals coordinates of h(d,n).
+        A list of d-gonals coordinates of the diagonals in h(d,n).
 
     See Also
     --------
@@ -500,7 +500,7 @@ def diagonals_coord(d: int, n: int) -> Lines_coord:
 
     Examples
     --------
-    >>> diags = diagonals_coord(2, 3)
+    >>> diags = get_diagonals_coord(2, 3)
     >>> diags
     [[(0, 0), (1, 1), (2, 2)], [(0, 2), (1, 1), (2, 0)]]
     """    
@@ -512,7 +512,7 @@ def diagonals_coord(d: int, n: int) -> Lines_coord:
     # restrict to corners with 0 as first coordinate. E.g.: (0,0), (0,2)
     corners_0 = [corner for corner in corners_all if corner[0] == 0]
 
-    diagonals: Lines_coord = []
+    diagonals = []
     for corner in corners_0: 
         # create the diagonals for each corner
         diagonal: Line_coord = []
@@ -531,6 +531,99 @@ def diagonals_coord(d: int, n: int) -> Lines_coord:
         diagonals.append(diagonal)
 
     return diagonals
+
+
+def get_lines_coord(d: int, n: int, flatten: bool = True) -> \
+              Tuple[Union[Lines_coord, List[Lines_coord]], int]: 
+    """ Returns the lines in a hypercube, h(d, n)
+
+    Parameters
+    ----------
+    d : int
+        The number of dimensions of the hypercube
+    n : int
+        The number of cells in any dimension
+
+    flatten : bool, optional 
+        Determines if the lines are returned as a flat list, or
+        as a nested lists of i-agonals.
+        A flat list is return by default.
+
+    Returns
+    -------
+    list :
+        A list of d-gonals coordinates for the lines in h(d, n).
+        The `flatten` arguments determines if the list is flat or 
+        nested listed of i-agonals
+    int :
+        The number of lines. 
+            
+    Raises
+    ------
+    AssertionError
+        If number of lines returned by this function does not
+        equal that calculated by the num_lines function.
+        THIS IS A CRITCAL ERROR THAT MEANS THIS FUNCTION HAS
+        A FLAWED IMPLEMENTATION.
+    
+    See Also
+    --------
+    num_lines
+    get_lines_np
+
+    Notes
+    -----
+    The notes section for the function num_lines provides a sketch of a 
+    constructive proof for the number of lines in a hypercube. This has
+    been used to implement this function. 
+
+    Examples
+    --------
+    >>> lines, count = get_lines_coord(2, 3) #doctest: +SKIP
+    >>> lines #doctest: +SKIP
+    ##[array([0, 2]), array([1, 3]), array([0, 1]), array([2, 3]), array([0, 3]), array([2, 1])]
+    >>> count #doctest: +SKIP
+    6
+    >>> len(lines) #doctest: +SKIP
+    6
+    >>> lines, count = get_lines_coord(2, 3, False) #doctest: +SKIP
+    >>> lines #doctest: +SKIP
+    ##[[array([0, 2])], [array([1, 3])], [array([0, 1])], [array([2, 3])], [array([0, 3]), array([2, 1])]]
+    >>> count #doctest: +SKIP
+    6
+    >>> len(lines) #doctest: +SKIP
+    5
+    """
+    
+    lines = []
+    count = 0
+
+    # loop over the numbers of dimensions
+    for i in range(d): 
+        # loop over all possible combinations of i dimensions
+        diagonals = get_diagonals_coord(i + 1, n)
+
+        for i_comb in it.combinations(range(d), r = i + 1): 
+            for diagonal in diagonals:
+                # a cell could be in any position in the other dimensions
+                for cell in it.product(range(n), repeat = d - i - 1):
+                    
+                    
+                    # take a slice of i dimensions given cell
+                    #sl = slice_ndarray(arr, set(range(d)) - set(i_comb), cell)
+                    # get all possible lines from slice
+                    #diags = get_diagonals_np()(sl)
+                    #count += len(diags)
+                    
+                    diags = []
+                    if flatten:
+                        lines.extend(diags)
+                    else:
+                        lines.append(diags)
+    
+    assert count == num_lines(d, n)
+    return lines, count
+
 
 
 
@@ -676,6 +769,84 @@ def slice_ndarray(arr: np.ndarray, axes: Collection[int],
         sl[axis] = coord
     
     return arr[tuple(sl)]
+
+
+def insert_into_tuple(tup: Tuple, pos: Union[int, Collection[int]], 
+                      val: Union[Any, Collection[Any]]) -> Tuple:
+    """ Insert values into a tuple. 
+
+    Parameters
+    ----------
+    tup : tuple
+        the tuple into which values are to be inserted
+    pos : int of sized iterable container class of ints
+        The positions into which values are to be inserted
+    val : any value or sized iterable container class of any values
+        The values corresponding to the positions in `pos`
+
+    Returns
+    -------
+    Tuple:
+        A copy of `tup` with values inserted.
+
+    Raises
+    ------
+    ValueError
+        If length of `pos` is not equal to length of `val`
+
+    See Also
+    --------
+    list.insert
+ 
+    Notes
+    -----
+    `tup` is converted to a list and the list.insert method is used to
+    insert values. the list is then converted to a tuple and returned.
+
+    Examples
+    --------
+    >>> tup = (0, 1, 2, 3)
+    >>> pos = (5, 1)
+    >>> val = (9, 8)
+    >>> insert_into_tuple(tup, pos, val)
+    (0, 8, 1, 2, 3, 9)
+    >>> insert_into_tuple(tup, (), ())
+    (0, 1, 2, 3)
+    """
+
+    tl = list(tup)
+
+    try:
+        # first assume pos and val are iterable and not single integers
+        if len(pos) != len(val): #type: ignore ## if pos is int then len function raises error
+            raise ValueError("pos and val must be of the same length")
+        
+        if len(pos) == 0: #type: ignore
+            return tup
+
+        # sort pos so from low to high; sort val correspondingly
+        stl = list(zip(*sorted(zip(pos, val)))) #type: ignore
+        for p, v in zip(stl[0], stl[1]):
+            tl.insert(p, v)
+    except: 
+        # perhaps pos and val are integers
+        tl.insert(pos, val) #type: ignore
+
+    return tuple(tl)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
