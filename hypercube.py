@@ -319,9 +319,10 @@ def get_lines_np(arr: Cube_np, flatten: bool = True) -> \
         # loop over all possible combinations of i dimensions
         for i_comb in it.combinations(range(d), r = i + 1): 
             # a cell could be in any position in the other dimensions
+            other_d = set(range(d)) - set(i_comb)
             for cell in it.product(range(n), repeat = d - i - 1):
                 # take a slice of i dimensions given cell
-                sl = slice_ndarray(arr, set(range(d)) - set(i_comb), cell)
+                sl = slice_ndarray(arr, other_d, cell)
                 # get all possible lines from slice
                 diags = get_diagonals_np()(sl)
                 count += len(diags)
@@ -606,20 +607,18 @@ def get_lines_coord(d: int, n: int, flatten: bool = True) -> \
         for i_comb in it.combinations(range(d), r = i + 1): 
             for diagonal in diagonals:
                 # a cell could be in any position in the other dimensions
-                for cell in it.product(range(n), repeat = d - i - 1):
-                    
-                    
-                    # take a slice of i dimensions given cell
-                    #sl = slice_ndarray(arr, set(range(d)) - set(i_comb), cell)
-                    # get all possible lines from slice
-                    #diags = get_diagonals_np()(sl)
-                    #count += len(diags)
-                    
+                other_d = set(range(d)) - set(i_comb)
+                for cell in it.product(range(n), repeat = d - i - 1):                        
                     diags = []
-                    if flatten:
-                        lines.extend(diags)
-                    else:
-                        lines.append(diags)
+                    for c in diagonal:
+                        diags.append(insert_into_tuple(c, other_d, cell))
+
+                    count += 1
+                    lines.append(diags)
+                    #if flatten:
+                    #    lines.extend(diags)
+                    #else:
+                    #    lines.append(diags)
     
     assert count == num_lines(d, n)
     return lines, count
@@ -816,21 +815,36 @@ def insert_into_tuple(tup: Tuple, pos: Union[int, Collection[int]],
 
     tl = list(tup)
 
-    try:
-        # first assume pos and val are iterable and not single integers
-        if len(pos) != len(val): #type: ignore ## if pos is int then len function raises error
+    if isinstance(pos, int):
+        tl.insert(pos, val)
+    else:
+        if len(pos) != len(val):
             raise ValueError("pos and val must be of the same length")
-        
-        if len(pos) == 0: #type: ignore
+
+        if len(pos) == 0:
             return tup
 
         # sort pos so from low to high; sort val correspondingly
-        stl = list(zip(*sorted(zip(pos, val)))) #type: ignore
+        stl = list(zip(*sorted(zip(pos, val)))) 
         for p, v in zip(stl[0], stl[1]):
             tl.insert(p, v)
-    except: 
-        # perhaps pos and val are integers
-        tl.insert(pos, val) #type: ignore
+
+
+    # try:
+    #     # first assume pos and val are iterable and not single integers
+    #     if len(pos) != len(val): #type: ignore ## if pos is int then len function raises error
+    #         raise ValueError("pos and val must be of the same length")
+        
+    #     if len(pos) == 0: #type: ignore
+    #         return tup
+
+    #     # sort pos so from low to high; sort val correspondingly
+    #     stl = list(zip(*sorted(zip(pos, val)))) #type: ignore
+    #     for p, v in zip(stl[0], stl[1]):
+    #         tl.insert(p, v)
+    # except: 
+    #     # perhaps pos and val are integers
+    #     tl.insert(pos, val) #type: ignore
 
     return tuple(tl)
 
