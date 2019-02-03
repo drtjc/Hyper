@@ -302,11 +302,11 @@ def get_lines_np(arr: Cube_np, flatten: bool = True) -> \
     >>> arr[0, 0] = 0
     >>> lines, count = get_lines_np(arr, False)
     >>> lines
-    [[array([0, 2])], [array([1, 3])], [array([0, 1])], [array([2, 3])], [array([0, 3]), array([2, 1])]]
+    [[array([0, 2]), array([1, 3]), array([0, 1]), array([2, 3])], [array([0, 3]), array([2, 1])]]
     >>> count
     6
     >>> len(lines)
-    5
+    2
     """
     
     d = arr.ndim
@@ -315,7 +315,8 @@ def get_lines_np(arr: Cube_np, flatten: bool = True) -> \
     count = 0
 
     # loop over the numbers of dimensions
-    for i in range(d): 
+    for i in range(d):
+        lines_i = [] 
         # loop over all possible combinations of i dimensions
         for i_comb in it.combinations(range(d), r = i + 1): 
             # a cell could be in any position in the other dimensions
@@ -326,11 +327,13 @@ def get_lines_np(arr: Cube_np, flatten: bool = True) -> \
                 # get all possible lines from slice
                 diags = get_diagonals_np()(sl)
                 count += len(diags)
-                if flatten:
-                    lines.extend(diags)
-                else:
-                    lines.append(diags)
-    
+                lines_i.extend(diags)
+        
+        if flatten:
+            lines.extend(lines_i)
+        else:
+            lines.append(lines_i)
+
     assert count == num_lines(d, n)
     return lines, count
 
@@ -580,45 +583,48 @@ def get_lines_coord(d: int, n: int, flatten: bool = True) -> \
 
     Examples
     --------
-    >>> lines, count = get_lines_coord(2, 3) #doctest: +SKIP
-    >>> lines #doctest: +SKIP
-    ##[array([0, 2]), array([1, 3]), array([0, 1]), array([2, 3]), array([0, 3]), array([2, 1])]
-    >>> count #doctest: +SKIP
+    >>> lines, count = get_lines_coord(2, 2)
+    >>> lines
+    [[(0, 0), (1, 0)], [(0, 1), (1, 1)], [(0, 0), (0, 1)], [(1, 0), (1, 1)], [(0, 0), (1, 1)], [(0, 1), (1, 0)]]
+    >>> count
     6
-    >>> len(lines) #doctest: +SKIP
+    >>> len(lines)
     6
-    >>> lines, count = get_lines_coord(2, 3, False) #doctest: +SKIP
-    >>> lines #doctest: +SKIP
-    ##[[array([0, 2])], [array([1, 3])], [array([0, 1])], [array([2, 3])], [array([0, 3]), array([2, 1])]]
-    >>> count #doctest: +SKIP
+    >>> lines, count = get_lines_coord(2, 2, False)
+    >>> lines
+    [[[(0, 0), (1, 0)], [(0, 1), (1, 1)], [(0, 0), (0, 1)], [(1, 0), (1, 1)]], [[(0, 0), (1, 1)], [(0, 1), (1, 0)]]]
+    >>> count
     6
-    >>> len(lines) #doctest: +SKIP
-    5
+    >>> len(lines)
+    2
     """
     
-    lines = []
+    lines: List = []
     count = 0
 
     # loop over the numbers of dimensions
     for i in range(d): 
+        lines_i = []
         # loop over all possible combinations of i dimensions
         diagonals = get_diagonals_coord(i + 1, n)
-
         for i_comb in it.combinations(range(d), r = i + 1): 
-            for diagonal in diagonals:
-                # a cell could be in any position in the other dimensions
-                other_d = set(range(d)) - set(i_comb)
-                for cell in it.product(range(n), repeat = d - i - 1):                        
-                    diags = []
+            # a cell could be in any position in the other dimensions
+            other_d = set(range(d)) - set(i_comb)
+            for cell in it.product(range(n), repeat = d - i - 1):                                  
+                diags: Lines_coord = []
+                for diagonal in diagonals:
+                    diag = []
                     for c in diagonal:
-                        diags.append(insert_into_tuple(c, other_d, cell))
-
-                    count += 1
-                    lines.append(diags)
-                    #if flatten:
-                    #    lines.extend(diags)
-                    #else:
-                    #    lines.append(diags)
+                        diag.append(insert_into_tuple(c, other_d, cell))
+                    diags.append(diag)
+                    
+                count += len(diags)
+                lines_i.extend(diags)
+        
+        if flatten:
+            lines.extend(lines_i)
+        else:
+            lines.append(lines_i)
     
     assert count == num_lines(d, n)
     return lines, count
@@ -829,23 +835,6 @@ def insert_into_tuple(tup: Tuple, pos: Union[int, Collection[int]],
         for p, v in zip(stl[0], stl[1]):
             tl.insert(p, v)
 
-
-    # try:
-    #     # first assume pos and val are iterable and not single integers
-    #     if len(pos) != len(val): #type: ignore ## if pos is int then len function raises error
-    #         raise ValueError("pos and val must be of the same length")
-        
-    #     if len(pos) == 0: #type: ignore
-    #         return tup
-
-    #     # sort pos so from low to high; sort val correspondingly
-    #     stl = list(zip(*sorted(zip(pos, val)))) #type: ignore
-    #     for p, v in zip(stl[0], stl[1]):
-    #         tl.insert(p, v)
-    # except: 
-    #     # perhaps pos and val are integers
-    #     tl.insert(pos, val) #type: ignore
-
     return tuple(tl)
 
 
@@ -944,14 +933,30 @@ def join_multiline(iter, divider = ' ', divide_empty_lines = False, fill_value =
 if __name__ == "__main__":
 
     d = 2
-    n = 3
+    n = 2
 
 
     arr = np.arange(n**d).reshape([n]*d)
     print(arr)
-    print(get_diagonals_np()(arr))
+
+    lines, count = get_lines_np(arr, False)
+    print(count)
+    print(len(lines))
+    #print(lines)
+    l_, c_ = get_lines_coord(d, n, False)
+    print(c_)
+    print(len(l_))
+    print(l_)
+
+
     
-    p = diagonals_coord(d,n)
-    print(p)
-    dd = [[arr[x] for x in y] for y in p]
-    print(dd)
+    #ll = [[arr[x] for x in y] for y in l_]
+    #print(ll)
+
+    #print(get_diagonals_np()(arr))
+    #p = diagonals_coord(d,n)
+    #print(p)
+
+
+
+ 

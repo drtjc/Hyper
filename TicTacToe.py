@@ -196,7 +196,7 @@ class TicTacToe():
 
 if __name__ == "__main__":
  
-    dim = 3
+    dim = 2
     size = 3
     ttt = TicTacToe(dim, size, 1)
 
