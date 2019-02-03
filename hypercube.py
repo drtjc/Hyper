@@ -46,12 +46,16 @@ import itertools as it
 from collections import defaultdict, Counter as counter
 from typing import List, Callable, Union, Collection, Tuple, Any, DefaultDict, TypeVar, Counter, Dict
 
-# type aliases
-Line = TypeVar('Line') # line should really be a 1d numpy array
-Lines = List[Line]
-Cell = Tuple[int]
-Scopes = DefaultDict[Cell, Lines]  
-Structure = Tuple[np.ndarray, Lines, Scopes]
+
+# type aliases - numpy does not yet have type annotations so 'make' one
+Cube_np = TypeVar('Cube_np', np.ndarray, np.ndarray) # line should really be a numpy array representing h(d, n)
+Line_np = TypeVar('Line_np', np.ndarray, np.ndarray) # line should really be a 1d numpy array with n elements
+Lines_np = List[Line_np]
+Cell_coord = Tuple[int, ...]
+Scopes_np = DefaultDict[Cell_coord, Lines_np]  
+Structure_np = Tuple[Cube_np, Lines_np, Scopes_np]
+Line_coord = List[Cell_coord]
+Lines_coord = List[Line_coord]
 
 
 def num_lines(d: int, n: int) -> int: 
@@ -122,13 +126,13 @@ def num_lines(d: int, n: int) -> int:
     76
     """
 
-    count = 0
+    count: int = 0
     for i in range(1, d + 1):
         count += comb(d, i, True) * (n ** (d - i)) * (2 ** (i - 1)) 
     return count
 
 
-def get_diagonals_np() -> Callable[[Line], Lines]:
+def get_diagonals_np() -> Callable[[Cube_np], Lines_np]:
     """ Returns a function that calculates the d-agonals of a d-array. 
     The returned function has the following structure:
 
@@ -223,9 +227,9 @@ def get_diagonals_np() -> Callable[[Line], Lines]:
     # The diagonals of this array are [4, 3] and [2, 5]
     # We now have all 4 3-agonals of the original 3d arr.
 
-    diags = []
+    diags: Lines_np = []
     
-    def diagonals_np(arr: np.ndarray) -> Lines:
+    def diagonals_np(arr: Cube_np) -> Lines_np:
         if arr.ndim == 1:
             diags.append(arr)
         else:
@@ -236,8 +240,8 @@ def get_diagonals_np() -> Callable[[Line], Lines]:
     return diagonals_np
 
 
-def get_lines_np(arr: np.ndarray, flatten: bool = True) -> \
-              Tuple[Union[Lines, List[Lines]], int]: 
+def get_lines_np(arr: Cube_np, flatten: bool = True) -> \
+              Tuple[Union[Lines_np, List[Lines_np]], int]: 
     """ Returns the lines in an array
 
     Parameters
@@ -307,8 +311,8 @@ def get_lines_np(arr: np.ndarray, flatten: bool = True) -> \
     
     d = arr.ndim
     n = arr.shape[0]
-    lines = []
-    count = 0
+    lines: Union[Lines_np, List[Lines_np]] = []
+    count: int = 0
 
     # loop over the numbers of dimensions
     for i in range(d): 
@@ -330,7 +334,7 @@ def get_lines_np(arr: np.ndarray, flatten: bool = True) -> \
     return lines, count
 
 
-def get_scopes_np(lines: Lines, d: int) -> Scopes:
+def get_scopes_np(lines: Lines_np, d: int) -> Scopes_np:
     """ Calculate the scope of each cell in a hypercube
 
     Parameters
@@ -400,7 +404,7 @@ def get_scopes_np(lines: Lines, d: int) -> Scopes:
     return scopes
 
 
-def structure_np(d: int, n: int, zeros: bool = True, OFFSET: int = 0) -> Structure:
+def structure_np(d: int, n: int, zeros: bool = True, OFFSET: int = 0) -> Structure_np:
     """ Return a celled hypercube, its lines, and the scopes of its cells.
 
     Parameters
@@ -469,7 +473,71 @@ def structure_np(d: int, n: int, zeros: bool = True, OFFSET: int = 0) -> Structu
     return (arr, lines, scopes)
 
 
-def scopes_size(scopes: Scopes) -> Counter:
+def diagonals_coord(d: int, n: int) -> Lines_coord:
+    """ Returns the d-agonals coordinates of h(d, n). 
+
+    Parameters
+    ----------
+    d : int
+        The number of dimensions of the hypercube
+    n : int
+        The number of cells in any dimension
+
+    Returns
+    -------
+    list :
+        A list of d-gonals coordinates of h(d,n).
+
+    See Also
+    --------
+    num_lines
+    get_diagonals_np
+
+    Notes
+    -----
+    The number of corners of h(d, n) is 2^d. The number of d-agonals 
+    is 2^d / 2 since two connecting corners form a line. 
+
+    Examples
+    --------
+    >>> diags = diagonals_coord(2, 3)
+    >>> diags
+    [[(0, 0), (1, 1), (2, 2)], [(0, 2), (1, 1), (2, 0)]]
+    """    
+    
+    # comments below use an example with h(2, 3)
+
+    # get an iterator of all corners. E.g.: (0,0), (0,2), (2,0), (2,2)
+    corners_all = it.product([0, n - 1], repeat = d)
+    # restrict to corners with 0 as first coordinate. E.g.: (0,0), (0,2)
+    corners_0 = [corner for corner in corners_all if corner[0] == 0]
+
+    diagonals: Lines_coord = []
+    for corner in corners_0: 
+        # create the diagonals for each corner
+        diagonal: Line_coord = []
+        diagonal.append(corner) # add corner as first cell in diagonal
+        # add rest of diagonal
+        for i in range(1, n): 
+            # find next cell. Start by decrementing coords.
+            # E.g.: (0,0) -> (-1,-1); (0,2) -> (-1,1)
+            # E.g.: (0,0) -> (-2,-2); (0,2) -> (-2,0)
+            tmp = tuple(c - i for c in corner)
+            # Take absolute values of coords. 
+            # E.g.: (-1,-1) -> (1,1); (-1,1) -> (1,1)
+            # E.g.: (-2,-2) -> (2,2); (-2,0) -> (2,0) 
+            coords = tuple(abs(t) for t in tmp)
+            diagonal.append(coords)
+        diagonals.append(diagonal)
+
+    return diagonals
+
+
+
+
+## TJC could this also take Scopes_np
+# how do we overload a function??
+def scopes_size(scopes: Scopes_np) -> Counter:
     """ Calculate the different scope lengths.
 
     Parameters
@@ -497,7 +565,8 @@ def scopes_size(scopes: Scopes) -> Counter:
     return counter([len(scope) for scope in scopes.values()])
 
 
-def scopes_size_cells(scopes: Scopes) -> DefaultDict[int, List[Cell]]:
+##TJC , could this take Scopes_coord
+def scopes_size_cells(scopes: Scopes_np) -> DefaultDict[int, List[Cell_coord]]:
     """ Group cells by length of their scope.
 
     Parameters
@@ -531,6 +600,30 @@ def scopes_size_cells(scopes: Scopes) -> DefaultDict[int, List[Cell]]:
         scopes_size_cells[len(scope)].append(cell)
 
     return scopes_size_cells
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 def slice_ndarray(arr: np.ndarray, axes: Collection[int], 
@@ -586,13 +679,12 @@ def slice_ndarray(arr: np.ndarray, axes: Collection[int],
 
 
 
-def display(arr, display_cell = str, separator = ' ', under = False):
+def display(arr, display_cell = str, under = False):
     
     if arr.size == 1:
-        print(f'under = {under}')
         s = display_cell(arr)
         if s.isalpha() and under:
-            return underline(s)  ##TJC but no underlining if last row on even dimension
+            return underline(s)
         elif s.isspace() and under:
             return '_' * len(s)
         else:
@@ -610,7 +702,7 @@ def display(arr, display_cell = str, separator = ' ', under = False):
             UU = under
         else:
             UU = True
-        sub_arr_str.append(display(a, display_cell, separator, UU))
+        sub_arr_str.append(display(a, display_cell, UU))
 
 
     #d = arr.ndim
@@ -660,3 +752,21 @@ def join_multiline(iter, divider = ' ', divide_empty_lines = False, fill_value =
 
     # finally, join each string separated by a new line 
     return '\n'.join(st)            
+
+
+
+
+if __name__ == "__main__":
+
+    d = 2
+    n = 3
+
+
+    arr = np.arange(n**d).reshape([n]*d)
+    print(arr)
+    print(get_diagonals_np()(arr))
+    
+    p = diagonals_coord(d,n)
+    print(p)
+    dd = [[arr[x] for x in y] for y in p]
+    print(dd)

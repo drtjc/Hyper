@@ -4,6 +4,8 @@ from collections.abc import Sequence
 from sys import getsizeof
 from typing import NamedTuple, List, Tuple
 from pprint import pprint
+from colorama import init, Fore, Back, Style
+init()
 
 import hypercube as hc
 
@@ -30,7 +32,7 @@ class TicTacToe():
     def __init__(self, d: int, n: int, moves_per_turn = 1, drop = False) -> None:
 
         try:            
-            struct = hc.structure_np(d, n, zeros = True, OFFSET = self._MOVE_BASE)
+            struct = hc.structure_np(d, n, zeros = False, OFFSET = self._MOVE_BASE)
         except MemoryError:
             raise MemoryError("The board is too big to fit into available memory")
 
@@ -69,12 +71,19 @@ class TicTacToe():
 
 
     def display_cell(self, v):
+
         if v > 0:
-            return self.p1
+            s = self.p1
         elif v < 0:
-            return self.p2
+            s = self.p2
         else:
-            return ' '
+            s = ' '
+
+        last_move = self.moves[-1][1]
+        if self.board[last_move] == v:
+            s = Fore.RED + s + Style.RESET_ALL
+        
+        return s
 
     def display(self, header = True):
         b = hc.display(self.board, self.display_cell) + '\n'
@@ -148,7 +157,6 @@ class TicTacToe():
         idx = self.get_lines_state()
         if idx > - 1:
             self.in_progress = False
-            print("winner!\n")
             return True
         else:
             return False
@@ -188,8 +196,8 @@ class TicTacToe():
 
 if __name__ == "__main__":
  
-    dim = 9
-    size = 2
+    dim = 3
+    size = 3
     ttt = TicTacToe(dim, size, 1)
 
     #print(ttt.lines[0])
@@ -200,6 +208,7 @@ if __name__ == "__main__":
     #m = ttt.move('333')
 
 
+
     #if m:
     #    print("game over")
     #print(ttt.moves)
@@ -207,7 +216,7 @@ if __name__ == "__main__":
 
     #ttt.undo()
     #print(ttt.moves)
-    ttt.display()
+    #ttt.display()
 
     #m = ttt.move('333')
 
