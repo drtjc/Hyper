@@ -30,7 +30,7 @@ class TicTacToe():
     def __init__(self, d: int, n: int, moves_per_turn = 1, drop = False) -> None:
 
         try:            
-            struct = hc.structure_np(d, n, True, self._MOVE_BASE)
+            struct = hc.structure_np(d, n, zeros = True, OFFSET = self._MOVE_BASE)
         except MemoryError:
             raise MemoryError("The board is too big to fit into available memory")
 
@@ -44,22 +44,40 @@ class TicTacToe():
         self.num_lines = len(self.lines)
         self.scopes = struct[2]
 
+        self.reset()
+
+        self.p1 = 'O'
+        self.p2 = 'X'
+
+    def reset(self):
+        self.in_progress = True 
+        self.board.fill(0)
+        
         self.active_player: int = 0
-        self.active_moves: int = 0 # number of moves played by active player in current turn           
+        self.active_moves: int = 0
 
         # record player 0 moves as positive integers, and player 1 moves as negative integer
         self.moves: List[Tuple[int]] = [] ##TJC need to specifiy tuple for mypy is d lots of int 
         self.moves_played: List[int] = [0, 0] # number of moves played in game by each player
 
-    def clear(self):
-        self.board.fill(0)
+        self.lines_state = []
+
 
     def memory(self) -> Memory:
         m = self.board.nbytes, getsizeof(self.lines), getsizeof(self.scopes)
         return self.Memory(self.board.dtype, *m, sum(m))
 
+
+    def display_cell(self, v):
+        if v > 0:
+            return self.p1
+        elif v < 0:
+            return self.p2
+        else:
+            return ' '
+
     def display(self, header = True):
-        b = hc.display(self.board) + '\n'
+        b = hc.display(self.board, self.display_cell) + '\n'
         if header:
             b = f'\nd = {self.d}, n = {self.n}\n\n' + b
         print(b)
@@ -89,6 +107,9 @@ class TicTacToe():
             raise TypeError(f'String argument expected, got {type(cell)})')
 
     def move(self, cell, base = 1):
+        if not self.in_progress:
+            print("New game")
+            self.reset()
 
         try:
             if isinstance(cell, str):
@@ -113,37 +134,85 @@ class TicTacToe():
 
         # we now have an empty cell
         self.moves_played[self.active_player] += 1
-        sgn = -1 if self.active_player == 1 else 1
+        sgn = -1 if self.active_player == 1 else 1 # player 0 is positive, player 1 negative
         self.board[t_cell] = sgn * (self.moves_played[self.active_player] + self._MOVE_BASE)
-        self.moves.append(t_cell)
-
-        # can check for win now
+        self.moves.append((self.active_player, t_cell))
+        self.display(False)
 
         self.active_moves += 1
         if self.active_moves == self.moves_per_turn:
             self.active_moves = 0
-            self.active_player = not self.active_player
- 
-        self.display(False)
+            self.active_player = int(not self.active_player)
+
+        # can check for win now
+        idx = self.get_lines_state()
+        if idx > - 1:
+            self.in_progress = False
+            print("winner!\n")
+            return True
+        else:
+            return False
+
+    def get_lines_state(self):
+        # list of tuples - each tuple containg number of +ves and -eves in a line
+        ##TJC do we want also how many are consecutive??
+        # return idx of winning line if there is one
+        self.lines_state.clear()
+        for c, line in enumerate(self.lines):
+            state = (sum(line > self._MOVE_BASE), sum(line < -self._MOVE_BASE))
+            self.lines_state.append(state)
+            if state[0] == self.n or state[1] == self.n:
+                return c
+
+        return -1 # no winning line
 
 
-        def _check_for_win(self):
-            
+    def undo(self, replace = 0):
+        if len(self.moves) == 0:
+            return
 
+        self.in_progress = True # in case game has just been won
+        
+        if self.active_moves == 0:
+            self.active_moves = self.moves_per_turn - 1
+            self.active_player = int(not self.active_player)
+        else:
+            self.active_moves -= 1
 
-        def undo(self, moves = 1):
-            pass
+        self.moves_played[self.active_player] -= 1
+        self.board[self.moves[-1][1]] = replace
+        del self.moves[-1]
+        self.get_lines_state()
 
 
 
 if __name__ == "__main__":
  
-    dim = 2
-    size = 3
-    ttt = TicTacToe(dim, size)
+    dim = 9
+    size = 2
+    ttt = TicTacToe(dim, size, 1)
 
-    ttt.move('22')
-    ttt.move('11')
-    ttt.move('33')
-    ttt.move('22')
+    #print(ttt.lines[0])
+    #m = ttt.move('111')
+    #m = ttt.move('131')
+    #m = ttt.move('222')
+    #m = ttt.move('121')
+    #m = ttt.move('333')
+
+
+    #if m:
+    #    print("game over")
+    #print(ttt.moves)
+    #ttt.move('22')
+
+    #ttt.undo()
+    #print(ttt.moves)
+    ttt.display()
+
+    #m = ttt.move('333')
+
+    #m = ttt.move('11')
+
+    #print(ttt.lines[1])
+    #print(sum((ttt.lines[1]) > 0))
 

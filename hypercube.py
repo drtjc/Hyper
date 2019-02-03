@@ -586,30 +586,46 @@ def slice_ndarray(arr: np.ndarray, axes: Collection[int],
 
 
 
-
-def display(arr):
-
+def display(arr, display_cell = str, separator = ' ', under = False):
+    
     if arr.size == 1:
-        return str(arr).rjust(4)
-        #return "_"
-        return underline("X")
-        #return f'{arr: <{3}}'
+        print(f'under = {under}')
+        s = display_cell(arr)
+        if s.isalpha() and under:
+            return underline(s)  ##TJC but no underlining if last row on even dimension
+        elif s.isspace() and under:
+            return '_' * len(s)
+        else:
+            return s
 
     sub_arr = [arr[i] for i in range(arr.shape[0])]
-    sub_arr_str = [display(a) for a in sub_arr]
-    
+
     d = arr.ndim
+    #sub_arr_str = [display(a, display_cell) for a in sub_arr]
+    sub_arr_str = []
+    for c, a in enumerate(sub_arr):
+        if d == 2 and c == len(sub_arr) - 1:
+            UU = False
+        elif d == 1:
+            UU = under
+        else:
+            UU = True
+        sub_arr_str.append(display(a, display_cell, separator, UU))
+
+
+    #d = arr.ndim
     if d % 2 == 0: # even number of dimensions - display down the screen
         if d == 2:
             return ''.join('\n'.join(sub_arr_str))
         else:
-            sp = '\n' + '\n' * int(d / 2 - 1) # increase space between higher dimesions
+            sp = '\n' + '\n' * (int((d / 2) ** 1.5) - 1) # increase space between higher dimesions
+            #sp = '\n' + '\n' * int((d -1 ) ** 1.5)    
             return sp.join(sub_arr_str)
     else: # odd number of dimensions - display across the screen
         if d == 1:
-            return '|'.join(sub_arr_str) ### do underlining here??
+            return '|'.join(sub_arr_str)
         else:
-            return join_multiline(sub_arr_str, ' ' + '.' * d + ' ', False)
+            return join_multiline(sub_arr_str, ' ' + ' ' * int((d - 2) ** 1.5) + ' ', False)
 
 
 
