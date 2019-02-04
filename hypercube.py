@@ -40,23 +40,26 @@ the suffix _coord.
 
 
 # numpy and scipy don't yet have type annotations
-import numpy as np #type: ignore
-from scipy.special import comb #type: ignore
+import numpy as np 
+from scipy.special import comb
 import itertools as it
 from collections import defaultdict, Counter as counter
 from typing import List, Callable, Union, Collection, Tuple, Any, DefaultDict, TypeVar, Counter, Dict
 
+Cell_coord = Tuple[int, ...]
 
-# type aliases - numpy does not yet have type annotations so 'make' one
 Cube_np = TypeVar('Cube_np', np.ndarray, np.ndarray) # line should really be a numpy array representing h(d, n)
 Line_np = TypeVar('Line_np', np.ndarray, np.ndarray) # line should really be a 1d numpy array with n elements
 Lines_np = List[Line_np]
-Cell_coord = Tuple[int, ...]
 Scopes_np = DefaultDict[Cell_coord, Lines_np]  
 Structure_np = Tuple[Cube_np, Lines_np, Scopes_np]
+
 Line_coord = List[Cell_coord]
 Lines_coord = List[Line_coord]
+Scopes_coord = DefaultDict[Cell_coord, Lines_coord]
+Structure_coord = Tuple[Lines_coord, Scopes_coord]
 
+Scopes = Union[Scopes_np, Scopes_coord]
 
 def num_lines(d: int, n: int) -> int: 
     """ Calculate the number of lines in a hypercube.  
@@ -630,12 +633,21 @@ def get_lines_coord(d: int, n: int, flatten: bool = True) -> \
     return lines, count
 
 
+def get_scopes_coord(lines: Lines_coord) -> Scopes_coord:
+
+    scopes: DefaultDict = defaultdict(list)
+    
+    # get all possible cells
+    cells = it.product(range(n), repeat = d)
+
+    for cell in cells:
+        for line in lines:
+            if cell in line:
+                scopes[cell].append(line)
+    return scopes
 
 
-
-## TJC could this also take Scopes_np
-# how do we overload a function??
-def scopes_size(scopes: Scopes_np) -> Counter:
+def scopes_size(scopes: Scopes) -> Counter:
     """ Calculate the different scope lengths.
 
     Parameters
@@ -663,8 +675,9 @@ def scopes_size(scopes: Scopes_np) -> Counter:
     return counter([len(scope) for scope in scopes.values()])
 
 
+## TJC do we want this to also have an np version that has the arrays as values??
 ##TJC , could this take Scopes_coord
-def scopes_size_cells(scopes: Scopes_np) -> DefaultDict[int, List[Cell_coord]]:
+def scopes_size_coord(scopes: Scopes) -> DefaultDict[int, List[Cell_coord]]:
     """ Group cells by length of their scope.
 
     Parameters
@@ -777,7 +790,7 @@ def slice_ndarray(arr: np.ndarray, axes: Collection[int],
 
 
 def insert_into_tuple(tup: Tuple, pos: Union[int, Collection[int]], 
-                      val: Union[Any, Collection[Any]]) -> Tuple:
+                      val: Union[Any, Collection[Any]]) -> Tuple[int, ...]:
     """ Insert values into a tuple. 
 
     Parameters
@@ -928,31 +941,55 @@ def join_multiline(iter, divider = ' ', divide_empty_lines = False, fill_value =
     return '\n'.join(st)            
 
 
+def _lines_np_coord_check(d: int, n: int) -> bool:
+
+    dtype = np.int64 if n ** d > 2 ** 31 else np.int32
+    arr = np.arange(n ** d, dtype = dtype).reshape([n] * d)
+
+    lines_np, _ = get_lines_np(arr)
+    lines_coord, _ = get_lines_coord(d, n)
+
+    t_np = [tuple(sorted(l.tolist())) for l in lines_np]
+    t_coord = [tuple(sorted([arr[c] for c in l])) for l in lines_coord] 
+
+    return set(t_np) == set(t_coord)
 
 
 if __name__ == "__main__":
 
     d = 2
-    n = 2
+    n = 3
 
-
+    #print(_lines_np_coord_check(d, n))
+    #print(len(ll))
+    #print(n ** d)
     arr = np.arange(n**d).reshape([n]*d)
-    print(arr)
+    #print(arr)
 
-    lines, count = get_lines_np(arr, False)
-    print(count)
-    print(len(lines))
+    #lines, count = get_lines_np(arr, True)
+    #l_, c_ = get_lines_coord(d, n, True)
+
     #print(lines)
-    l_, c_ = get_lines_coord(d, n, False)
-    print(c_)
-    print(len(l_))
-    print(l_)
+    #print(l_)
 
+    lines = get_lines_coord(d, n)[0]
+    s1 = get_scopes_coord(lines)
+    #print(s1)
+    print(scopes_size_coord(s1))
 
     
-    #ll = [[arr[x] for x in y] for y in l_]
+    l = get_lines_np(arr)[0]
+    s2 = get_scopes_np(l, d)
+    #print(s2)
+    print(scopes_size_coord(s2))
+
+    #ll = [tuple(sorted([arr[x] for x in y])) for y in l_]
     #print(ll)
 
+    #v1 = [tuple(sorted(a.tolist())) for a in lines]
+    #print(v1)
+
+    #print(set(v1) == set(ll))
     #print(get_diagonals_np()(arr))
     #p = diagonals_coord(d,n)
     #print(p)
