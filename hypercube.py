@@ -849,26 +849,110 @@ def scopes_size_cell(scopes: Scopes) -> DefaultDict[int, List[Cell_coord]]:
     return scopes_size_cell
 
 
+# The following 3 functions are for the displaying of a
+# hypercube to a terminal. 
+# It is assumed that an numpy ndarray has been used to
+# represent the hypercube
+
+def display(arr, display_cell = str, under = False):
+    
+    if arr.size == 1:
+        s = display_cell(arr)
+        if s.isalpha() and under:
+            return underline(s)
+        elif s.isspace() and under:
+            return '_' * len(s)
+        else:
+            return s
+
+    sub_arr = [arr[i] for i in range(arr.shape[0])]
+
+    d = arr.ndim
+    #sub_arr_str = [display(a, display_cell) for a in sub_arr]
+    sub_arr_str = []
+    for c, a in enumerate(sub_arr):
+        if d == 2 and c == len(sub_arr) - 1:
+            UU = False
+        elif d == 1:
+            UU = under
+        else:
+            UU = True
+        sub_arr_str.append(display(a, display_cell, UU))
+
+
+    #d = arr.ndim
+    if d % 2 == 0: # even number of dimensions - display down the screen
+        if d == 2:
+            return ''.join('\n'.join(sub_arr_str))
+        else:
+            sp = '\n' + '\n' * (int((d / 2) ** 1.5) - 1) # increase space between higher dimesions
+            #sp = '\n' + '\n' * int((d -1 ) ** 1.5)    
+            return sp.join(sub_arr_str)
+    else: # odd number of dimensions - display across the screen
+        if d == 1:
+            return '|'.join(sub_arr_str)
+        else:
+            return join_multiline(sub_arr_str, ' ' + ' ' * int((d - 2) ** 1.5) + ' ', False)
 
 
 
 
+def underline(s: str) -> str:
+    """ Underlines a string
+
+    Parameters
+    ----------
+    s: str
+        The string to be underlined
+
+    Returns
+    -------
+    str:
+        An underlined string 
+
+    Notes
+    -----
+    The code appears only to work properly with alphabetic characters
+
+    Examples
+    --------
+    >>> underline('X')
+    'X̲'
+    >>> underline('1')
+    '1̲'
+    >>> underline('XX')
+    'X̲X̲'
+    """
+
+    try:
+        return ''.join([chr + "\u0332" for chr in str(s)])
+    except:
+        return s
 
 
 
 
+def join_multiline(iter, divider = ' ', divide_empty_lines = False, fill_value = '_'):
 
+    # for each multiline block, split into individual lines
+    spl = [x.split('\n') for x in iter]
+    
+    # create list of tuples with tuple i containing line i from each multiline block
+    tl = [i for i in it.zip_longest(*spl, fillvalue = fill_value)]
+    
+    
+    if divide_empty_lines:
+        st = [divider.join(t) for t in tl]
+    else:
+        st = []
+        for t in tl:
+            if all([x.strip() == '' for x in t]):
+                st.append('')
+            else:
+                st.append(divider.join(t))
 
-
-
-
-
-
-
-
-
-
-
+    # finally, join each string separated by a new line 
+    return '\n'.join(st)            
 
 
 
@@ -989,101 +1073,13 @@ def insert_into_tuple(tup: Tuple, pos: Union[int, Collection[int]],
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-def display(arr, display_cell = str, under = False):
-    
-    if arr.size == 1:
-        s = display_cell(arr)
-        if s.isalpha() and under:
-            return underline(s)
-        elif s.isspace() and under:
-            return '_' * len(s)
-        else:
-            return s
-
-    sub_arr = [arr[i] for i in range(arr.shape[0])]
-
-    d = arr.ndim
-    #sub_arr_str = [display(a, display_cell) for a in sub_arr]
-    sub_arr_str = []
-    for c, a in enumerate(sub_arr):
-        if d == 2 and c == len(sub_arr) - 1:
-            UU = False
-        elif d == 1:
-            UU = under
-        else:
-            UU = True
-        sub_arr_str.append(display(a, display_cell, UU))
-
-
-    #d = arr.ndim
-    if d % 2 == 0: # even number of dimensions - display down the screen
-        if d == 2:
-            return ''.join('\n'.join(sub_arr_str))
-        else:
-            sp = '\n' + '\n' * (int((d / 2) ** 1.5) - 1) # increase space between higher dimesions
-            #sp = '\n' + '\n' * int((d -1 ) ** 1.5)    
-            return sp.join(sub_arr_str)
-    else: # odd number of dimensions - display across the screen
-        if d == 1:
-            return '|'.join(sub_arr_str)
-        else:
-            return join_multiline(sub_arr_str, ' ' + ' ' * int((d - 2) ** 1.5) + ' ', False)
-
-
-
-
-def underline(s):
-    try:
-        return ''.join([chr + "\u0332" for chr in str(s)])
-    except:
-        return str
-
-
-
-
-def join_multiline(iter, divider = ' ', divide_empty_lines = False, fill_value = '_'):
-
-    # for each multiline block, split into individual lines
-    spl = [x.split('\n') for x in iter]
-    
-    # create list of tuples with tuple i containing line i from each multiline block
-    tl = [i for i in it.zip_longest(*spl, fillvalue = fill_value)]
-    
-    
-    if divide_empty_lines:
-        st = [divider.join(t) for t in tl]
-    else:
-        st = []
-        for t in tl:
-            if all([x.strip() == '' for x in t]):
-                st.append('')
-            else:
-                st.append(divider.join(t))
-
-    # finally, join each string separated by a new line 
-    return '\n'.join(st)            
-
-
 def _lines_np_coord_check(d: int, n: int) -> bool:
 
     dtype = np.int64 if n ** d > 2 ** 31 else np.int32
     arr = np.arange(n ** d, dtype = dtype).reshape([n] * d)
 
     lines_np = get_lines_flat_np(arr)
-    lines_coord, _ = get_lines_coord(d, n)
+    lines_coord = get_lines_flat_coord(d, n)
 
     t_np = [tuple(sorted(l.tolist())) for l in lines_np]
     t_coord = [tuple(sorted([arr[c] for c in l])) for l in lines_coord] 
@@ -1098,27 +1094,26 @@ if __name__ == "__main__":
     d = 2
     n = 2
 
-    arr = np.arange(n**d).reshape([n]*d)
+    #arr = np.arange(n**d).reshape([n]*d)
     #print(arr)
 
-    l = get_lines_flat_coord(d, n)
+    #l = get_lines_flat_coord(d, n)
     #print(l)
 
-    s = get_scopes_coord(l, d)
+    #s = get_scopes_coord(l, d)
     #pprint(s)
     
     #print(scopes_size_coord(s))
 
 
-    ll = get_lines_flat_np(arr)
+    #ll = get_lines_flat_np(arr)
     #print(ll)
 
-    ss = get_scopes_np(ll, d)
-    pprint(ss)
+    #ss = get_scopes_np(ll, d)
+    #pprint(ss)
     
-    print(scopes_size_coord(ss))
+    #print(scopes_size_coord(ss))
    
- 
-
-
+    s = underline('X1X')
+    pprint(s)
  
