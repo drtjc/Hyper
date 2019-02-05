@@ -775,8 +775,6 @@ def structure_coord(d: int, n: int) -> Structure_coord:
     return (lines, scopes)
 
 
-
-
 def scopes_size(scopes: Scopes) -> Counter:
     """ Calculate the different scope lengths.
 
@@ -800,14 +798,15 @@ def scopes_size(scopes: Scopes) -> Counter:
     >>> scopes = structure_np(2, 3)[2] 
     >>> scopes_size(scopes) == Counter({2: 4, 3: 4, 4: 1})
     True
+    >>> scopes = structure_coord(2, 3)[1]
+    >>> scopes_size(scopes) == Counter({2: 4, 3: 4, 4: 1})
+    True
     """
     
     return counter([len(scope) for scope in scopes.values()])
 
 
-## TJC do we want this to also have an np version that has the arrays as values??
-##TJC , could this take Scopes_coord
-def scopes_size_coord(scopes: Scopes) -> DefaultDict[int, List[Cell_coord]]:
+def scopes_size_cell(scopes: Scopes) -> DefaultDict[int, List[Cell_coord]]:
     """ Group cells by length of their scope.
 
     Parameters
@@ -822,25 +821,32 @@ def scopes_size_coord(scopes: Scopes) -> DefaultDict[int, List[Cell_coord]]:
             
     See Also
     --------
-    get_scopes
+    get_scopes_flat_np
+    get_scopes_flat_coord
  
     Examples
     --------
     >>> import numpy as np
     >>> from pprint import pprint
     >>> scopes = structure_np(2, 3)[2] 
-    >>> pprint(scopes_size_coord(scopes))
+    >>> pprint(scopes_size_cell(scopes))
     defaultdict(<class 'list'>,
                 {2: [(1, 0), (0, 1), (2, 1), (1, 2)],
                  3: [(0, 0), (2, 0), (0, 2), (2, 2)],
                  4: [(1, 1)]})
+    >>> scopes = structure_coord(2, 3)[1] 
+    >>> pprint(scopes_size_cell(scopes))
+    defaultdict(<class 'list'>,
+                {2: [(0, 1), (1, 0), (1, 2), (2, 1)],
+                 3: [(0, 0), (0, 2), (2, 0), (2, 2)],
+                 4: [(1, 1)]})
     """
 
-    scopes_size_cells: DefaultDict = defaultdict(list)
+    scopes_size_cell: DefaultDict = defaultdict(list)
     for cell, scope in scopes.items():
-        scopes_size_cells[len(scope)].append(cell)
+        scopes_size_cell[len(scope)].append(cell)
 
-    return scopes_size_cells
+    return scopes_size_cell
 
 
 
@@ -1092,38 +1098,27 @@ if __name__ == "__main__":
     d = 2
     n = 2
 
-    #print(_lines_np_coord_check(d, n))
-    #print(len(ll))
-    #print(n ** d)
-    #arr = np.arange(n**d).reshape([n]*d)
+    arr = np.arange(n**d).reshape([n]*d)
     #print(arr)
 
-    #lines = get_lines_flat_np(arr)
     l = get_lines_flat_coord(d, n)
+    #print(l)
 
-    #print(lines)
-    print(l)
-
-    s1 = get_scopes_coord(l, d)
-    pprint(s1)
-    #print(scopes_size_coord(s1))
-
+    s = get_scopes_coord(l, d)
+    #pprint(s)
     
-    #s2 = get_scopes_np(lines, d)
-    #print(s2)
-    #print(scopes_size_coord(s2))
+    #print(scopes_size_coord(s))
 
-    #ll = [tuple(sorted([arr[x] for x in y])) for y in l_]
+
+    ll = get_lines_flat_np(arr)
     #print(ll)
 
-    #v1 = [tuple(sorted(a.tolist())) for a in lines]
-    #print(v1)
-
-    #print(set(v1) == set(ll))
-    #print(get_diagonals_np()(arr))
-    #p = diagonals_coord(d,n)
-    #print(p)
-
+    ss = get_scopes_np(ll, d)
+    pprint(ss)
+    
+    print(scopes_size_coord(ss))
+   
+ 
 
 
  
