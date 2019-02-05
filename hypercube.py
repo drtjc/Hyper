@@ -642,7 +642,6 @@ def get_lines_grouped_coord(d: int, n: int) -> Tuple[List[Lines_coord], int]:
     return lines, count
 
 
-
 def get_lines_flat_coord(d: int, n: int) -> Lines_coord: 
     """ Returns the lines in a hypercube, h(d, n)
 
@@ -680,12 +679,6 @@ def get_lines_flat_coord(d: int, n: int) -> Lines_coord:
     grouped = get_lines_grouped_coord(d, n)[0]
     flat = [x for y in grouped for x in y]
     return flat
-
-
-
-
-
-
 
 
 def get_scopes_coord(lines: Lines_coord, d: int) -> Scopes_coord:
@@ -743,10 +736,43 @@ def get_scopes_coord(lines: Lines_coord, d: int) -> Scopes_coord:
     return scopes
 
 
+def structure_coord(d: int, n: int) -> Structure_coord:
+    """ Return lines, and the scopes of its cells, for h(d, n)
 
+    Parameters
+    ----------
+    d : int
+        The number of dimensions of the hypercube
+    n : int
+        The number of cells in any dimension
+ 
+    Returns
+    -------
+    tuple :
+        A tuple lines, and the scopes of its cells, for h(d, n)
+            
+    See Also
+    --------
+    get_lines_flat_coord
+    get_scopes_coord
+ 
+    Examples
+    --------
+    >>> from pprint import pprint
+    >>> struct = structure_coord(2, 2) 
+    >>> struct[0]
+    [[(0, 0), (1, 0)], [(0, 1), (1, 1)], [(0, 0), (0, 1)], [(1, 0), (1, 1)], [(0, 0), (1, 1)], [(0, 1), (1, 0)]]
+    >>> pprint(struct[1]) #doctest: +NORMALIZE_WHITESPACE
+    defaultdict(<class 'list'>,
+                {(0, 0): [[(0, 0), (1, 0)], [(0, 0), (0, 1)], [(0, 0), (1, 1)]],
+                 (0, 1): [[(0, 1), (1, 1)], [(0, 0), (0, 1)], [(0, 1), (1, 0)]],
+                 (1, 0): [[(0, 0), (1, 0)], [(1, 0), (1, 1)], [(0, 1), (1, 0)]],
+                 (1, 1): [[(0, 1), (1, 1)], [(1, 0), (1, 1)], [(0, 0), (1, 1)]]})
+    """
 
-
-
+    lines = get_lines_flat_coord(d, n)
+    scopes = get_scopes_coord(lines, d)
+    return (lines, scopes)
 
 
 
