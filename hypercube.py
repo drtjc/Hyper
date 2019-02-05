@@ -374,7 +374,7 @@ def get_scopes_np(lines: Lines_np, d: int) -> Scopes_np:
     Parameters
     ----------
     lines : list
-        The first returned value from get_lines(arr) where arr is of the
+        The returned value from get_lines_flat_np(arr) where arr is of the
         form np.arange(n ** d, dtype = int64).reshape([n] * d).
         That is, arr is populated with the values 0,1,2,...,n^d - 1.
 
@@ -567,9 +567,8 @@ def get_diagonals_coord(d: int, n: int) -> Lines_coord:
     return diagonals
 
 
-def get_lines_coord(d: int, n: int, flatten: bool = True) -> \
-              Tuple[Union[Lines_coord, List[Lines_coord]], int]: 
-    """ Returns the lines in a hypercube, h(d, n)
+def get_lines_grouped_coord(d: int, n: int) -> Tuple[List[Lines_coord], int]: 
+    """ Returns the lines in a hypercube, h(d, n) grouped by dimensdion
 
     Parameters
     ----------
@@ -578,17 +577,10 @@ def get_lines_coord(d: int, n: int, flatten: bool = True) -> \
     n : int
         The number of cells in any dimension
 
-    flatten : bool, optional 
-        Determines if the lines are returned as a flat list, or
-        as a nested lists of i-agonals.
-        A flat list is return by default.
-
     Returns
     -------
     list :
         A list of d-gonals coordinates for the lines in h(d, n).
-        The `flatten` arguments determines if the list is flat or 
-        nested listed of i-agonals
     int :
         The number of lines. 
             
@@ -603,7 +595,7 @@ def get_lines_coord(d: int, n: int, flatten: bool = True) -> \
     See Also
     --------
     num_lines
-    get_lines_coord
+    get_digonals_coord
 
     Notes
     -----
@@ -613,14 +605,7 @@ def get_lines_coord(d: int, n: int, flatten: bool = True) -> \
 
     Examples
     --------
-    >>> lines, count = get_lines_coord(2, 2)
-    >>> lines
-    [[(0, 0), (1, 0)], [(0, 1), (1, 1)], [(0, 0), (0, 1)], [(1, 0), (1, 1)], [(0, 0), (1, 1)], [(0, 1), (1, 0)]]
-    >>> count
-    6
-    >>> len(lines)
-    6
-    >>> lines, count = get_lines_coord(2, 2, False)
+    >>> lines, count = get_lines_grouped_coord(2, 2)
     >>> lines
     [[[(0, 0), (1, 0)], [(0, 1), (1, 1)], [(0, 0), (0, 1)], [(1, 0), (1, 1)]], [[(0, 0), (1, 1)], [(0, 1), (1, 0)]]]
     >>> count
@@ -651,13 +636,56 @@ def get_lines_coord(d: int, n: int, flatten: bool = True) -> \
                 count += len(diags)
                 lines_i.extend(diags)
         
-        if flatten:
-            lines.extend(lines_i)
-        else:
-            lines.append(lines_i)
+        lines.append(lines_i)
     
     assert count == num_lines(d, n)
     return lines, count
+
+
+
+def get_lines_flat_coord(d: int, n: int) -> Lines_coord: 
+    """ Returns the lines in a hypercube, h(d, n)
+
+    Parameters
+    ----------
+    d : int
+        The number of dimensions of the hypercube
+    n : int
+        The number of cells in any dimension
+
+    Returns
+    -------
+    list :
+        A list of d-gonals coordinates for the lines in h(d, n).
+                
+    See Also
+    --------
+    get_lines_grouped_coord
+    num_lines
+    get_diagonals_coord
+
+    Notes
+    -----
+    Calls the function get_lines_grouped_coord
+
+    Examples
+    --------
+    >>> lines = get_lines_flat_coord(2, 2)
+    >>> lines
+    [[(0, 0), (1, 0)], [(0, 1), (1, 1)], [(0, 0), (0, 1)], [(1, 0), (1, 1)], [(0, 0), (1, 1)], [(0, 1), (1, 0)]]
+    >>> len(lines)
+    6
+    """
+    
+    grouped = get_lines_grouped_coord(d, n)[0]
+    flat = [x for y in grouped for x in y]
+    return flat
+
+
+
+
+
+
 
 
 def get_scopes_coord(lines: Lines_coord, d: int) -> Scopes_coord:
@@ -687,7 +715,7 @@ def get_scopes_coord(lines: Lines_coord, d: int) -> Scopes_coord:
     Examples
     --------
     >>> from pprint import pprint
-    >>> lines, _ = get_lines_coord(2, 2)
+    >>> lines = get_lines_flat_coord(2, 2)
     >>> pprint(lines) #doctest: +NORMALIZE_WHITESPACE
     [[(0, 0), (1, 0)],
      [(0, 1), (1, 1)],
@@ -706,8 +734,7 @@ def get_scopes_coord(lines: Lines_coord, d: int) -> Scopes_coord:
 
     n = len(lines[0])
     scopes: DefaultDict = defaultdict(list)
-    # get all possible cells
-    cells = it.product(range(n), repeat = d)
+    cells = it.product(range(n), repeat = d) # get all possible cells
 
     for cell in cells:
         for line in lines:
@@ -1042,19 +1069,17 @@ if __name__ == "__main__":
     #print(_lines_np_coord_check(d, n))
     #print(len(ll))
     #print(n ** d)
-    arr = np.arange(n**d).reshape([n]*d)
+    #arr = np.arange(n**d).reshape([n]*d)
     #print(arr)
 
-    lines = get_lines_flat_np(arr)
-    l_, c_ = get_lines_coord(d, n, True)
+    #lines = get_lines_flat_np(arr)
+    l = get_lines_flat_coord(d, n)
 
-    print(lines)
-    #print(l_)
+    #print(lines)
+    print(l)
 
-    #lines = get_lines_coord(d, n)[0]
-    #pprint(lines)
-    #s1 = get_scopes_coord(l_, d)
-    #pprint(s1)
+    s1 = get_scopes_coord(l, d)
+    pprint(s1)
     #print(scopes_size_coord(s1))
 
     
