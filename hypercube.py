@@ -243,26 +243,19 @@ def get_diagonals_np() -> Callable[[Cube_np], Lines_np]:
     return diagonals_np
 
 
-def get_lines_np(arr: Cube_np, flatten: bool = True) -> \
-              Tuple[Union[Lines_np, List[Lines_np]], int]: 
-    """ Returns the lines in an array
+def get_lines_grouped_np(arr: Cube_np) -> Tuple[List[Lines_np], int]: 
+    """ Returns the lines in an array grouped by dimension
 
     Parameters
     ----------
     arr : numpy.ndarray
         The array whose lines are to be calculated
 
-    flatten : bool, optional 
-        Determines if the lines are returned as a flat list, or
-        as a nested lists of i-agonals.
-        A flat list is return by default.
-
     Returns
     -------
     list :
         A list of numpy.ndarray views of the lines in `arr`.
-        The `flatten` arguments determines if the list is flat or 
-        nested listed of i-agonals
+        List is nested list of i-agonals
     int :
         The number of lines. 
             
@@ -292,24 +285,16 @@ def get_lines_np(arr: Cube_np, flatten: bool = True) -> \
     >>> arr
     array([[0, 1],
            [2, 3]])
-    >>> lines, count = get_lines_np(arr)
-    >>> lines
-    [array([0, 2]), array([1, 3]), array([0, 1]), array([2, 3]), array([0, 3]), array([2, 1])]
-    >>> count
-    6
-    >>> len(lines)
-    6
-    >>> arr[0, 0] = 99
-    >>> lines
-    [array([99,  2]), array([1, 3]), array([99,  1]), array([2, 3]), array([99,  3]), array([2, 1])]
-    >>> arr[0, 0] = 0
-    >>> lines, count = get_lines_np(arr, False)
+    >>> lines, count = get_lines_grouped_np(arr)
     >>> lines
     [[array([0, 2]), array([1, 3]), array([0, 1]), array([2, 3])], [array([0, 3]), array([2, 1])]]
     >>> count
     6
     >>> len(lines)
     2
+    >>> arr[0, 0] = 99
+    >>> lines
+    [[array([99,  2]), array([1, 3]), array([99,  1]), array([2, 3])], [array([99,  3]), array([2, 1])]]
     """
     
     d = arr.ndim
@@ -331,14 +316,56 @@ def get_lines_np(arr: Cube_np, flatten: bool = True) -> \
                 diags = get_diagonals_np()(sl)
                 count += len(diags)
                 lines_i.extend(diags)
-        
-        if flatten:
-            lines.extend(lines_i)
-        else:
-            lines.append(lines_i)
+
+        lines.append(lines_i)
 
     assert count == num_lines(d, n)
     return lines, count
+
+
+def get_lines_flat_np(arr: Cube_np) -> Lines_np: 
+    """ Returns the lines in an array
+
+    Parameters
+    ----------
+    arr : numpy.ndarray
+        The array whose lines are to be calculated
+
+    Returns
+    -------
+    list :
+        A list of numpy.ndarray views of the lines in `arr`.
+                
+    See Also
+    --------
+    get_lines_grouped_np
+    num_lines
+    get_diagonals_np
+
+    Notes
+    -----
+    Calls the function get_lines_grouped_np.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> arr = np.arange(4).reshape(2, 2)
+    >>> arr
+    array([[0, 1],
+           [2, 3]])
+    >>> lines = get_lines_flat_np(arr)
+    >>> lines
+    [array([0, 2]), array([1, 3]), array([0, 1]), array([2, 3]), array([0, 3]), array([2, 1])]
+    >>> len(lines)
+    6
+    >>> arr[0, 0] = 99
+    >>> lines
+    [array([99,  2]), array([1, 3]), array([99,  1]), array([2, 3]), array([99,  3]), array([2, 1])]
+    """
+
+    grouped = get_lines_grouped_np(arr)[0]
+    flat = [x for y in grouped for x in y]
+    return flat
 
 
 def get_scopes_np(lines: Lines_np, d: int) -> Scopes_np:
@@ -358,14 +385,14 @@ def get_scopes_np(lines: Lines_np, d: int) -> Scopes_np:
     Returns
     -------
     defaultdict :
-        A dictionary with keys equal to each cell of the hypercube 
-        (represented as a tuple). For each cell key, the value is cell's
+        A dictionary with keys equal to each cell coordinates of the 
+        hypercube. For each cell key, the value is cell's
         scope - a list of numpy.ndarray views that are lines containing
         the cell.
             
     See Also
     --------
-    get_lines_np
+    get_lines_flat_np
 
     Notes
     -----
@@ -381,7 +408,7 @@ def get_scopes_np(lines: Lines_np, d: int) -> Scopes_np:
     >>> arr
     array([[0, 1],
            [2, 3]])
-    >>> lines, _ = get_lines_np(arr)
+    >>> lines = get_lines_flat_np(arr)
     >>> lines
     [array([0, 2]), array([1, 3]), array([0, 1]), array([2, 3]), array([0, 3]), array([2, 1])]
     >>> scopes = get_scopes_np(lines, 2)
@@ -435,7 +462,7 @@ def structure_np(d: int, n: int, zeros: bool = True, OFFSET: int = 0) -> Structu
             
     See Also
     --------
-    get_lines_np
+    get_lines_flat_np
     get_scopes_np
  
     Examples
@@ -473,7 +500,7 @@ def structure_np(d: int, n: int, zeros: bool = True, OFFSET: int = 0) -> Structu
     # function populates the arrays with values 0,1,2, ...
     dtype = np.int64 if n ** d > 2 ** 31 - OFFSET - 1 else np.int32
     arr = np.arange(n ** d, dtype = dtype).reshape([n] * d)
-    lines, _ = get_lines_np(arr)
+    lines = get_lines_flat_np(arr)
     scopes = get_scopes_np(lines, d)
     if zeros:
         arr.fill(0)
@@ -576,7 +603,7 @@ def get_lines_coord(d: int, n: int, flatten: bool = True) -> \
     See Also
     --------
     num_lines
-    get_lines_np
+    get_lines_coord
 
     Notes
     -----
@@ -633,10 +660,52 @@ def get_lines_coord(d: int, n: int, flatten: bool = True) -> \
     return lines, count
 
 
-def get_scopes_coord(lines: Lines_coord) -> Scopes_coord:
+def get_scopes_coord(lines: Lines_coord, d: int) -> Scopes_coord:
+    """ Calculate the scope of each cell in a hypercube
 
+    Parameters
+    ----------
+    lines : list
+        The first returned value from get_lines_coord(d, n).
+
+    dim : int 
+        The dimension of the hypercube that was used to
+        generate the `lines` parameter.
+
+    Returns
+    -------
+    defaultdict :
+        A dictionary with keys equal to each cell coordinates of the 
+        hypercube. For each cell key, the value is cell's
+        scope - a list of coordinates that are lines containing
+        the cell.
+            
+    See Also
+    --------
+    get_lines_coord
+ 
+    Examples
+    --------
+    >>> from pprint import pprint
+    >>> lines, _ = get_lines_coord(2, 2)
+    >>> pprint(lines) #doctest: +NORMALIZE_WHITESPACE
+    [[(0, 0), (1, 0)],
+     [(0, 1), (1, 1)],
+     [(0, 0), (0, 1)],
+     [(1, 0), (1, 1)],
+     [(0, 0), (1, 1)],
+     [(0, 1), (1, 0)]]
+    >>> scopes = get_scopes_coord(lines, 2)
+    >>> pprint(scopes) #doctest: +NORMALIZE_WHITESPACE
+    defaultdict(<class 'list'>,
+                {(0, 0): [[(0, 0), (1, 0)], [(0, 0), (0, 1)], [(0, 0), (1, 1)]],
+                 (0, 1): [[(0, 1), (1, 1)], [(0, 0), (0, 1)], [(0, 1), (1, 0)]],
+                 (1, 0): [[(0, 0), (1, 0)], [(1, 0), (1, 1)], [(0, 1), (1, 0)]],
+                 (1, 1): [[(0, 1), (1, 1)], [(1, 0), (1, 1)], [(0, 0), (1, 1)]]})
+    """
+
+    n = len(lines[0])
     scopes: DefaultDict = defaultdict(list)
-    
     # get all possible cells
     cells = it.product(range(n), repeat = d)
 
@@ -645,6 +714,14 @@ def get_scopes_coord(lines: Lines_coord) -> Scopes_coord:
             if cell in line:
                 scopes[cell].append(line)
     return scopes
+
+
+
+
+
+
+
+
 
 
 def scopes_size(scopes: Scopes) -> Counter:
@@ -699,7 +776,7 @@ def scopes_size_coord(scopes: Scopes) -> DefaultDict[int, List[Cell_coord]]:
     >>> import numpy as np
     >>> from pprint import pprint
     >>> scopes = structure_np(2, 3)[2] 
-    >>> pprint(scopes_size_cells(scopes))
+    >>> pprint(scopes_size_coord(scopes))
     defaultdict(<class 'list'>,
                 {2: [(1, 0), (0, 1), (2, 1), (1, 2)],
                  3: [(0, 0), (2, 0), (0, 2), (2, 2)],
@@ -946,7 +1023,7 @@ def _lines_np_coord_check(d: int, n: int) -> bool:
     dtype = np.int64 if n ** d > 2 ** 31 else np.int32
     arr = np.arange(n ** d, dtype = dtype).reshape([n] * d)
 
-    lines_np, _ = get_lines_np(arr)
+    lines_np = get_lines_flat_np(arr)
     lines_coord, _ = get_lines_coord(d, n)
 
     t_np = [tuple(sorted(l.tolist())) for l in lines_np]
@@ -957,8 +1034,10 @@ def _lines_np_coord_check(d: int, n: int) -> bool:
 
 if __name__ == "__main__":
 
+    from pprint import pprint
+
     d = 2
-    n = 3
+    n = 2
 
     #print(_lines_np_coord_check(d, n))
     #print(len(ll))
@@ -966,22 +1045,22 @@ if __name__ == "__main__":
     arr = np.arange(n**d).reshape([n]*d)
     #print(arr)
 
-    #lines, count = get_lines_np(arr, True)
-    #l_, c_ = get_lines_coord(d, n, True)
+    lines = get_lines_flat_np(arr)
+    l_, c_ = get_lines_coord(d, n, True)
 
-    #print(lines)
+    print(lines)
     #print(l_)
 
-    lines = get_lines_coord(d, n)[0]
-    s1 = get_scopes_coord(lines)
-    #print(s1)
-    print(scopes_size_coord(s1))
+    #lines = get_lines_coord(d, n)[0]
+    #pprint(lines)
+    #s1 = get_scopes_coord(l_, d)
+    #pprint(s1)
+    #print(scopes_size_coord(s1))
 
     
-    l = get_lines_np(arr)[0]
-    s2 = get_scopes_np(l, d)
+    #s2 = get_scopes_np(lines, d)
     #print(s2)
-    print(scopes_size_coord(s2))
+    #print(scopes_size_coord(s2))
 
     #ll = [tuple(sorted([arr[x] for x in y])) for y in l_]
     #print(ll)
