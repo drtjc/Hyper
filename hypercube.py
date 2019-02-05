@@ -858,7 +858,7 @@ def display(arr, display_cell = str, under = False):
     
     if arr.size == 1:
         s = display_cell(arr)
-        if s.isalpha() and under:
+        if s.isalpha() and under: # can get rid of isalpha check since in underline function
             return underline(s)
         elif s.isspace() and under:
             return '_' * len(s)
@@ -897,7 +897,7 @@ def display(arr, display_cell = str, under = False):
 
 
 
-def underline(s: str) -> str:
+def underline(s: str, alpha_only = True) -> str:
     """ Underlines a string
 
     Parameters
@@ -918,14 +918,26 @@ def underline(s: str) -> str:
     --------
     >>> underline('X')
     'X̲'
-    >>> underline('1')
-    '1̲'
     >>> underline('XX')
     'X̲X̲'
+    >>> underline('1')
+    '1'
+    >>> underline('1', False)
+    '1̲'
     """
 
     try:
-        return ''.join([chr + "\u0332" for chr in str(s)])
+        if alpha_only:
+            s_ = ""
+            for chr in str(s):
+                if chr.isalpha():
+                    s_ = s_ +  chr + "\u0332"
+                else:
+                    s_ = s_ + chr
+            return s_
+        else:
+            return ''.join([chr + "\u0332" for chr in str(s)])
+        
     except:
         return s
 
@@ -1114,6 +1126,6 @@ if __name__ == "__main__":
     
     #print(scopes_size_coord(ss))
    
-    s = underline('X1X')
+    s = underline('1', True)
     pprint(s)
  
