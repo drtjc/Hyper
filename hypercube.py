@@ -854,16 +854,22 @@ def scopes_size_cell(scopes: Scopes) -> DefaultDict[int, List[Cell_coord]]:
 # It is assumed that an numpy ndarray has been used to
 # represent the hypercube
 
+
+from colorama import init, Fore, Back, Style
+init()
+
 def display(arr, display_cell = str, under = False):
     
     if arr.size == 1:
-        s = display_cell(arr)
-        if s.isalpha() and under: # can get rid of isalpha check since in underline function
-            return underline(s)
-        elif s.isspace() and under:
-            return '_' * len(s)
-        else:
-            return s
+        s, f, b = display_cell(arr)
+        
+        if under:
+            if s.isspace():
+                s = '_' * len(s)
+            else:
+                s = underline(s)       
+        return f + s + Style.RESET_ALL
+
 
     sub_arr = [arr[i] for i in range(arr.shape[0])]
 
@@ -936,8 +942,7 @@ def underline(s: str, alpha_only = True) -> str:
                     s_ = s_ + chr
             return s_
         else:
-            return ''.join([chr + "\u0332" for chr in str(s)])
-        
+            return ''.join([chr + "\u0332" for chr in str(s)])      
     except:
         return s
 
@@ -967,7 +972,7 @@ def join_multiline(iter, divider = ' ', divide_empty_lines = False, fill_value =
     return '\n'.join(st)            
 
 
-
+# The following 2 functions are helper functions
 
 def slice_ndarray(arr: np.ndarray, axes: Collection[int], 
                 coords: Collection[int]) -> np.ndarray:

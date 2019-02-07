@@ -2,6 +2,7 @@ import numpy as np #type: ignore
 import re
 from collections.abc import Sequence
 from sys import getsizeof
+from enum import Enum, auto
 from typing import NamedTuple, List, Tuple
 from pprint import pprint
 from colorama import init, Fore, Back, Style
@@ -14,6 +15,7 @@ class Error(Exception):
     """Base class for exceptions in this module."""
     pass
 
+
 class MoveError(Error):
 
     def __init__(self, message, cell):
@@ -21,20 +23,37 @@ class MoveError(Error):
         self.cell = cell
 
 
+class GameOverError(Error):
 
+    def __init__(self, message):
+        self.message = message
+
+
+
+class GameState(Enum):
+    P1_WIN = auto()
+    P2_WIN = auto()
+    TIE = auto()
+    IN_PROGRESS = auto()
 
 
 class TicTacToe():
 
     _MOVE_BASE = 99
-    Memory = NamedTuple('Memory', [('dtype', str), ('board', int), ('lines', int), ('scopes', int), ('total', int)]) 
+    
+    Memory = NamedTuple('Memory', [('dtype', str), ('board', int), ('lines', int),
+                                   ('scopes', int), ('total', int)]) 
+    
+    GameState_str = {GameState.P1_WIN: 'p1 wins', GameState.P2_WIN: 'p2 wins', 
+                     GameState.TIE: "It's a tie", GameState.IN_PROGRESS: 'In progress'}
 
     def __init__(self, d: int, n: int, moves_per_turn = 1, drop = False) -> None:
 
         try:            
             struct = hc.structure_np(d, n, zeros = False, OFFSET = self._MOVE_BASE)
         except MemoryError:
-            raise MemoryError("The board is too big to fit into available memory")
+            print("The board is too big to fit into available memory")
+            raise
 
         self.d = d
         self.n = n
@@ -48,18 +67,27 @@ class TicTacToe():
 
         self.reset()
 
-        self.p1 = 'O'
-        self.p2 = 'X'
+        self.p1_name = 'Player 1'
+        self.p2_name = 'Player 2'
+        # p1 and p2 should be alphabetic characters, and of the same length
+        self.p1_mark = 'O'
+        self.p2_mark = 'X'
+        
+        self.color_last_move = Fore.RED
+        self.color_win_line = Back.YELLOW
+
+    def state_str(self):
+        return self.GameState_str[self.state].replace('p1', self.p1_name).replace('p2', self.p2_name)
 
     def reset(self):
-        self.in_progress = True 
+        self.state = GameState.IN_PROGRESS  
         self.board.fill(0)
         
         self.active_player: int = 0
         self.active_moves: int = 0
 
         # record player 0 moves as positive integers, and player 1 moves as negative integer
-        self.moves: List[Tuple[int]] = [] ##TJC need to specifiy tuple for mypy is d lots of int 
+        self.moves: List[Tuple[int, ...]] = []  
         self.moves_played: List[int] = [0, 0] # number of moves played in game by each player
 
         self.lines_state = []
@@ -72,18 +100,25 @@ class TicTacToe():
 
     def display_cell(self, v):
 
-        if v > 0:
-            s = self.p1
-        elif v < 0:
-            s = self.p2
-        else:
-            s = ' '
+        f = Fore.RESET
+        b = Back.RESET
 
+        if v > 0:
+            s = self.p1_mark
+        elif v < 0:
+            s = self.p2_mark
+        else:
+            s = ' ' * len(self.p1_mark)
+
+        # check if cell is last move, and adjust color if so
         last_move = self.moves[-1][1]
         if self.board[last_move] == v:
-            s = Fore.RED + s + Style.RESET_ALL
+            f = self.color_last_move
         
-        return s
+        # check if cell is in a winning lime
+
+
+        return s, f, b
 
     def display(self, header = True):
         b = hc.display(self.board, self.display_cell) + '\n'
@@ -116,9 +151,8 @@ class TicTacToe():
             raise TypeError(f'String argument expected, got {type(cell)})')
 
     def move(self, cell, base = 1):
-        if not self.in_progress:
-            print("New game")
-            self.reset()
+        if self.state != GameState.IN_PROGRESS:
+            raise GameOverError("The game is over")
 
         try:
             if isinstance(cell, str):
@@ -146,20 +180,37 @@ class TicTacToe():
         sgn = -1 if self.active_player == 1 else 1 # player 0 is positive, player 1 negative
         self.board[t_cell] = sgn * (self.moves_played[self.active_player] + self._MOVE_BASE)
         self.moves.append((self.active_player, t_cell))
-        self.display(False)
 
+        # check for win now
+        idx = self.get_lines_state()
+        if idx > - 1:
+            self.state = GameState.P2_WIN if self.active_player else GameState.P1_WIN
+            return -1
+
+        # game still in progress
         self.active_moves += 1
         if self.active_moves == self.moves_per_turn:
             self.active_moves = 0
             self.active_player = int(not self.active_player)
 
-        # can check for win now
-        idx = self.get_lines_state()
-        if idx > - 1:
-            self.in_progress = False
-            return True
+        # need to check if the game can be won
+        if self.is_tie():
+            self.state = GameState.TIE
+            return 0
         else:
-            return False
+            return 1
+
+
+    def is_tie(self):
+        if self.state == GameState.TIE:
+            return True
+        else: 
+            # check if a win is possible
+            if len(self.moves) == self.n ** self.d:
+                return True
+            else:
+                return False
+
 
     def get_lines_state(self):
         # list of tuples - each tuple containg number of +ves and -eves in a line
@@ -179,7 +230,7 @@ class TicTacToe():
         if len(self.moves) == 0:
             return
 
-        self.in_progress = True # in case game has just been won
+        self.state = GameState.IN_PROGRESS
         
         if self.active_moves == 0:
             self.active_moves = self.moves_per_turn - 1
@@ -199,29 +250,67 @@ if __name__ == "__main__":
     dim = 2
     size = 3
     ttt = TicTacToe(dim, size, 1)
+    ttt.p1_name = 'Tom'
+    ttt.p2_name = 'Other'
 
-    #print(ttt.lines[0])
-    #m = ttt.move('111')
-    #m = ttt.move('131')
-    #m = ttt.move('222')
-    #m = ttt.move('121')
-    #m = ttt.move('333')
+    ttt.color_last_move = Fore.MAGENTA
+
+    print(ttt.state_str())
+
+    m = ttt.move('22')
+    ttt.display(False)
+    print(ttt.state_str())
+
+    m = ttt.move('12')
+    ttt.display(False)
+    print(ttt.state_str())
+    
+    m = ttt.move('11')
+    ttt.display(False)
+    print(ttt.state_str())
+
+    m = ttt.move('33')
+    ttt.display(False)
+    print(ttt.state_str())
+
+    m = ttt.move('21')
+    ttt.display(False)
+    print(ttt.state_str())
+
+    m = ttt.move('23')
+    ttt.display(False)
+    print(ttt.state_str())
+
+# game over
+    m = ttt.move('31')
+    ttt.display(False)
+    print(ttt.state_str())
+
+    ttt.undo()
+    ttt.display(False)
+    print(ttt.state_str())
+
+
+# if played with game over then game over error
+    #m = ttt.move('13')
+    #ttt.display(False)
+    #print(ttt.state_str())
+
+    #m = ttt.move('31')
+    #ttt.display(False)
+    #print(ttt.state_str())
+
+    #m = ttt.move('32')
+    #ttt.display(False)
+    #print(ttt.state_str())
 
 
 
-    #if m:
-    #    print("game over")
-    #print(ttt.moves)
-    #ttt.move('22')
+# move already played
+#    m = ttt.move('23')
+#    ttt.display(False)
+#    print(ttt.state_str)
+    
 
-    #ttt.undo()
-    #print(ttt.moves)
-    #ttt.display()
 
-    #m = ttt.move('333')
-
-    #m = ttt.move('11')
-
-    #print(ttt.lines[1])
-    #print(sum((ttt.lines[1]) > 0))
 
