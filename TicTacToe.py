@@ -114,14 +114,16 @@ class TicTacToe():
         last_move = self.moves[-1][1]
         if self.board[last_move] == v:
             f = self.color_last_move
-        
+
         # check if cell is in a winning lime
-
-
+    
+    
         return s, f, b
+    
+        
 
     def display(self, header = True):
-        b = hc.display(self.board, self.display_cell) + '\n'
+        b = hc.display_np(self.board, self.display_cell) + '\n'
         if header:
             b = f'\nd = {self.d}, n = {self.n}\n\n' + b
         print(b)
@@ -247,7 +249,7 @@ class TicTacToe():
 
 if __name__ == "__main__":
  
-    dim = 2
+    dim = 1
     size = 3
     ttt = TicTacToe(dim, size, 1)
     ttt.p1_name = 'Tom'
@@ -257,38 +259,38 @@ if __name__ == "__main__":
 
     print(ttt.state_str())
 
-    m = ttt.move('22')
+    m = ttt.move('1')
     ttt.display(False)
-    print(ttt.state_str())
+    #print(ttt.state_str())
 
-    m = ttt.move('12')
-    ttt.display(False)
-    print(ttt.state_str())
+#     m = ttt.move('12')
+#     ttt.display(False)
+#     print(ttt.state_str())
     
-    m = ttt.move('11')
-    ttt.display(False)
-    print(ttt.state_str())
+#     m = ttt.move('11')
+#     ttt.display(False)
+#     print(ttt.state_str())
 
-    m = ttt.move('33')
-    ttt.display(False)
-    print(ttt.state_str())
+#     m = ttt.move('33')
+#     ttt.display(False)
+#     print(ttt.state_str())
 
-    m = ttt.move('21')
-    ttt.display(False)
-    print(ttt.state_str())
+#     m = ttt.move('21')
+#     ttt.display(False)
+#     print(ttt.state_str())
 
-    m = ttt.move('23')
-    ttt.display(False)
-    print(ttt.state_str())
+#     m = ttt.move('23')
+#     ttt.display(False)
+#     print(ttt.state_str())
 
-# game over
-    m = ttt.move('31')
-    ttt.display(False)
-    print(ttt.state_str())
+# # game over
+#     m = ttt.move('31')
+#     #ttt.display(False)
+#     print(ttt.state_str())
 
-    ttt.undo()
-    ttt.display(False)
-    print(ttt.state_str())
+#     ttt.undo()
+#     #ttt.display(False)
+#     print(ttt.state_str())
 
 
 # if played with game over then game over error

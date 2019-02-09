@@ -43,8 +43,11 @@ the suffix _coord.
 import numpy as np 
 from scipy.special import comb
 import itertools as it
+import numbers
 from collections import defaultdict, Counter as counter
 from typing import List, Callable, Union, Collection, Tuple, Any, DefaultDict, TypeVar, Counter, Dict
+from colorama import init, Fore, Back, Style
+init()
 
 Cell_coord = Tuple[int, ...]
 
@@ -854,53 +857,98 @@ def scopes_size_cell(scopes: Scopes) -> DefaultDict[int, List[Cell_coord]]:
 # It is assumed that an numpy ndarray has been used to
 # represent the hypercube
 
+def display_np(arr: Cube_np, display_cell: Callable[[Any], Tuple[str, str, str]] = None, ul = False) -> str:
+    """ Construct a string to display the hypercube in the terminal.
 
-from colorama import init, Fore, Back, Style
-init()
+    Parameters
+    ----------
+    arr: numpy.ndarray
+        The array to be displayed
+    display_cell: callback function, optional
+        A callback function called with the value of each cell value.
+        It returns a tuple of strings - the character/string to be displayed, 
+        it's color, and the background color of the cell. See Examples for how
+        colors are specified.
+        If display_cell is not provided, the cell value is displayed.
+    ul: bool, optional
+        display_np calls itself recursively (see Notes). This parameter is used 
+        to track whether a cell is on the bottom row of a 2-d array. It has direct
+        impact when the user calls dislay_np unless the array is 1-d, in which
+        case it determines if cell values are underlined when displayed. 
 
-def display(arr, display_cell = str, under = False):
+    Returns
+    -------
+    str:
+        a string that can be printed to the terminal to display the hypercube
+
+    See Also
+    --------
+    underline
+    join_multiline
     
-    if arr.size == 1:
-        s, f, b = display_cell(arr)
-        
-        if under:
+    Notes
+    -----
+    The '|' character is used to represent the board horizontally.
+    Cell contents are underlined in order to represent the board vertically. For example,
+    the character 'X' is underlined to give 'X̲'. 
+    This function is recursive, it starts with hypercube and keeps removing dimensions
+    until at a single cell, which can be given a string value.
+    We are trying to siaply d dimensions in 2 dimension. to do this, odd dimension are 
+    shown horizontally; even dimensions are shown vertically.
+
+    Examples
+    --------
+
+
+
+
+    """
+
+    if arr.size == 1: # arr is a single cell
+        if display_cell is None:
+            s, f, b = str(arr), '', ''
+        else:
+            s, f, b = display_cell(arr)
+
+        # underline displayed string (to repsent board structure) unless 
+        # string is in the bottom row of array
+        if ul:
             if s.isspace():
                 s = '_' * len(s)
             else:
                 s = underline(s)       
+        
+        # add any foreground and background color
         return f + s + Style.RESET_ALL
 
-
+    # arr is not a single cell
+    d = arr.ndim
+    # break the array into sub arrays along the first dimension
     sub_arr = [arr[i] for i in range(arr.shape[0])]
 
-    d = arr.ndim
-    #sub_arr_str = [display(a, display_cell) for a in sub_arr]
+    # constuct a string for each sub array
     sub_arr_str = []
     for c, a in enumerate(sub_arr):
         if d == 2 and c == len(sub_arr) - 1:
-            UU = False
-        elif d == 1:
-            UU = under
-        else:
-            UU = True
-        sub_arr_str.append(display(a, display_cell, UU))
+            # sub arr is 2-dimensional and last row - don't underline
+            ul = False
+        elif d != 1:
+            ul = True
 
+        sub_arr_str.append(display_np(a, display_cell, ul))
 
-    #d = arr.ndim
+    # join the sub strings
     if d % 2 == 0: # even number of dimensions - display down the screen
         if d == 2:
             return ''.join('\n'.join(sub_arr_str))
         else:
-            sp = '\n' + '\n' * (int((d / 2) ** 1.5) - 1) # increase space between higher dimesions
-            #sp = '\n' + '\n' * int((d -1 ) ** 1.5)    
+            sp = '\n' + '\n' * (int((d / 2) ** 1.5) - 1) # increase space between higher dimesions  
             return sp.join(sub_arr_str)
     else: # odd number of dimensions - display across the screen
         if d == 1:
             return '|'.join(sub_arr_str)
         else:
             return join_multiline(sub_arr_str, ' ' + ' ' * int((d - 2) ** 1.5) + ' ', False)
-
-
 
 
 def underline(s: str, alpha_only = True) -> str:
@@ -949,6 +997,8 @@ def underline(s: str, alpha_only = True) -> str:
 
 
 
+
+
 def join_multiline(iter, divider = ' ', divide_empty_lines = False, fill_value = '_'):
 
     # for each multiline block, split into individual lines
@@ -970,6 +1020,9 @@ def join_multiline(iter, divider = ' ', divide_empty_lines = False, fill_value =
 
     # finally, join each string separated by a new line 
     return '\n'.join(st)            
+
+
+
 
 
 # The following 2 functions are helper functions
@@ -1102,6 +1155,9 @@ def _lines_np_coord_check(d: int, n: int) -> bool:
     t_coord = [tuple(sorted([arr[c] for c in l])) for l in lines_coord] 
 
     return set(t_np) == set(t_coord)
+
+
+
 
 
 if __name__ == "__main__":
