@@ -3,7 +3,7 @@ import re
 from collections.abc import Sequence
 from sys import getsizeof
 from enum import Enum, auto
-from typing import NamedTuple, List, Tuple
+from typing import NamedTuple, List, Tuple, Union
 from pprint import pprint
 from colorama import init, Fore, Back, Style
 init()
@@ -18,16 +18,15 @@ class Error(Exception):
 
 class MoveError(Error):
 
-    def __init__(self, message, cell):
+    def __init__(self, message: str, cell: Tuple[int, ...]):
         self.message = message
         self.cell = cell
 
 
 class GameOverError(Error):
 
-    def __init__(self, message):
+    def __init__(self, message: str):
         self.message = message
-
 
 
 class GameState(Enum):
@@ -76,10 +75,7 @@ class TicTacToe():
         self.color_last_move = Fore.BLUE
         self.color_win_line = Back.MAGENTA
 
-    def state_str(self):
-        return self.GameState_str[self.state].replace('p1', self.p1_name).replace('p2', self.p2_name)
-
-    def reset(self):
+    def reset(self) -> None:
         self.state = GameState.IN_PROGRESS  
         self.board.fill(0)
         self.win_line: List[int] = []
@@ -88,21 +84,22 @@ class TicTacToe():
         self.active_moves: int = 0
 
         # record player 0 moves as positive integers, and player 1 moves as negative integer
-        self.moves: List[Tuple[int, ...]] = []  
+        self.moves: List[Tuple[int, Tuple[int, ...]]] = []  
         self.moves_played: List[int] = [0, 0] # number of moves played in game by each player
 
         self.lines_state = []
 
+    def state_str(self) -> str:
+        return self.GameState_str[self.state].replace('p1', self.p1_name).replace('p2', self.p2_name)
 
     def memory(self) -> Memory:
         m = self.board.nbytes, getsizeof(self.lines), getsizeof(self.scopes)
         return self.Memory(self.board.dtype, *m, sum(m))
 
+    def display_cell(self, v: int) -> Tuple[str, str]:
 
-    def display_cell(self, v):
-
-        f = Fore.RESET
-        b = Back.RESET
+        f: str = Fore.RESET
+        b: str = Back.RESET
 
         if v > 0:
             s = self.p1_mark
@@ -123,15 +120,13 @@ class TicTacToe():
 
         return s, f + b
     
-        
-
-    def display(self, header = True):
+    def display(self, header: bool = True) -> None:
         b = hc.display_np(self.board, self.display_cell) + '\n'
         if header:
             b = f'\nd = {self.d}, n = {self.n}\n\n' + b
         print(b)
 
-    def str_to_tuple(self, cell, base = 1):
+    def str_to_tuple(self, cell: str, base: int = 1) -> Tuple[int, ...]:
         if isinstance(cell, str):
             # check to see if there are any non-digits
             nd = re.findall(r'\D+', cell) 
@@ -155,7 +150,7 @@ class TicTacToe():
         else:
             raise TypeError(f'String argument expected, got {type(cell)})')
 
-    def move(self, cell, base = 1):
+    def move(self, cell: Union[str, Tuple[int, ...]], base: int = 1) -> int:
         if self.state != GameState.IN_PROGRESS:
             raise GameOverError("The game is over")
 
@@ -178,7 +173,7 @@ class TicTacToe():
         if abs(v) > self._MOVE_BASE:
             # if players whose turn it is is interative then get them
             # to put another move in rather than raise error
-            raise MoveError("The cell has already been played", cell)
+            raise MoveError("The cell has already been played", t_cell)
 
         # we now have an empty cell
         self.moves_played[self.active_player] += 1
@@ -206,7 +201,7 @@ class TicTacToe():
             return 1
 
 
-    def is_tie(self):
+    def is_tie(self) -> bool:
         if self.state == GameState.TIE:
             return True
         else: 
@@ -216,7 +211,7 @@ class TicTacToe():
             else:
                 return False
 
-    def is_win(self):
+    def is_win(self) -> bool:
         if self.state == GameState.P1_WIN or self.state == GameState.P2_WIN:
             return True
         elif self.state == GameState.TIE:
@@ -228,7 +223,7 @@ class TicTacToe():
                 t_cell = self.moves[-1]
                 ## tjc check each line on scope of t_cell
 
-    def get_lines_state(self):
+    def get_lines_state(self) -> int:
         # list of tuples - each tuple containg number of +ves and -eves in a line
         ##TJC do we want also how many are consecutive??
         # return idx of winning line if there is one
@@ -245,7 +240,7 @@ class TicTacToe():
         return -1 # no winning line
 
 
-    def undo(self, replace = 0):
+    def undo(self, replace: int = 0) -> None:
         if len(self.moves) == 0:
             return
 
@@ -274,29 +269,29 @@ if __name__ == "__main__":
 
     #ttt.color_last_move = Fore.MAGENTA
 
-    print(ttt.state_str())
-
-    m = ttt.move('11')
-    ttt.display(False)
     #print(ttt.state_str())
 
-    m = ttt.move('12')
-    ttt.display(False)
+    #m = ttt.move('11')
+    #ttt.display(False)
+    #print(ttt.state_str())
+
+    #m = ttt.move('12')
+    #ttt.display(False)
 #     print(ttt.state_str())
     
-    m = ttt.move('21')
-    ttt.display(False)
+    #m = ttt.move('21')
+    #ttt.display(False)
 #     print(ttt.state_str())
 
-    m = ttt.move('33')
-    ttt.display(False)
+    #m = ttt.move('33')
+    #ttt.display(False)
 #     print(ttt.state_str())
 
-    m = ttt.move('31')
-    ttt.display(False)
+    #m = ttt.move('31')
+    #ttt.display(False)
 #     print(ttt.state_str())
 
-    print(ttt.win_line)
+    #print(ttt.win_line)
 
 #    m = ttt.move('23')
 #    ttt.display(False)
