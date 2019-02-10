@@ -45,7 +45,7 @@ from scipy.special import comb
 import itertools as it
 import numbers
 from collections import defaultdict, Counter as counter
-from typing import List, Callable, Union, Collection, Tuple, Any, DefaultDict, TypeVar, Counter, Dict
+from typing import List, Callable, Union, Collection, Tuple, Any, DefaultDict, TypeVar, Counter, Dict, Iterable
 
 Cell_coord = Tuple[int, ...]
 
@@ -1011,19 +1011,70 @@ def underline(s: str, alpha_only = True) -> str:
         return s
 
 
+def join_multiline(iter: Iterable[str], divider: str = ' ', divide_empty_lines: bool = False,
+                   fill_value: str = '_') -> str:
+    """ Join multiline string line by line.
 
+    Parameters
+    ----------
+    iter: iterable
+        An iterable of multiline (or single line) strings 
+    divider: str, optional
+        string to divided the corresponding lines in each iterable
+    divide_empty_lines: bool, optional
+        If the corresponding line in each iterable is blank, then determines if the lines
+        are still divided by divider, or divided by ''.
+    fill_value: str, optional
+        If the number of lines in each multiline string in iter differs, then fill_value
+        is used to fill in values of the shorter strings.
 
+    Returns
+    -------
+    str:
+        The joined string.
 
-
-def join_multiline(iter, divider = ' ', divide_empty_lines = False, fill_value = '_'):
-
+    Examples
+    --------
+    >>> # note that newline has to be escaped to work in doctest examples below.
+    >>> ml_1 = 'AA\\nMM\\nXX'
+    >>> ml_2 = 'BB\\nNN\\nYY'
+    >>> ml_3 = 'CC\\nOO\\nZZ'
+    >>> ml = join_multiline([ml_1, ml_2, ml_3])
+    >>> print(ml) #doctest: +NORMALIZE_WHITESPACE
+    AA BB CC
+    MM NN OO
+    XX YY ZZ
+    >>> ml = join_multiline([ml_1, ml_2, ml_3], divider = '_')
+    >>> print(ml) #doctest: +NORMALIZE_WHITESPACE
+    AA_BB_CC
+    MM_NN_OO
+    XX_YY_ZZ
+    >>> ml_3 = 'CC\\nOO'
+    >>> ml = join_multiline([ml_1, ml_2, ml_3], fill_value = '@')
+    >>> print(ml) #doctest: +NORMALIZE_WHITESPACE
+    AA BB CC
+    MM NN OO
+    XX YY @
+    >>> ml_1 = 'AA\\n\\nMM'
+    >>> ml_2 = 'BB\\n\\nNN'
+    >>> ml_3 = 'CC\\n\\nZZ'
+    >>> ml = join_multiline([ml_1, ml_2, ml_3], divider = '_')
+    >>> print(ml) #doctest: +NORMALIZE_WHITESPACE
+    AA_BB_CC
+    <BLANKLINE>
+    MM_NN_ZZ    
+    >>> ml = join_multiline([ml_1, ml_2, ml_3], divider = '_', divide_empty_lines = True)
+    >>> print(ml) #doctest: +NORMALIZE_WHITESPACE
+    AA_BB_CC
+    __
+    MM_NN_ZZ
+    """
     # for each multiline block, split into individual lines
     spl = [x.split('\n') for x in iter]
     
     # create list of tuples with tuple i containing line i from each multiline block
     tl = [i for i in it.zip_longest(*spl, fillvalue = fill_value)]
-    
-    
+        
     if divide_empty_lines:
         st = [divider.join(t) for t in tl]
     else:
@@ -1036,9 +1087,6 @@ def join_multiline(iter, divider = ' ', divide_empty_lines = False, fill_value =
 
     # finally, join each string separated by a new line 
     return '\n'.join(st)            
-
-
-
 
 
 # The following 2 functions are helper functions
@@ -1159,6 +1207,9 @@ def insert_into_tuple(tup: Tuple, pos: Union[int, Collection[int]],
 
 
 
+
+
+
 def _lines_np_coord_check(d: int, n: int) -> bool:
 
     dtype = np.int64 if n ** d > 2 ** 31 else np.int32
@@ -1180,49 +1231,24 @@ if __name__ == "__main__":
 
     from pprint import pprint
 
-    def dc(v: Any) -> Tuple[str, str]:
-
-        # define colors - could also use colorama module
-        # red foreground + yellow background
-        fmt = '\033[31m' + '\033[43m' 
-        fmt = '\033[31;43m'
-
-        # cell foreground is red, cell background is yellow
-        if v > 0:
-            return 'X', fmt
-        elif v < 0:
-            return 'O', fmt
-        else:
-            return ' ', ''
-
-    d = 3
-    n = 3
-    arr = np.zeros((n,) * d, dtype = int)
-    arr[0, 0, 0] = 1
-    arr[1, 1, 1] = -1
-    disp = display_np(arr, dc)
-    print(disp)
+    ml_1 = 'AA\nMM\nXX'
+    ml_2 = 'BB\nNN\nYY'
+    ml_3 = 'CC\nOO\nZZ'
+    ml = join_multiline([ml_1, ml_2, ml_3])
+    print(ml) 
+    ml = join_multiline([ml_1, ml_2, ml_3], divider = '_')
+    print(ml)
 
 
+    ml_3 = 'CC\nOO'
+    ml = join_multiline([ml_1, ml_2, ml_3], fill_value = '@')
+    print(ml)
 
+    ml_1 = 'AA\n\nMM'
+    ml_2 = 'BB\n\nNN'
+    ml_3 = 'CC\n\nZZ'
 
-    #print(arr)
-
-    #l = get_lines_flat_coord(d, n)
-    #print(l)
-
-    #s = get_scopes_coord(l, d)
-    #pprint(s)
-    
-    #print(scopes_size_coord(s))
-
-
-    #ll = get_lines_flat_np(arr)
-    #print(ll)
-
-    #ss = get_scopes_np(ll, d)
-    #pprint(ss)
-    
-    #print(scopes_size_coord(ss))
-   
- 
+    ml = join_multiline([ml_1, ml_2, ml_3], divider = '_')
+    print(ml)
+    ml = join_multiline([ml_1, ml_2, ml_3], divider = '_', divide_empty_lines = True)
+    print(ml)
