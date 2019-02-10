@@ -1205,12 +1205,31 @@ def insert_into_tuple(tup: Tuple, pos: Union[int, Collection[int]],
     return tuple(tl)
 
 
-
-
-
-
-
 def _lines_np_coord_check(d: int, n: int) -> bool:
+    """ Checks if lines_np and lines_coord give the same lines.
+
+    Parameters
+    ----------
+    d : int
+        The number of dimensions of the hypercube
+    n : int
+        The number of cells in any dimension
+
+    Returns
+    -------
+    bool :
+        True if lines_np and lines_coord give the same lines.
+        False otherwise.
+
+    See Also
+    --------
+    get_lines_flat_np
+    get_lines_flat_coord
+
+    Notes
+    -----
+    This function is a private function used in testing.
+    """
 
     dtype = np.int64 if n ** d > 2 ** 31 else np.int32
     arr = np.arange(n ** d, dtype = dtype).reshape([n] * d)
@@ -1222,33 +1241,4 @@ def _lines_np_coord_check(d: int, n: int) -> bool:
     t_coord = [tuple(sorted([arr[c] for c in l])) for l in lines_coord] 
 
     return set(t_np) == set(t_coord)
-
-
-
-
-
-if __name__ == "__main__":
-
-    from pprint import pprint
-
-    ml_1 = 'AA\nMM\nXX'
-    ml_2 = 'BB\nNN\nYY'
-    ml_3 = 'CC\nOO\nZZ'
-    ml = join_multiline([ml_1, ml_2, ml_3])
-    print(ml) 
-    ml = join_multiline([ml_1, ml_2, ml_3], divider = '_')
-    print(ml)
-
-
-    ml_3 = 'CC\nOO'
-    ml = join_multiline([ml_1, ml_2, ml_3], fill_value = '@')
-    print(ml)
-
-    ml_1 = 'AA\n\nMM'
-    ml_2 = 'BB\n\nNN'
-    ml_3 = 'CC\n\nZZ'
-
-    ml = join_multiline([ml_1, ml_2, ml_3], divider = '_')
-    print(ml)
-    ml = join_multiline([ml_1, ml_2, ml_3], divider = '_', divide_empty_lines = True)
-    print(ml)
+    
