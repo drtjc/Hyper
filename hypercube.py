@@ -46,8 +46,6 @@ import itertools as it
 import numbers
 from collections import defaultdict, Counter as counter
 from typing import List, Callable, Union, Collection, Tuple, Any, DefaultDict, TypeVar, Counter, Dict
-from colorama import init, Fore, Back, Style
-init()
 
 Cell_coord = Tuple[int, ...]
 
@@ -857,7 +855,7 @@ def scopes_size_cell(scopes: Scopes) -> DefaultDict[int, List[Cell_coord]]:
 # It is assumed that an numpy ndarray has been used to
 # represent the hypercube
 
-def display_np(arr: Cube_np, display_cell: Callable[[Any], Tuple[str, str, str]] = None, ul = False) -> str:
+def display_np(arr: Cube_np, display_cell: Callable[[Any], Tuple[str, str]] = None, ul = False) -> str:
     """ Construct a string to display the hypercube in the terminal.
 
     Parameters
@@ -867,8 +865,8 @@ def display_np(arr: Cube_np, display_cell: Callable[[Any], Tuple[str, str, str]]
     display_cell: callback function, optional
         A callback function called with the value of each cell value.
         It returns a tuple of strings - the character/string to be displayed, 
-        it's color, and the background color of the cell. See Examples for how
-        colors are specified.
+        and any formatting to be applied (typically ansi color sequences). 
+        See Examples for how colors are specified.
         If display_cell is not provided, the cell value is displayed.
     ul: bool, optional
         display_np calls itself recursively (see Notes). This parameter is used 
@@ -898,28 +896,46 @@ def display_np(arr: Cube_np, display_cell: Callable[[Any], Tuple[str, str, str]]
 
     Examples
     --------
+    >>> import numpy as np
+    >>> from pprint import pprint
 
-
-
-
+    >>> def dc(v: Any) -> Tuple[str, str]:
+    ...
+    ...    # define colors - could also use colorama module
+    ...    # red foreground + yellow background
+    ...    fmt = '\033[31;43m'
+    ...
+    ...    if v > 0:
+    ...        return 'X', fmt
+    ...    elif v < 0:
+    ...        return 'O', fmt
+    ...    else:
+    ...        return ' ', ''
+    
+    >>> d = 3
+    >>> n = 3 
+    >>> arr = np.zeros((n,) * d, dtype = int)
+    >>> arr[0, 0, 0] = 1
+    >>> arr[1, 1, 1] = -1
+    >>> disp = display_np(arr, dc)
+    >>> print(disp) #doctest: +SKIP
+    X̲|_|_   _|_|_   _|_|_
+    _|_|_   _|O̲|_   _|_|_
+     | |     | |     | | 
     """
 
     if arr.size == 1: # arr is a single cell
         if display_cell is None:
-            s, f, b = str(arr), '', ''
+            s, fmt = str(arr), ''
         else:
-            s, f, b = display_cell(arr)
+            s, fmt = display_cell(arr)
 
         # underline displayed string (to repsent board structure) unless 
         # string is in the bottom row of array
         if ul:
-            if s.isspace():
-                s = '_' * len(s)
-            else:
-                s = underline(s)       
-        
-        # add any foreground and background color
-        return f + s + Style.RESET_ALL
+            s = '_' * len(s) if s.isspace() else underline(s)
+            
+        return fmt + s + '\033[0m' # '\033[0m' removes color settings
 
     # arr is not a single cell
     d = arr.ndim
@@ -1164,10 +1180,32 @@ if __name__ == "__main__":
 
     from pprint import pprint
 
-    d = 2
-    n = 2
+    def dc(v: Any) -> Tuple[str, str]:
 
-    #arr = np.arange(n**d).reshape([n]*d)
+        # define colors - could also use colorama module
+        # red foreground + yellow background
+        fmt = '\033[31m' + '\033[43m' 
+        fmt = '\033[31;43m'
+
+        # cell foreground is red, cell background is yellow
+        if v > 0:
+            return 'X', fmt
+        elif v < 0:
+            return 'O', fmt
+        else:
+            return ' ', ''
+
+    d = 3
+    n = 3
+    arr = np.zeros((n,) * d, dtype = int)
+    arr[0, 0, 0] = 1
+    arr[1, 1, 1] = -1
+    disp = display_np(arr, dc)
+    print(disp)
+
+
+
+
     #print(arr)
 
     #l = get_lines_flat_coord(d, n)
@@ -1187,6 +1225,4 @@ if __name__ == "__main__":
     
     #print(scopes_size_coord(ss))
    
-    s = underline('1', True)
-    pprint(s)
  

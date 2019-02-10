@@ -73,8 +73,8 @@ class TicTacToe():
         self.p1_mark = 'O'
         self.p2_mark = 'X'
         
-        self.color_last_move = Fore.RED
-        self.color_win_line = Back.YELLOW
+        self.color_last_move = Fore.BLUE
+        self.color_win_line = Back.MAGENTA
 
     def state_str(self):
         return self.GameState_str[self.state].replace('p1', self.p1_name).replace('p2', self.p2_name)
@@ -82,6 +82,7 @@ class TicTacToe():
     def reset(self):
         self.state = GameState.IN_PROGRESS  
         self.board.fill(0)
+        self.win_line: List[int] = []
         
         self.active_player: int = 0
         self.active_moves: int = 0
@@ -111,14 +112,16 @@ class TicTacToe():
             s = ' ' * len(self.p1_mark)
 
         # check if cell is last move, and adjust color if so
-        last_move = self.moves[-1][1]
-        if self.board[last_move] == v:
-            f = self.color_last_move
+        if len(self.moves) > 0:
+            last_move = self.moves[-1][1]
+            if self.board[last_move] == v:
+                f = self.color_last_move
+        
+        if self.state == GameState.P1_WIN or self.state == GameState.P2_WIN:
+            if v in self.win_line:
+                b = self.color_win_line
 
-        # check if cell is in a winning lime
-    
-    
-        return s, f, b
+        return s, f + b
     
         
 
@@ -213,6 +216,17 @@ class TicTacToe():
             else:
                 return False
 
+    def is_win(self):
+        if self.state == GameState.P1_WIN or self.state == GameState.P2_WIN:
+            return True
+        elif self.state == GameState.TIE:
+            return False
+        else: # check to see if last move was a winning move
+            if len(self.moves) < 2 * self.n:
+                return False
+            else:
+                t_cell = self.moves[-1]
+                ## tjc check each line on scope of t_cell
 
     def get_lines_state(self):
         # list of tuples - each tuple containg number of +ves and -eves in a line
@@ -223,7 +237,10 @@ class TicTacToe():
             state = (sum(line > self._MOVE_BASE), sum(line < -self._MOVE_BASE))
             self.lines_state.append(state)
             if state[0] == self.n or state[1] == self.n:
+                self.win_line = line
                 return c
+
+                ## could check scope of last move first for winning line
 
         return -1 # no winning line
 
@@ -249,43 +266,45 @@ class TicTacToe():
 
 if __name__ == "__main__":
  
-    dim = 1
+    dim = 2
     size = 3
     ttt = TicTacToe(dim, size, 1)
     ttt.p1_name = 'Tom'
     ttt.p2_name = 'Other'
 
-    ttt.color_last_move = Fore.MAGENTA
+    #ttt.color_last_move = Fore.MAGENTA
 
     print(ttt.state_str())
 
-    m = ttt.move('1')
+    m = ttt.move('11')
     ttt.display(False)
     #print(ttt.state_str())
 
-#     m = ttt.move('12')
-#     ttt.display(False)
+    m = ttt.move('12')
+    ttt.display(False)
 #     print(ttt.state_str())
     
-#     m = ttt.move('11')
-#     ttt.display(False)
+    m = ttt.move('21')
+    ttt.display(False)
 #     print(ttt.state_str())
 
-#     m = ttt.move('33')
-#     ttt.display(False)
+    m = ttt.move('33')
+    ttt.display(False)
 #     print(ttt.state_str())
 
-#     m = ttt.move('21')
-#     ttt.display(False)
+    m = ttt.move('31')
+    ttt.display(False)
 #     print(ttt.state_str())
 
-#     m = ttt.move('23')
-#     ttt.display(False)
+    print(ttt.win_line)
+
+#    m = ttt.move('23')
+#    ttt.display(False)
 #     print(ttt.state_str())
 
 # # game over
-#     m = ttt.move('31')
-#     #ttt.display(False)
+#    m = ttt.move('31')
+#    ttt.display(False)
 #     print(ttt.state_str())
 
 #     ttt.undo()
