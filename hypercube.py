@@ -1080,7 +1080,7 @@ def join_multiline(iter: Iterable[str], divider: str = ' ', divide_empty_lines: 
     else:
         st = []
         for t in tl:
-            if all([x.strip() == '' for x in t]):
+            if all([not x.strip() for x in t]):
                 st.append('')
             else:
                 st.append(divider.join(t))
