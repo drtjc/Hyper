@@ -162,7 +162,6 @@ class TicTacToe():
                 f = self.color_last_move
         
         if self.state == GameState.WIN_P1 or self.state == GameState.WIN_P2:
-            print("here")
             if v in self.win_line:
                 b = self.color_win_line
 
@@ -356,34 +355,34 @@ class TicTacToe():
 
 if __name__ == "__main__":
  
-    dim = 2
+    dim = 4
     size = 3
     ttt = TicTacToe(dim, size, 1)
     ttt.p_names = ['Tom 2', 'Tom']
     ttt.p_names = 'Tom 2', 'Tom'
     print(ttt.p_names[0])
-    ttt.p_marks = ["O", "X"]
+    ttt.p_marks = ["0", "X"]
     #ttt.color_last_move = Fore.MAGENTA
 
     #print(ttt.state_str())
 
-    ttt.move('11')
+    ttt.move('1111')
     ttt.display(False)
     print(ttt.state_str())
 
-    ttt.move('12')
+    ttt.move('1211')
     ttt.display(False)
     print(ttt.state_str())
 
-    ttt.move('22')
+    ttt.move('2222')
     ttt.display(False)
     print(ttt.state_str())
     
-    ttt.move('13')
+    ttt.move('1312')
     ttt.display(False)
     print(ttt.state_str())
 
-    ttt.move('33')
+    ttt.move('3333')
     ttt.display(False)
     print(ttt.state_str())
 
