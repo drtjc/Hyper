@@ -9,7 +9,7 @@ from colorama import init, Fore, Back, Style
 init()
 
 import hypercube as hc
-
+Cell_coord = hc.Cell_coord
 
 class Error(Exception):
     """ Base class for exceptions in this module."""
@@ -19,7 +19,7 @@ class Error(Exception):
 class MoveError(Error):
     """ Raised if a cell has already been played."""
 
-    def __init__(self, message: str, cell: Tuple[int, ...]):
+    def __init__(self, message: str, cell: Cell_coord):
         self.message = message
         self.cell = cell
 
@@ -43,21 +43,13 @@ class GameState(Enum):
 class Memory(NamedTuple):
     dtype: int
     board: int
-    lines: int
     scopes: int
     total: int
 
 
 class Move(NamedTuple):
     Player: int
-    Cell: hc.Cell_coord
-
-
-class LineState(NamedTuple):
-    P1_total_marks: int
-    P1_consecutive_marks: int
-    P2_total_marks: int
-    P2_consecutive_marks: int
+    Cell: Cell_coord
 
 
 class TicTacToe():
@@ -72,7 +64,7 @@ class TicTacToe():
     def __init__(self, d: int, n: int, moves_per_turn = 1, drop = False) -> None:
 
         try:            
-            struct = hc.structure_np(d, n, zeros = False, OFFSET = self._MOVE_BASE)
+            self.board, _, self.scopes = hc.structure_np(d, n, zeros = False, OFFSET = self._MOVE_BASE)
         except MemoryError:
             print("The board is too big to fit into available memory")
             raise
@@ -81,17 +73,9 @@ class TicTacToe():
         self.n = n
         self.moves_per_turn = moves_per_turn
         self.drop = drop
-
-        self.board = struct[0]
-        self.lines = struct[1]
-        self.num_lines = len(self.lines)
-        self.scopes = struct[2]
-
         self.reset()
-
         self._p_names = ['Player 1', 'Player 2']
-        self._p_marks = ['O', 'X']
-        
+        self._p_marks = ['O', 'X']     
         self.color_last_move = Fore.BLUE
         self.color_win_line = Back.MAGENTA
 
@@ -140,7 +124,7 @@ class TicTacToe():
         return self.GameState_str[self.state].replace('p1', self.p_names[0]).replace('p2', self.p_names[1])
 
     def memory(self) -> Memory:
-        m = self.board.nbytes, getsizeof(self.lines), getsizeof(self.scopes)
+        m = self.board.nbytes, getsizeof(self.scopes)
         return Memory(self.board.dtype, *m, sum(m))
 
     def display_cell(self, v: int) -> Tuple[str, str]:
@@ -173,7 +157,7 @@ class TicTacToe():
             b = f'\nd = {self.d}, n = {self.n}\n\n' + b
         print(b)
 
-    def str_to_tuple(self, cell: str, base: int = 1) -> Tuple[int, ...]:
+    def str_to_tuple(self, cell: str, base: int = 1) -> Cell_coord:
         if isinstance(cell, str):
             # check to see if there are any non-digits
             nd = re.findall(r'\D+', cell) 
@@ -197,7 +181,7 @@ class TicTacToe():
         else:
             raise TypeError(f'String argument expected, got {type(cell)})')
 
-    def move(self, cell: Union[str, Tuple[int, ...]], base: int = 1) -> None:
+    def move(self, cell: Union[str, Cell_coord], base: int = 1) -> None:
         if self.state != GameState.IN_PROGRESS:
             raise GameOverError("The game is over")
 
@@ -270,33 +254,10 @@ class TicTacToe():
             else:
                 t_cell = self.moves[-1][1]
                 for line in self.scopes[t_cell]:
-                    state = self.line_state(line)
-                    if state.P1_total_marks == self.n or state.P2_total_marks == self.n:
+                    if sum(line > self._MOVE_BASE) == self.n or sum(line < -self._MOVE_BASE) == self.n:
                         self.win_line = line
                         return True
                 return False
-
-
-    def line_state(self, line: hc.Line_np) -> LineState:
-        return LineState(sum(line > self._MOVE_BASE), -1, sum(line < -self._MOVE_BASE), -1)
-
-
-    def get_lines_state(self) -> int:
-        # list of tuples - each tuple containg number of +ves and -eves in a line
-        ##TJC do we want also how many are consecutive??
-        # return idx of winning line if there is one
-        self.lines_state.clear()
-        for c, line in enumerate(self.lines):
-            #state = (sum(line > self._MOVE_BASE), sum(line < -self._MOVE_BASE))
-            state = LineState(sum(line > self._MOVE_BASE), -1, sum(line < -self._MOVE_BASE), -1)
-            self.lines_state.append(state)
-            if state[0] == self.n or state[2] == self.n:
-                self.win_line = line
-                return c
-
-                ## could check scope of last move first for winning line
-
-        return -1 # no winning line
 
 
     def undo(self, replace: int = 0) -> None:
