@@ -315,9 +315,9 @@ if __name__ == "__main__":
     ttt.display(False)
     print(ttt.state_str())
 
-    ttt.move('3333')
-    ttt.display(False)
-    print(ttt.state_str())
+#    ttt.move('3333')
+#    ttt.display(False)
+#    print(ttt.state_str())
 
 
 
