@@ -69,8 +69,19 @@ class Heuristics(Strategy):
 
 
 @strategy
-class Test(Strategy):
-    pass
+class Interactive(Strategy):
+    
+    def __init__(self, d: int, n: int, moves_per_turn = 1, drop = False) -> None:
+        super().__init__(d, n, moves_per_turn, drop)
+
+    def move(self, cell: Cell_coord) -> Cell_coord:
+        pass
+
+    def undo(self, cell: Cell_coord) -> Cell_coord:
+        pass
+
+
+
 
 if __name__ == "__main__":
 

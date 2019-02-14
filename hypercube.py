@@ -44,6 +44,7 @@ import numpy as np
 from scipy.special import comb
 import itertools as it
 import numbers
+import re
 from collections import defaultdict, Counter as counter
 from typing import List, Callable, Union, Collection, Tuple, Any, DefaultDict, TypeVar, Counter, Dict, Iterable
 
@@ -1089,7 +1090,7 @@ def join_multiline(iter: Iterable[str], divider: str = ' ', divide_empty_lines: 
     return '\n'.join(st)            
 
 
-# The following 2 functions are helper functions
+# The following functions are helper functions
 
 def slice_ndarray(arr: np.ndarray, axes: Collection[int], 
                 coords: Collection[int]) -> np.ndarray:
@@ -1203,6 +1204,89 @@ def insert_into_tuple(tup: Tuple, pos: Union[int, Collection[int]],
             tl.insert(p, v)
 
     return tuple(tl)
+
+
+def str_to_tuple(d: int, n: int, cell: str, offset: int = 1) -> Cell_coord:
+    """ Returns cells coordinates provided as a string as a tuple of integers.
+
+    Parameters
+    ----------
+    d : int
+        The number of dimensions of the hypercube
+    n : int
+        The number of cells in any dimension
+    cell: str
+        cell coordinates specified as a string (see Notes).
+        Will accept a non-string arguments which is attempted to
+        be cast to a string.
+    offset: int
+        idx offset - typically 0 or 1.
+ 
+    Raises
+    ------
+    ValueError:
+        1. if digits are not separated and the n is greater than 9
+        2. Incorrect numbers of coordinates provided
+        3. One or more coordinates is not valid
+
+    Notes
+    -----
+    If the string is all digits then assumes that each digit is a coordinate.
+    If non-digit character as provided then assumes that these split coordinates.
+
+    Returns
+    -------
+    tuple :
+        A tuple containing the cell coordinates.
+             
+    Examples
+    --------
+    >>> d = 3
+    >>> n = 3 
+    >>> str_to_tuple(d, n, '123')
+    (0, 1, 2)
+    >>> str_to_tuple(d, n, '012', offset = 0)
+    (0, 1, 2)
+    >>> str_to_tuple(d, n, '1,2::3')
+    (0, 1, 2)
+    >>> str_to_tuple(d, n, 123)
+    (0, 1, 2)
+    >>> str_to_tuple(d, n, '12')
+    Traceback (most recent call last):
+        ...
+    ValueError: Incorrect number of coordinates provided
+    >>> str_to_tuple(d, n, '125')
+    Traceback (most recent call last):
+        ...
+    ValueError: One or more coordinates are not valid
+    >>> d = 3
+    >>> n = 10
+    >>> str_to_tuple(d, n, '123')
+    Traceback (most recent call last):
+        ...
+    ValueError: Board is too big for each dimension to be specified by single digit
+    """
+
+    cell = str(cell)
+    # check to see if there are any non-digits
+    nd = re.findall(r'\D+', cell) 
+    if len(nd) == 0: 
+        if n > 9:
+            raise ValueError("Board is too big for each dimension to be specified by single digit")
+        else:
+            tup = tuple(int(coord) - offset for coord in cell) 
+    else: # there are non-digits, use these as separators
+        tup = tuple(int(coord) - offset for coord in re.findall(r'\d+', cell)) 
+    
+    # check that correct number of coordinates specified
+    if len(tup) != d:
+        raise ValueError("Incorrect number of coordinates provided")
+
+    # check that each coordinate is valid
+    if all(t in range(n) for t in tup):
+        return tup
+    else:
+        raise ValueError("One or more coordinates are not valid")           
 
 
 def _lines_np_coord_check(d: int, n: int) -> bool:

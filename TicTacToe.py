@@ -1,5 +1,4 @@
 import numpy as np #type: ignore
-import re
 from collections.abc import Sequence
 from sys import getsizeof
 from enum import Enum, auto
@@ -155,38 +154,14 @@ class TicTacToe():
             b = f'\nd = {self.d}, n = {self.n}\n\n' + b
         print(b)
 
-    ## TJC put this in hypercube, and tuple_to_str
-    def str_to_tuple(self, cell: str, base: int = 1) -> Cell_coord:
-        if isinstance(cell, str):
-            # check to see if there are any non-digits
-            nd = re.findall(r'\D+', cell) 
-            if len(nd) == 0: 
-                if self.d - -1 + base > 9:
-                    raise ValueError("Too many dimensions for each to be specified by single digit")
-                else:
-                    tup = tuple(int(coord) - base for coord in cell) 
-            else: # there are non-digits, use these as separators
-                tup = tuple(int(coord) - base for coord in re.findall(r'\d+', cell)) 
-            
-            # check that correct number of coordinates specified
-            if len(tup) != self.d:
-                raise ValueError("Incorrect number of coordinates provided")
 
-            # check that each coordinate is valid
-            if all(t in range(self.n) for t in tup):
-                return tup
-            else:
-                raise ValueError("One or more coordinates are not valid")           
-        else:
-            raise TypeError(f'String argument expected, got {type(cell)})')
-
-    def move(self, cell: Union[str, Cell_coord], base: int = 1) -> None:
+    def move(self, cell: Union[str, Cell_coord], offset: int = 1) -> None:
         if self.state != GameState.IN_PROGRESS:
             raise GameOverError("The game is over")
 
         try:
             if isinstance(cell, str):
-                t_cell = self.str_to_tuple(cell, base)
+                t_cell = hc.str_to_tuple(self.d, self.n, cell, offset)
             else:
                 t_cell = tuple(cell)
             
