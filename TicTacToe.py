@@ -90,8 +90,6 @@ class TicTacToe():
         self.moves: List[Move] = []
         self.moves_played: List[int] = [0, 0] # number of moves played in game by each player
 
-        self.lines_state: List[LineState] = []
-
     @property
     def p_names(self) -> Sequence[str]:
         return self._p_names
@@ -157,6 +155,7 @@ class TicTacToe():
             b = f'\nd = {self.d}, n = {self.n}\n\n' + b
         print(b)
 
+    ## TJC put this in hypercube, and tuple_to_str
     def str_to_tuple(self, cell: str, base: int = 1) -> Cell_coord:
         if isinstance(cell, str):
             # check to see if there are any non-digits
@@ -220,8 +219,6 @@ class TicTacToe():
             self.active_player = int(not self.active_player)
 
         # check for win now
-        #idx = self.get_lines_state()
-        #if idx > - 1:
         if self.is_win(): 
             self.state = GameState.WIN_P2 if self.active_player else GameState.WIN_P1
             return
@@ -308,7 +305,7 @@ class TicTacToe():
         self.moves_played[self.active_player] -= 1
         self.board[self.moves[-1][1]] = replace
         del self.moves[-1]
-        self.get_lines_state()
+
 
 
 

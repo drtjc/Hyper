@@ -20,6 +20,15 @@ class Strategy(abc.ABC):
         """ Undo last move played """
 
 
+
+strategies = []
+def strategy(s):
+    strategies.append(s)
+    return strategy
+
+
+
+
 import hypercube as hc
 
 #class LineState(NamedTuple):
@@ -29,7 +38,7 @@ import hypercube as hc
 #    P2_consecutive_marks: int
 
 
-
+@ strategy
 class Heuristics(Strategy):
 
     def __init__(self, d: int, n: int, moves_per_turn = 1, drop = False) -> None:
@@ -55,3 +64,11 @@ class Heuristics(Strategy):
     #     return -1 # no winning line
 
 
+@ strategy
+class Test(Strategy):
+    pass
+
+if __name__ == "__main__":
+
+    sn = [s.__name__ for s in strategies]
+    print(sn)
