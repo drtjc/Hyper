@@ -24,7 +24,7 @@ class Strategy(abc.ABC):
 strategies = []
 def strategy(s):
     strategies.append(s)
-    return strategy
+    return s
 
 
 
@@ -38,13 +38,17 @@ import hypercube as hc
 #    P2_consecutive_marks: int
 
 
-@ strategy
+@strategy
 class Heuristics(Strategy):
 
     def __init__(self, d: int, n: int, moves_per_turn = 1, drop = False) -> None:
         super().__init__(d, n, moves_per_turn, drop)
 
+    def move(self, cell: Cell_coord) -> Cell_coord:
+        pass
 
+    def undo(self, cell: Cell_coord) -> Cell_coord:
+        pass
 
     # def get_lines_state(self) -> int:
     #     # list of tuples - each tuple containg number of +ves and -eves in a line
@@ -64,7 +68,7 @@ class Heuristics(Strategy):
     #     return -1 # no winning line
 
 
-@ strategy
+@strategy
 class Test(Strategy):
     pass
 
@@ -72,3 +76,6 @@ if __name__ == "__main__":
 
     sn = [s.__name__ for s in strategies]
     print(sn)
+
+    h = Heuristics(3, 4)
+    print(h.d)
