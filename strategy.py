@@ -1,7 +1,8 @@
 import abc
+import hypercube as hc
 from typing import Tuple
 
-Cell_coord = Tuple[int, ...]
+Cell_coord = hc.Cell_coord
 
 class Strategy(abc.ABC):
 
@@ -19,8 +20,6 @@ class Strategy(abc.ABC):
     def undo(self, cell: Cell_coord) -> Cell_coord:
         """ Undo last move played """
 
-
-
 strategies = []
 def strategy(s):
     strategies.append(s)
@@ -29,7 +28,7 @@ def strategy(s):
 
 
 
-import hypercube as hc
+
 
 #class LineState(NamedTuple):
 #    P1_total_marks: int
@@ -66,6 +65,20 @@ class Heuristics(Strategy):
     #             ## could check scope of last move first for winning line
 
     #     return -1 # no winning line
+
+
+@strategy
+class Random(Strategy):
+    
+    def __init__(self, d: int, n: int, moves_per_turn = 1, drop = False) -> None:
+        super().__init__(d, n, moves_per_turn, drop)
+
+    def move(self, cell: Cell_coord) -> Cell_coord:
+        pass
+
+    def undo(self, cell: Cell_coord) -> Cell_coord:
+        pass
+
 
 
 @strategy

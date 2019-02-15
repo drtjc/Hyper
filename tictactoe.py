@@ -42,6 +42,7 @@ class GameState(Enum):
 class Memory(NamedTuple):
     dtype: int
     board: int
+    lines: int
     scopes: int
     total: int
 
@@ -63,7 +64,7 @@ class TicTacToe():
     def __init__(self, d: int, n: int, moves_per_turn = 1, drop = False) -> None:
 
         try:            
-            self.board, _, self.scopes = hc.structure_np(d, n, zeros = False, OFFSET = self._MOVE_BASE)
+            self.board, self.lines, self.scopes = hc.structure_np(d, n, zeros = False, OFFSET = self._MOVE_BASE)
         except MemoryError:
             print("The board is too big to fit into available memory")
             raise
@@ -121,10 +122,10 @@ class TicTacToe():
         return self.GameState_str[self.state].replace('p1', self.p_names[0]).replace('p2', self.p_names[1])
 
     def memory(self) -> Memory:
-        m = self.board.nbytes, getsizeof(self.scopes)
+        m = self.board.nbytes, getsizeof(self.lines), getsizeof(self.scopes)
         return Memory(self.board.dtype, *m, sum(m))
 
-    def display_cell(self, v: int) -> Tuple[str, str]:
+    def display_cell(self, v: int) -> Tuple[str, str, str]:
 
         f: str = Fore.RESET
         b: str = Back.RESET
@@ -146,7 +147,7 @@ class TicTacToe():
             if v in self.win_line:
                 b = self.color_win_line
 
-        return s, f + b
+        return s, f + b, Style.RESET_ALL
     
     def display(self, header: bool = False) -> None:
         b = hc.display_np(self.board, self.display_cell) + '\n'
@@ -285,39 +286,49 @@ class TicTacToe():
 
 
 
+## TO DO
+#hypercube - numlines by dimension
+# turn into generators
+
 
 if __name__ == "__main__":
  
-    dim = 4
-    size = 3
+    dim = 6
+    size = 7
     ttt = TicTacToe(dim, size, 1)
-    ttt.p_names = ['Tom 2', 'Tom']
-    ttt.p_names = 'Tom 2', 'Tom'
-    print(ttt.p_names[0])
-    ttt.p_marks = ["0", "X"]
-    #ttt.color_last_move = Fore.MAGENTA
+    #ttt.p_names = ['Tom 2', 'Tom']
+    #ttt.p_names = 'Tom 2', 'Tom'
+    #print(ttt.p_names[0])
+    #ttt.p_marks = ["O", "X"]
 
+    #_, scopes = hc.structure_coord(dim, size)
+    #print(scopes[(0,0)])
+
+    #s0 = hc.get_scope_cell_coord(dim, size, (0,0))
+    #print(s0)
+
+    print(ttt.memory())
     #print(ttt.state_str())
 
-    ttt.move('1111')
-    ttt.display(False)
-    print(ttt.state_str())
+    # ttt.move('1111')
+    # ttt.display(False)
+    # print(ttt.state_str())
 
-    ttt.move('1211')
-    ttt.display(False)
-    print(ttt.state_str())
+    # ttt.move('1211')
+    # ttt.display(False)
+    # print(ttt.state_str())
 
-    ttt.move('2222')
-    ttt.display(False)
-    print(ttt.state_str())
+    # ttt.move('2222')
+    # ttt.display(False)
+    # print(ttt.state_str())
     
-    ttt.move('1312')
-    ttt.display(False)
-    print(ttt.state_str())
+    # ttt.move('1312')
+    # ttt.display(False)
+    # print(ttt.state_str())
 
-#    ttt.move('3333')
-#    ttt.display(False)
-#    print(ttt.state_str())
+    # ttt.move('3333')
+    # ttt.display(False)
+    # print(ttt.state_str())
 
 
 

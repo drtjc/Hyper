@@ -616,7 +616,7 @@ def get_lines_grouped_coord(d: int, n: int) -> Tuple[List[Lines_coord], int]:
     2
     """
     
-    lines: List = []
+    lines = []
     count = 0
 
     # loop over the numbers of dimensions
@@ -856,7 +856,7 @@ def scopes_size_cell(scopes: Scopes) -> DefaultDict[int, List[Cell_coord]]:
 # It is assumed that an numpy ndarray has been used to
 # represent the hypercube
 
-def display_np(arr: Cube_np, display_cell: Callable[[Any], Tuple[str, str]] = None, ul = False) -> str:
+def display_np(arr: Cube_np, display_cell: Callable[[Any], Tuple[str, str, str]] = None, ul = False) -> str:
     """ Construct a string to display the hypercube in the terminal.
 
     Parameters
@@ -892,7 +892,7 @@ def display_np(arr: Cube_np, display_cell: Callable[[Any], Tuple[str, str]] = No
     the character 'X' is underlined to give 'X̲'. 
     This function is recursive, it starts with hypercube and keeps removing dimensions
     until at a single cell, which can be given a string value.
-    We are trying to siaply d dimensions in 2 dimension. to do this, odd dimension are 
+    We are trying to display d dimensions in 2 dimension. to do this, odd dimensions are 
     shown horizontally; even dimensions are shown vertically.
 
     Examples
@@ -900,18 +900,19 @@ def display_np(arr: Cube_np, display_cell: Callable[[Any], Tuple[str, str]] = No
     >>> import numpy as np
     >>> from pprint import pprint
 
-    >>> def dc(v: Any) -> Tuple[str, str]:
+    >>> def dc(v: Any) -> Tuple[str, str, str]:
     ...
     ...    # define colors - could also use colorama module
     ...    # red foreground + yellow background
-    ...    fmt = '\033[31;43m'
+    ...    pre_fmt = '\033[31;43m'
+    ...    post_fmt = '\033[0m' # removes color settings
     ...
     ...    if v > 0:
-    ...        return 'X', fmt
+    ...        return 'X', pre_fmt, post_fmt
     ...    elif v < 0:
-    ...        return 'O', fmt
+    ...        return 'O', pre_fmt, post_fmt
     ...    else:
-    ...        return ' ', ''
+    ...        return ' ', '', ''
     
     >>> d = 3
     >>> n = 3 
@@ -927,16 +928,16 @@ def display_np(arr: Cube_np, display_cell: Callable[[Any], Tuple[str, str]] = No
 
     if arr.size == 1: # arr is a single cell
         if display_cell is None:
-            s, fmt = str(arr), ''
+            s, pre_fmt, post_fmt = str(arr), '', ''
         else:
-            s, fmt = display_cell(arr)
+            s, pre_fmt, post_fmt = display_cell(arr)
 
         # underline displayed string (to repsent board structure) unless 
         # string is in the bottom row of array
         if ul:
             s = '_' * len(s) if s.isspace() else underline(s)
             
-        return fmt + s + '\033[0m' # '\033[0m' removes color settings
+        return pre_fmt + s + post_fmt
 
     # arr is not a single cell
     d = arr.ndim
@@ -1326,3 +1327,32 @@ def _lines_np_coord_check(d: int, n: int) -> bool:
 
     return set(t_np) == set(t_coord)
     
+
+
+
+def get_scope_cell_coord(d: int, n: int, cell: Cell_coord) -> Lines_coord: 
+    
+    lines = []
+
+    # loop over the numbers of dimensions
+    for i in range(d): 
+        # loop over all possible combinations of i dimensions
+        diagonals = get_diagonals_coord(i + 1, n)
+
+        for i_comb in it.combinations(range(d), r = i + 1): 
+              
+            other_d = set(range(d)) - set(i_comb)
+            
+            for diagonal in diagonals:
+                for c in diagonal:
+                    # if selected dimensions of c match cell, then c
+                    # # with other dimensions of cell are in scope 
+                    cc = tuple(cell[i] for i in i_comb)
+                    fc = tuple(c[i] for i in i_comb)
+                    oc = tuple(cell[i] for i in other_d)
+                    if fc == cc:
+                        tt = insert_into_tuple(cc, other_d, oc)
+                        lines.append(tt)
+                        break
+
+    return lines
