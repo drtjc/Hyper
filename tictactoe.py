@@ -61,10 +61,18 @@ class TicTacToe():
     GameState_str = {GameState.WIN_P1: 'p1 wins', GameState.WIN_P2: 'p2 wins',
                      GameState.TIE: "It's a tie", GameState.IN_PROGRESS: 'In progress'}
 
-    def __init__(self, d: int, n: int, moves_per_turn = 1, drop = False) -> None:
+    def __init__(self, d: int, n: int, moves_per_turn: int = 1, 
+                 drop: bool = False, preload_scope: bool = True) -> None:
 
         try:            
-            self.board, self.lines, self.scopes = hc.structure_np(d, n, zeros = False, OFFSET = self._MOVE_BASE)
+            #self.board, self.lines, self.scopes = hc.structure_np(d, n, zeros = False, OFFSET = self._MOVE_BASE)
+            ## TJC
+            if preload_scope:
+                self.board, _, self.scopes = hc.structure_np(d, n, zeros = False, OFFSET = self._MOVE_BASE)
+            else:    
+                self.board, _, _ = hc.structure_np(d, n, zeros = False, OFFSET = self._MOVE_BASE)
+                #self.scopes = None
+            #self.lines = None
         except MemoryError:
             print("The board is too big to fit into available memory")
             raise
@@ -295,7 +303,7 @@ if __name__ == "__main__":
  
     dim = 6
     size = 7
-    ttt = TicTacToe(dim, size, 1)
+    ttt = TicTacToe(dim, size, preload_scope = False)
     #ttt.p_names = ['Tom 2', 'Tom']
     #ttt.p_names = 'Tom 2', 'Tom'
     #print(ttt.p_names[0])
