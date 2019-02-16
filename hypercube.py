@@ -279,6 +279,95 @@ def get_diagonals_np() -> Callable[[Cube_np], Lines_np]:
     return diagonals_np
 
 
+
+
+
+
+
+def get_diagonals_np_2(arr: Cube_np) -> Iterator[Line_np]:
+    """ Calculates the d-agonals of a d-array. 
+
+    Parameters
+    ----------
+    arr : numpy.ndarray
+        A d-array whose d-agonals are to be calculated
+
+    Returns
+    -------
+    Iterator :
+        An iterator of numpy.ndarray views of the d-gonals of `arr`.
+
+    Notes
+    -----
+    The number of corners of `arr` is 2^d. The number of d-agonals 
+    is 2^d / 2 since two connecting corners form a line. 
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> arr = np.arange(8).reshape(2, 2, 2)
+    >>> arr
+    array([[[0, 1],
+            [2, 3]],
+    <BLANKLINE>
+           [[4, 5],
+            [6, 7]]])
+    >>> diagonals = list(get_diagonals_np_2(arr))
+    >>> diagonals
+    [array([0, 7]), array([1, 6]), array([4, 3]), array([5, 2])]
+    >>> arr[0, 0, 0] = 99
+    >>> diagonals
+    [array([99,  7]), array([1, 6]), array([4, 3]), array([5, 2])]
+    """
+    
+    # The function is recursive. How it works is best shown by example.
+    # 1d: arr = [0, 1] then the diagonal is also [0, 1].
+    
+    # 2d: arr = [[0, 1],
+    #            [2, 3]]
+    # The numpy diagonal method gives the main diagonal = [0, 3], a 1d array
+    # which is recursively passed to the function.
+    # To get the opposite diagonal we first use the numpy flip function to
+    # reverse the order of the elements along the given dimension, 0 in this case.
+    # This gives [[2, 3],
+    #              0, 1]]
+    # The numpy diagonal method gives the main diagonal = [2, 1], a 2d array
+    # which is recursively passed to the function.
+
+    # 3d: arr = [[[0, 1],
+    #             [2, 3]],
+    #            [[4, 5],
+    #             [6, 7]]]
+    # The numpy diagonal method gives the main diagonals in the 3rd dimension
+    # as rows.
+    #            [[0, 6],
+    #             [1, 7]]
+    # Note that the diagonals of this array are [0, 7] and [6, 1] which are
+    # retrieved by a recurive call to the function.
+    # We now have 2 of the 4 3-agonals of the orginal 3d arr.
+    # To get the opposite 3-agonals we first use the numpy flip function which
+    # gives
+    #           [[[4, 5],
+    #             [6, 7]],
+    #            [[0, 1],
+    #             [2, 3]]]
+    # and a call to the numpy diagonal method gives
+    #            [[4, 2],
+    #             [5, 3]]
+    # The diagonals of this array are [4, 3] and [2, 5]
+    # We now have all four 3-agonals of the original 3d arr.
+
+    if arr.ndim == 1:
+        yield arr
+    else:
+        yield from get_diagonals_np_2(arr.diagonal())
+        yield from get_diagonals_np_2(np.flip(arr, 0).diagonal())
+
+
+
+
+
+
 def get_lines_grouped_np(arr: Cube_np) -> Tuple[List[Lines_np], int]: 
     """ Returns the lines in an array grouped by dimension
 
@@ -350,6 +439,7 @@ def get_lines_grouped_np(arr: Cube_np) -> Tuple[List[Lines_np], int]:
                 sl = slice_ndarray(arr, other_d, cell)
                 # get all possible lines from slice
                 diags = get_diagonals_np()(sl)
+                #diags = list(testd(sl))
                 count += len(diags)
                 lines_i.extend(diags)
 
@@ -1393,5 +1483,14 @@ def get_scope_cell_coord(d: int, n: int, cell: Cell_coord) -> Lines_coord:
 
 
 if __name__ == "__main__":
-    pass   
+    
+    d = 3
+    n = 3
+    arr = np.arange(n ** d).reshape([n] * d)
  
+    diagonals = get_diagonals_np()
+    diags = diagonals(arr)
+    print(diags)
+
+    dd = testd(arr)
+    print(list(dd))
