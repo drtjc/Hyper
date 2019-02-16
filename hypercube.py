@@ -38,10 +38,9 @@ a user-implementation of the hypercube. These funtions have
 the suffix _coord.
 """
 
-
-# numpy and scipy don't yet have type annotations
-import numpy as np 
-from scipy.special import comb
+# numpy (and scipy) don't yet have type annotations
+import numpy as np # type: ignore
+from scipy.special import comb # type: ignore
 import itertools as it
 import numbers
 import re
@@ -1375,9 +1374,9 @@ def get_scope_cell_coord(d: int, n: int, cell: Cell_coord) -> Lines_coord:
 
 if __name__ == "__main__":
     
-    d = 3
-    n = 4
-    arr = np.arange(n ** d).reshape([n] * d)
+    d = 9
+    n = 10
+    #arr = np.arange(n ** d).reshape([n] * d)
  
-    print(list(num_lines_grouped(d,n)))
+    
     print(num_lines(d, n))
