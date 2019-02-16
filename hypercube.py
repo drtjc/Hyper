@@ -249,7 +249,7 @@ def get_diagonals_np(arr: Cube_np) -> Generator[Line_np, None, None]:
         yield from get_diagonals_np(np.flip(arr, 0).diagonal())
 
 
-def get_lines_grouped_np(arr: Cube_np) -> List[Lines_np]: 
+def get_lines_grouped_np(arr: Cube_np) -> Generator[Lines_np, None, None]: 
     """ Returns the lines in an array grouped by dimension
 
     Parameters
@@ -263,18 +263,9 @@ def get_lines_grouped_np(arr: Cube_np) -> List[Lines_np]:
         A list of numpy.ndarray views of the lines in `arr`.
         List is nested list of i-agonals
             
-    Raises
-    ------
-    AssertionError
-        If number of lines returned by this function does not
-        equal that calculated by the num_lines function.
-        THIS IS A CRITCAL ERROR THAT MEANS THIS FUNCTION HAS
-        A FLAWED IMPLEMENTATION.
-    
     See Also
     --------
-    num_lines
-    get_diagonals_np
+    get_line_i_np
 
     Notes
     -----
@@ -289,7 +280,7 @@ def get_lines_grouped_np(arr: Cube_np) -> List[Lines_np]:
     >>> arr
     array([[0, 1],
            [2, 3]])
-    >>> lines = get_lines_grouped_np(arr)
+    >>> lines = list(get_lines_grouped_np(arr))
     >>> lines
     [[array([0, 2]), array([1, 3]), array([0, 1]), array([2, 3])], [array([0, 3]), array([2, 1])]]
     >>> arr[0, 0] = 99
@@ -297,30 +288,35 @@ def get_lines_grouped_np(arr: Cube_np) -> List[Lines_np]:
     [[array([99,  2]), array([1, 3]), array([99,  1]), array([2, 3])], [array([99,  3]), array([2, 1])]]
     """
     
+    for i in range(arr.ndim):
+        yield from get_lines_i_np(arr, i)
+
+
+
+
+def get_lines_i_np(arr: Cube_np, i: int) -> Generator[Lines_np, None, None]: 
+
     d = arr.ndim
     n = arr.shape[0]
     lines = []
 
-    # loop over the numbers of dimensions
-    for i in range(d):
-        lines_i = [] 
-        # loop over all possible combinations of i dimensions
-        for i_comb in it.combinations(range(d), r = i + 1): 
-            # a cell could be in any position in the other dimensions
-            other_d = set(range(d)) - set(i_comb)
-            for cell in it.product(range(n), repeat = d - i - 1):
-                # take a slice of i dimensions given cell
-                sl = slice_ndarray(arr, other_d, cell)
-                # get all possible lines from slice
-                diags = list(get_diagonals_np(sl))
-                lines_i.extend(diags)
+    # loop over all possible combinations of i dimensions
+    for i_comb in it.combinations(range(d), r = i + 1): 
+        # a cell could be in any position in the other dimensions
+        other_d = set(range(d)) - set(i_comb)
+        for cell in it.product(range(n), repeat = d - i - 1):
+            # take a slice of i dimensions given cell
+            sl = slice_ndarray(arr, other_d, cell)
+            # get all possible lines from slice
+            lines.extend(list(get_diagonals_np(sl)))
 
-        lines.append(lines_i)
-
-    return lines
+    yield lines
+ 
 
 
-def get_lines_np(arr: Cube_np) -> Lines_np: 
+
+
+def get_lines_np(arr: Cube_np) -> Generator[Lines_np, None, None]: 
     """ Returns the lines in an array
 
     Parameters
@@ -361,7 +357,7 @@ def get_lines_np(arr: Cube_np) -> Lines_np:
     """
 
     grouped = get_lines_grouped_np(arr)
-    flat = [x for y in grouped for x in y]
+    flat = (x for y in grouped for x in y)
     return flat
 
 
@@ -497,7 +493,7 @@ def structure_np(d: int, n: int, zeros: bool = True, OFFSET: int = 0) -> Structu
     # function populates the arrays with values 0,1,2, ...
     dtype = np.int64 if n ** d > 2 ** 31 - OFFSET - 1 else np.int32
     arr = np.arange(n ** d, dtype = dtype).reshape([n] * d)
-    lines = get_lines_np(arr)
+    lines = list(get_lines_np(arr))
     scopes = get_scopes_np(lines, d)
     if zeros:
         arr.fill(0)

@@ -317,8 +317,8 @@ if __name__ == "__main__":
     #s0 = hc.get_scope_cell_coord(dim, size, (0,0))
     #print(s0)
 
-    print(ttt.memory())
-    print(ttt.state_str())
+    # print(ttt.memory())
+    # print(ttt.state_str())
 
     ttt.move('1111')
     ttt.display(False)
