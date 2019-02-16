@@ -46,7 +46,7 @@ import itertools as it
 import numbers
 import re
 from typing import List, Callable, Union, Collection, Tuple, Any, Type
-from typing import DefaultDict, TypeVar, Counter, Dict, Iterable, Iterator
+from typing import DefaultDict, TypeVar, Counter, Dict, Iterable, Generator
 
 Cell_coord = Tuple[int, ...]
 
@@ -63,7 +63,7 @@ Structure_coord = Tuple[Lines_coord, Scopes_coord]
 
 Scopes = Union[Scopes_np, Scopes_coord]
 
-def num_lines_grouped(d: int, n: int) -> Tuple[List[int], int]: 
+def num_lines_grouped(d: int, n: int) -> Generator[int, None, None]: 
     """ Calculate the number of lines in a hypercube.  
 
     Parameters
@@ -73,9 +73,9 @@ def num_lines_grouped(d: int, n: int) -> Tuple[List[int], int]:
     n : int
         The number of cells in any dimension
  
-    Returns
+    Yields
     -------
-    list:
+    Generator:
         The number of lines in a hypercube h(d, n) by dimension.
 
     Notes
@@ -125,16 +125,14 @@ def num_lines_grouped(d: int, n: int) -> Tuple[List[int], int]:
   
     Examples
     --------
-    >>> num_lines_grouped(2, 3)
-    ([6, 2], 8)
-    >>> num_lines_grouped(3, 4)
-    ([48, 24, 4], 76)
+    >>> list(num_lines_grouped(2, 3))
+    [6, 2]
+    >>> list(num_lines_grouped(3, 4))
+    [48, 24, 4]
     """
 
-    counts = []
     for i in range(1, d + 1):
-        counts.append(comb(d, i, True) * (n ** (d - i)) * (2 ** (i - 1)))
-    return counts, sum(counts)
+        yield comb(d, i, True) * (n ** (d - i)) * (2 ** (i - 1))
 
 
 def num_lines(d: int, n: int) -> int: 
@@ -168,123 +166,10 @@ def num_lines(d: int, n: int) -> int:
     76
     """
     
-    return num_lines_grouped(d, n)[1]
+    return sum(list(num_lines_grouped(d, n)))
 
 
-def get_diagonals_np() -> Callable[[Cube_np], Lines_np]:
-    """ Returns a function that calculates the d-agonals of a d-array. 
-    The returned function has the following structure:
-
-    Parameters
-    ----------
-    arr : numpy.ndarray
-        A d-array whose d-agonals are to be calculated
-
-    Returns
-    -------
-    list :
-        A list of numpy.ndarray views of the d-gonals of `arr`.
-
-    Notes
-    -----
-    The number of corners of `arr` is 2^d. The number of d-agonals 
-    is 2^d / 2 since two connecting corners form a line. 
-
-    Examples
-    --------
-    >>> import numpy as np
-    >>> arr = np.arange(8).reshape(2, 2, 2)
-    >>> arr
-    array([[[0, 1],
-            [2, 3]],
-    <BLANKLINE>
-           [[4, 5],
-            [6, 7]]])
-    >>> diagonals = get_diagonals_np()
-    >>> diags = diagonals(arr)
-    >>> diags
-    [array([0, 7]), array([1, 6]), array([4, 3]), array([5, 2])]
-    >>> arr[0, 0, 0] = 99
-    >>> diags
-    [array([99,  7]), array([1, 6]), array([4, 3]), array([5, 2])]
-
-    Note that the diagonals function returned by get_diagonals maintains
-    the list of diagonals returned between invocations.
-    >>> arr = np.arange(2)
-    >>> arr
-    array([0, 1])
-    >>> diagonals = get_diagonals_np()
-    >>> diags = diagonals(arr)
-    >>> diags
-    [array([0, 1])]
-    >>> diags = diagonals(arr)
-    >>> diags
-    [array([0, 1]), array([0, 1])]
-
-    Call get_diagonals again in order to clear the list of 
-    returned diagonals.
-    >>> get_diagonals_np()(arr)
-    [array([0, 1])]
-    >>> get_diagonals_np()(arr)
-    [array([0, 1])]
-    """
-    
-    # The diagonals function is recursive. How it works is best shown by example.
-    # 1d: arr = [0, 1] then the diagonal is also [0, 1].
-    
-    # 2d: arr = [[0, 1],
-    #            [2, 3]]
-    # The numpy diagonal method gives the main diagonal = [0, 3], a 1d array
-    # which is recursively passed to the diagonals function.
-    # To get the opposite diagonal we first use the numpy flip function to
-    # reverse the order of the elements along the given dimension, 0 in this case.
-    # This gives [[2, 3],
-    #              0, 1]]
-    # The numpy diagonal method gives the main diagonal = [2, 1], a 2d array
-    # which is recursively passed to the diagonals function.
-
-    # 3d: arr = [[[0, 1],
-    #             [2, 3]],
-    #            [[4, 5],
-    #             [6, 7]]]
-    # The numpy diagonal method gives the main diagonals in the 3rd dimension
-    # as rows.
-    #            [[0, 6],
-    #             [1, 7]]
-    # Note that the diagonals of this array are [0, 7] and [6, 1] which are
-    # retrieved by a recurive call to the diagonals function.
-    # We now have 2 of the 4 3-agonals of the orginal 3d arr.
-    # To get the opposite 3-agonals we first use the numpy flip function which
-    # gives
-    #           [[[4, 5],
-    #             [6, 7]],
-    #            [[0, 1],
-    #             [2, 3]]]
-    # and a call to the numpy diagonal method gives
-    #            [[4, 2],
-    #             [5, 3]]
-    # The diagonals of this array are [4, 3] and [2, 5]
-    # We now have all 4 3-agonals of the original 3d arr.
-
-    diags: Lines_np = []
-    
-    def diagonals_np(arr: Cube_np) -> Lines_np:
-        if arr.ndim == 1:
-            diags.append(arr)
-        else:
-            diagonals_np(arr.diagonal())
-            diagonals_np(np.flip(arr, 0).diagonal())
-        return diags
-
-    return diagonals_np
-
-
-
-
-
-
-
-def get_diagonals_np_2(arr: Cube_np) -> Iterator[Line_np]:
+def get_diagonals_np(arr: Cube_np) -> Generator[Line_np, None, None]:
     """ Calculates the d-agonals of a d-array. 
 
     Parameters
@@ -312,7 +197,7 @@ def get_diagonals_np_2(arr: Cube_np) -> Iterator[Line_np]:
     <BLANKLINE>
            [[4, 5],
             [6, 7]]])
-    >>> diagonals = list(get_diagonals_np_2(arr))
+    >>> diagonals = list(get_diagonals_np(arr))
     >>> diagonals
     [array([0, 7]), array([1, 6]), array([4, 3]), array([5, 2])]
     >>> arr[0, 0, 0] = 99
@@ -360,15 +245,11 @@ def get_diagonals_np_2(arr: Cube_np) -> Iterator[Line_np]:
     if arr.ndim == 1:
         yield arr
     else:
-        yield from get_diagonals_np_2(arr.diagonal())
-        yield from get_diagonals_np_2(np.flip(arr, 0).diagonal())
+        yield from get_diagonals_np(arr.diagonal())
+        yield from get_diagonals_np(np.flip(arr, 0).diagonal())
 
 
-
-
-
-
-def get_lines_grouped_np(arr: Cube_np) -> Tuple[List[Lines_np], int]: 
+def get_lines_grouped_np(arr: Cube_np) -> List[Lines_np]: 
     """ Returns the lines in an array grouped by dimension
 
     Parameters
@@ -381,8 +262,6 @@ def get_lines_grouped_np(arr: Cube_np) -> Tuple[List[Lines_np], int]:
     list :
         A list of numpy.ndarray views of the lines in `arr`.
         List is nested list of i-agonals
-    int :
-        The number of lines. 
             
     Raises
     ------
@@ -410,13 +289,9 @@ def get_lines_grouped_np(arr: Cube_np) -> Tuple[List[Lines_np], int]:
     >>> arr
     array([[0, 1],
            [2, 3]])
-    >>> lines, count = get_lines_grouped_np(arr)
+    >>> lines = get_lines_grouped_np(arr)
     >>> lines
     [[array([0, 2]), array([1, 3]), array([0, 1]), array([2, 3])], [array([0, 3]), array([2, 1])]]
-    >>> count
-    6
-    >>> len(lines)
-    2
     >>> arr[0, 0] = 99
     >>> lines
     [[array([99,  2]), array([1, 3]), array([99,  1]), array([2, 3])], [array([99,  3]), array([2, 1])]]
@@ -425,7 +300,6 @@ def get_lines_grouped_np(arr: Cube_np) -> Tuple[List[Lines_np], int]:
     d = arr.ndim
     n = arr.shape[0]
     lines = []
-    count = 0
 
     # loop over the numbers of dimensions
     for i in range(d):
@@ -438,15 +312,12 @@ def get_lines_grouped_np(arr: Cube_np) -> Tuple[List[Lines_np], int]:
                 # take a slice of i dimensions given cell
                 sl = slice_ndarray(arr, other_d, cell)
                 # get all possible lines from slice
-                diags = get_diagonals_np()(sl)
-                #diags = list(testd(sl))
-                count += len(diags)
+                diags = list(get_diagonals_np(sl))
                 lines_i.extend(diags)
 
         lines.append(lines_i)
 
-    assert count == num_lines(d, n)
-    return lines, count
+    return lines
 
 
 def get_lines_np(arr: Cube_np) -> Lines_np: 
@@ -489,9 +360,10 @@ def get_lines_np(arr: Cube_np) -> Lines_np:
     [array([99,  2]), array([1, 3]), array([99,  1]), array([2, 3]), array([99,  3]), array([2, 1])]
     """
 
-    grouped = get_lines_grouped_np(arr)[0]
+    grouped = get_lines_grouped_np(arr)
     flat = [x for y in grouped for x in y]
     return flat
+
 
 def get_scopes_np(lines: Lines_np, d: int) -> Scopes_np:
     """ Calculate the scope of each cell in a hypercube
@@ -1485,12 +1357,8 @@ def get_scope_cell_coord(d: int, n: int, cell: Cell_coord) -> Lines_coord:
 if __name__ == "__main__":
     
     d = 3
-    n = 3
+    n = 4
     arr = np.arange(n ** d).reshape([n] * d)
  
-    diagonals = get_diagonals_np()
-    diags = diagonals(arr)
-    print(diags)
-
-    dd = testd(arr)
-    print(list(dd))
+    print(list(num_lines_grouped(d,n)))
+    print(num_lines(d, n))
