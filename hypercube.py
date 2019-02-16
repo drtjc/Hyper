@@ -44,13 +44,12 @@ from scipy.special import comb # type: ignore
 import itertools as it
 import numbers
 import re
-from typing import List, Callable, Union, Collection, Tuple, Any, Type
+from typing import List, Callable, Union, Collection, Tuple, Any, Type, Deque
 from typing import DefaultDict, TypeVar, Counter, Dict, Iterable, Generator
 
 Cell_coord = Tuple[int, ...]
-
-Cube_np = TypeVar('Cube_np', np.ndarray, np.ndarray) # line should really be a numpy array representing h(d, n)
-Line_np = TypeVar('Line_np', np.ndarray, np.ndarray) # line should really be a 1d numpy array with n elements
+Cube_np = TypeVar('Cube_np', np.ndarray, np.ndarray) # Cube should really be a numpy array representing h(d, n)
+Line_np = TypeVar('Line_np', np.ndarray, np.ndarray) # Line should really be a 1d numpy array with n elements
 Lines_np = List[Line_np]
 Scopes_np = DefaultDict[Cell_coord, Lines_np]  
 Structure_np = Tuple[Cube_np, Lines_np, Scopes_np]
@@ -520,6 +519,16 @@ def structure_np(d: int, n: int, zeros: bool = True, OFFSET: int = 0) -> Structu
     if zeros:
         arr.fill(0)
     return (arr, lines, scopes)
+
+
+
+
+
+
+
+
+
+
 
 
 def get_diagonals_coord(d: int, n: int) -> Lines_coord:
@@ -1106,17 +1115,17 @@ def join_multiline(iter: Iterable[str], divider: str = ' ', divide_empty_lines: 
 
 # The following functions are helper functions
 
-def slice_ndarray(arr: np.ndarray, axes: Collection[int], 
-                coords: Collection[int]) -> np.ndarray:
+def slice_ndarray(arr: Cube_np, axes: Collection[int], 
+                coords: Collection[int]) -> Cube_np:
     """ Returns a slice of an array. 
 
     Parameters
     ----------
     arr : numpy.ndarray
         The array to be sliced
-    axes : Iterable[int]
+    axes : Collection[int]
         The axes that are fixed
-    coords : Iterable[int]
+    coords : Collection[int]
         The coordinates corresponding to the fixed axes
 
     Returns
@@ -1173,7 +1182,7 @@ def insert_into_tuple(tup: Tuple, pos: Union[int, Collection[int]],
 
     Returns
     -------
-    Tuple:
+    tuple:
         A copy of `tup` with values inserted.
 
     Raises
@@ -1342,6 +1351,29 @@ def _lines_np_coord_check(d: int, n: int) -> bool:
     
 
 
+def increment_cell_coord(cell: Cell_coord, pos: Union[int, Collection[int]], 
+                    incr: Union[int, Collection[int]]) -> Cell_coord:
+    
+    cl = list(cell)
+
+    if isinstance(pos, int):
+        pass
+        # do stuff
+    elif not isinstance(incr, int):
+        if len(pos) != len(incr):
+            raise ValueError("pos and incr must be of the same length")
+
+        if len(pos) == 0:
+            return cell
+
+        # do stuff
+    else:
+        pass
+        # error - pos and union not of same type
+        # put this in insert_into_tuple as well
+
+    return tuple(cl)
+
 
 def get_scope_cell_coord(d: int, n: int, cell: Cell_coord) -> Lines_coord: 
     
@@ -1349,34 +1381,42 @@ def get_scope_cell_coord(d: int, n: int, cell: Cell_coord) -> Lines_coord:
 
     # loop over the numbers of dimensions
     for i in range(d): 
+        print(f'i = {i}')
         # loop over all possible combinations of i dimensions
-        diagonals = get_diagonals_coord(i + 1, n)
+        #diagonals = get_diagonals_coord(i + 1, n)
 
         for i_comb in it.combinations(range(d), r = i + 1): 
-              
-            other_d = set(range(d)) - set(i_comb)
+            print(f'i_comb = {i_comb}')   
+            # move values over selected dimensions
+            # from starting cell, move up/down n-1 times
+            # if any n cells are all valid, then forms a line in scope of cell
             
-            for diagonal in diagonals:
-                for c in diagonal:
-                    # if selected dimensions of c match cell, then c
-                    # # with other dimensions of cell are in scope 
-                    cc = tuple(cell[i] for i in i_comb)
-                    fc = tuple(c[i] for i in i_comb)
-                    oc = tuple(cell[i] for i in other_d)
-                    if fc == cc:
-                        tt = insert_into_tuple(cc, other_d, oc)
-                        lines.append(tt)
-                        break
+            # for all possible up/downs = 2 ^ (i+1) / 2
+            cells: Deque[Cell_coord] = Deque((cell,))
+            for j in range(1, n):
+                # move up/down for dimensions in i_comb
+                c = cell
+                
 
+                c = tuple(k - j for k in cell)
+                #print(c)
+                cells.append(c)
+
+                c = tuple(k + j for k in cell)
+                #print(c)
+                cells.appendleft(c)
+            print(cells)
+            
     return lines
 
 
 
 if __name__ == "__main__":
     
-    d = 9
-    n = 10
+    d = 3
+    n = 3
     #arr = np.arange(n ** d).reshape([n] * d)
  
+    get_scope_cell_coord(d, n, (1,2,1))
     
-    print(num_lines(d, n))
+    #print(num_lines(d, n))
