@@ -63,7 +63,7 @@ Structure_coord = Tuple[Lines_coord, Scopes_coord]
 
 Scopes = Union[Scopes_np, Scopes_coord]
 
-def num_lines(d: int, n: int) -> int: 
+def num_lines_grouped(d: int, n: int) -> Tuple[List[int], int]: 
     """ Calculate the number of lines in a hypercube.  
 
     Parameters
@@ -75,8 +75,8 @@ def num_lines(d: int, n: int) -> int:
  
     Returns
     -------
-    int:
-        The number of lines in a hypercube h(d, n).
+    list:
+        The number of lines in a hypercube h(d, n) by dimension.
 
     Notes
     -----
@@ -125,16 +125,50 @@ def num_lines(d: int, n: int) -> int:
   
     Examples
     --------
+    >>> num_lines_grouped(2, 3)
+    ([6, 2], 8)
+    >>> num_lines_grouped(3, 4)
+    ([48, 24, 4], 76)
+    """
+
+    counts = []
+    for i in range(1, d + 1):
+        counts.append(comb(d, i, True) * (n ** (d - i)) * (2 ** (i - 1)))
+    return counts, sum(counts)
+
+
+def num_lines(d: int, n: int) -> int: 
+    """ Calculate the number of lines in a hypercube.  
+
+    Parameters
+    ----------
+    d : int
+        The number of dimensions of the hypercube
+    n : int
+        The number of cells in any dimension
+ 
+    Returns
+    -------
+    int:
+        The number of lines in a hypercube h(d, n).
+
+    See Also
+    --------
+    num_lines_grouped
+
+    Notes
+    -----
+    Calls the function num_lines_grouped
+
+    Examples
+    --------
     >>> num_lines(2, 3)
     8
     >>> num_lines(3, 4)
     76
     """
-
-    count = 0
-    for i in range(1, d + 1):
-        count += comb(d, i, True) * (n ** (d - i)) * (2 ** (i - 1)) 
-    return count
+    
+    return num_lines_grouped(d, n)[1]
 
 
 def get_diagonals_np() -> Callable[[Cube_np], Lines_np]:
@@ -325,7 +359,7 @@ def get_lines_grouped_np(arr: Cube_np) -> Tuple[List[Lines_np], int]:
     return lines, count
 
 
-def get_lines_flat_np(arr: Cube_np) -> Lines_np: 
+def get_lines_np(arr: Cube_np) -> Lines_np: 
     """ Returns the lines in an array
 
     Parameters
@@ -355,7 +389,7 @@ def get_lines_flat_np(arr: Cube_np) -> Lines_np:
     >>> arr
     array([[0, 1],
            [2, 3]])
-    >>> lines = get_lines_flat_np(arr)
+    >>> lines = get_lines_np(arr)
     >>> lines
     [array([0, 2]), array([1, 3]), array([0, 1]), array([2, 3]), array([0, 3]), array([2, 1])]
     >>> len(lines)
@@ -375,7 +409,7 @@ def get_scopes_np(lines: Lines_np, d: int) -> Scopes_np:
     Parameters
     ----------
     lines : list
-        The returned value from get_lines_flat_np(arr) where arr is of the
+        The returned value from get_lines_np(arr) where arr is of the
         form np.arange(n ** d, dtype = int64).reshape([n] * d).
         That is, arr is populated with the values 0,1,2,...,n^d - 1.
 
@@ -393,7 +427,7 @@ def get_scopes_np(lines: Lines_np, d: int) -> Scopes_np:
             
     See Also
     --------
-    get_lines_flat_np
+    get_lines_np
 
     Notes
     -----
@@ -409,7 +443,7 @@ def get_scopes_np(lines: Lines_np, d: int) -> Scopes_np:
     >>> arr
     array([[0, 1],
            [2, 3]])
-    >>> lines = get_lines_flat_np(arr)
+    >>> lines = get_lines_np(arr)
     >>> lines
     [array([0, 2]), array([1, 3]), array([0, 1]), array([2, 3]), array([0, 3]), array([2, 1])]
     >>> scopes = get_scopes_np(lines, 2)
@@ -463,7 +497,7 @@ def structure_np(d: int, n: int, zeros: bool = True, OFFSET: int = 0) -> Structu
             
     See Also
     --------
-    get_lines_flat_np
+    get_lines_np
     get_scopes_np
  
     Examples
@@ -501,7 +535,7 @@ def structure_np(d: int, n: int, zeros: bool = True, OFFSET: int = 0) -> Structu
     # function populates the arrays with values 0,1,2, ...
     dtype = np.int64 if n ** d > 2 ** 31 - OFFSET - 1 else np.int32
     arr = np.arange(n ** d, dtype = dtype).reshape([n] * d)
-    lines = get_lines_flat_np(arr)
+    lines = get_lines_np(arr)
     scopes = get_scopes_np(lines, d)
     if zeros:
         arr.fill(0)
@@ -643,7 +677,7 @@ def get_lines_grouped_coord(d: int, n: int) -> Tuple[List[Lines_coord], int]:
     return lines, count
 
 
-def get_lines_flat_coord(d: int, n: int) -> Lines_coord: 
+def get_lines_coord(d: int, n: int) -> Lines_coord: 
     """ Returns the lines in a hypercube, h(d, n)
 
     Parameters
@@ -670,7 +704,7 @@ def get_lines_flat_coord(d: int, n: int) -> Lines_coord:
 
     Examples
     --------
-    >>> lines = get_lines_flat_coord(2, 2)
+    >>> lines = get_lines_coord(2, 2)
     >>> lines
     [[(0, 0), (1, 0)], [(0, 1), (1, 1)], [(0, 0), (0, 1)], [(1, 0), (1, 1)], [(0, 0), (1, 1)], [(0, 1), (1, 0)]]
     >>> len(lines)
@@ -709,7 +743,7 @@ def get_scopes_coord(lines: Lines_coord, d: int) -> Scopes_coord:
     Examples
     --------
     >>> from pprint import pprint
-    >>> lines = get_lines_flat_coord(2, 2)
+    >>> lines = get_lines_coord(2, 2)
     >>> pprint(lines) #doctest: +NORMALIZE_WHITESPACE
     [[(0, 0), (1, 0)],
      [(0, 1), (1, 1)],
@@ -754,7 +788,7 @@ def structure_coord(d: int, n: int) -> Structure_coord:
             
     See Also
     --------
-    get_lines_flat_coord
+    get_lines_coord
     get_scopes_coord
  
     Examples
@@ -771,7 +805,7 @@ def structure_coord(d: int, n: int) -> Structure_coord:
                  (1, 1): [[(0, 1), (1, 1)], [(1, 0), (1, 1)], [(0, 0), (1, 1)]]})
     """
 
-    lines = get_lines_flat_coord(d, n)
+    lines = get_lines_coord(d, n)
     scopes = get_scopes_coord(lines, d)
     return (lines, scopes)
 
@@ -822,8 +856,8 @@ def scopes_size_cell(scopes: Scopes) -> DefaultDict[int, List[Cell_coord]]:
             
     See Also
     --------
-    get_scopes_flat_np
-    get_scopes_flat_coord
+    get_scopes_np
+    get_scopes_coord
  
     Examples
     --------
@@ -1289,43 +1323,6 @@ def str_to_tuple(d: int, n: int, cell: str, offset: int = 1) -> Cell_coord:
         raise ValueError("One or more coordinates are not valid")           
 
 
-def flatten(items: Iterable[Any], ignore_types: Union[Type, Tuple[Type, ...]] = (str, bytes)) -> Iterator[Any]:
-    """ Flatten a nested iterable.
-
-    Parameters
-    ----------
-    items : iterable
-        The iterable to be flattend
-    ignore_types : tuple, optional
-        Types that are not flattened (iterated over). Defaults to (str, bytes).
- 
-    Returns
-    -------
-    Iterator:
-        Iterator of values from items.
-
-    Examples
-    --------
-    >>> nl = [1, 2, [3, 4, [5, 6, 7, (8, 9, 10, 'hello')]]]
-    >>> fl = list(flatten(nl))
-    >>> print(fl)
-    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 'hello']
-    >>> fl = list(flatten(nl), ignore_types = (bytes,))
-    >>> print(fl)
-    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 'h', 'e', 'l', 'l']
-
-    """
-
-    for x in items:
-        print(x)
-        print(isinstance(x, Iterable))
-        print(isinstance(x, ignore_types))
-        if isinstance(x, Iterable) and not isinstance(x, ignore_types):
-            yield from flatten(x, ignore_types)
-        else:
-            yield x
-
-
 def _lines_np_coord_check(d: int, n: int) -> bool:
     """ Checks if lines_np and lines_coord give the same lines.
 
@@ -1344,8 +1341,8 @@ def _lines_np_coord_check(d: int, n: int) -> bool:
 
     See Also
     --------
-    get_lines_flat_np
-    get_lines_flat_coord
+    get_lines_np
+    get_lines_coord
 
     Notes
     -----
@@ -1355,8 +1352,8 @@ def _lines_np_coord_check(d: int, n: int) -> bool:
     dtype = np.int64 if n ** d > 2 ** 31 else np.int32
     arr = np.arange(n ** d, dtype = dtype).reshape([n] * d)
 
-    lines_np = get_lines_flat_np(arr)
-    lines_coord = get_lines_flat_coord(d, n)
+    lines_np = get_lines_np(arr)
+    lines_coord = get_lines_coord(d, n)
 
     t_np = [tuple(sorted(l.tolist())) for l in lines_np]
     t_coord = [tuple(sorted([arr[c] for c in l])) for l in lines_coord] 
@@ -1396,17 +1393,5 @@ def get_scope_cell_coord(d: int, n: int, cell: Cell_coord) -> Lines_coord:
 
 
 if __name__ == "__main__":
-    
-    g = flatten('h', type(None))
-    print(g)
-    print(next(g))
-    #print(next(g))
-    #print(next(g))
-    #print(list(flatten('h', type(None))))
-    #print(list(flatten('hi there')))
-
-
-    print(type(None))
-    l = [1,2,[3,4,[5,6,7, (8,9,10, 'hello')]]]
-    c = flatten(l, ignore_types = type(None))
-    #print(list(c))
+    pass   
+ 
