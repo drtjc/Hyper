@@ -75,7 +75,7 @@ def num_lines_grouped(d: int, n: int) -> Generator[int, None, None]:
  
     Yields
     -------
-    Generator:
+    generator:
         The number of lines in a hypercube h(d, n) by dimension.
 
     Notes
@@ -170,17 +170,17 @@ def num_lines(d: int, n: int) -> int:
 
 
 def get_diagonals_np(arr: Cube_np) -> Generator[Line_np, None, None]:
-    """ Calculates the d-agonals of a d-array. 
+    """ Calculate the d-agonals of a d-array. 
 
     Parameters
     ----------
     arr : numpy.ndarray
         A d-array whose d-agonals are to be calculated
 
-    Returns
+    Yields
     -------
-    Iterator :
-        An iterator of numpy.ndarray views of the d-gonals of `arr`.
+    generator :
+        numpy.ndarray views of the d-gonals of `arr`.
 
     Notes
     -----
@@ -250,28 +250,21 @@ def get_diagonals_np(arr: Cube_np) -> Generator[Line_np, None, None]:
 
 
 def get_lines_grouped_np(arr: Cube_np) -> Generator[Lines_np, None, None]: 
-    """ Returns the lines in an array grouped by dimension
+    """ Generate the lines in an array grouped by dimension
 
     Parameters
     ----------
     arr : numpy.ndarray
         The array whose lines are to be calculated
 
-    Returns
+    Yields
     -------
-    list :
-        A list of numpy.ndarray views of the lines in `arr`.
-        List is nested list of i-agonals
+    generator :
+        numpy.ndarray views of the lines in `arr` by dimension.
             
     See Also
     --------
     get_line_i_np
-
-    Notes
-    -----
-    The notes section for the function num_lines provides a sketch of a 
-    constructive proof for the number of lines in a hypercube. This has
-    been used to implement this function. 
 
     Examples
     --------
@@ -292,10 +285,49 @@ def get_lines_grouped_np(arr: Cube_np) -> Generator[Lines_np, None, None]:
         yield from get_lines_i_np(arr, i)
 
 
-
-
 def get_lines_i_np(arr: Cube_np, i: int) -> Generator[Lines_np, None, None]: 
+    """ Returns the lines in an array that span the specified number of dimensions.
 
+    Parameters
+    ----------
+    arr : numpy.ndarray
+        The array whose lines are to be calculated
+    int : i
+        The number of dimensions that the returned lines must span
+
+    Yields
+    -------
+    generator :
+        numpy.ndarray views of the lines in `arr` spanning i dimensions.
+            
+    See Also
+    --------
+    get_line_i_np
+
+    Notes
+    -----
+    The notes section for the function num_lines_grouped provides a sketch
+    of a constructive proof for the number of lines in a hypercube. This has
+    been used to implement this function. 
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> arr = np.arange(4).reshape(2, 2)
+    >>> arr
+    array([[0, 1],
+           [2, 3]])
+    >>> lines = list(get_lines_i_np(arr, 0))
+    >>> lines
+    [[array([0, 2]), array([1, 3]), array([0, 1]), array([2, 3])]]
+    >>> lines = list(get_lines_i_np(arr, 1))
+    >>> lines
+    [[array([0, 3]), array([2, 1])]]
+    >>> arr[0, 0] = 99
+    >>> lines
+    [[array([99,  3]), array([2, 1])]]
+    """
+ 
     d = arr.ndim
     n = arr.shape[0]
     lines = []
@@ -313,9 +345,6 @@ def get_lines_i_np(arr: Cube_np, i: int) -> Generator[Lines_np, None, None]:
     yield lines
  
 
-
-
-
 def get_lines_np(arr: Cube_np) -> Generator[Lines_np, None, None]: 
     """ Returns the lines in an array
 
@@ -324,20 +353,14 @@ def get_lines_np(arr: Cube_np) -> Generator[Lines_np, None, None]:
     arr : numpy.ndarray
         The array whose lines are to be calculated
 
-    Returns
+    Yields
     -------
-    list :
-        A list of numpy.ndarray views of the lines in `arr`.
+    generator :
+        numpy.ndarray views of the lines in `arr`.
                 
     See Also
     --------
     get_lines_grouped_np
-    num_lines
-    get_diagonals_np
-
-    Notes
-    -----
-    Calls the function get_lines_grouped_np.
 
     Examples
     --------
@@ -346,7 +369,7 @@ def get_lines_np(arr: Cube_np) -> Generator[Lines_np, None, None]:
     >>> arr
     array([[0, 1],
            [2, 3]])
-    >>> lines = get_lines_np(arr)
+    >>> lines = list(get_lines_np(arr))
     >>> lines
     [array([0, 2]), array([1, 3]), array([0, 1]), array([2, 3]), array([0, 3]), array([2, 1])]
     >>> len(lines)
@@ -368,7 +391,7 @@ def get_scopes_np(lines: Lines_np, d: int) -> Scopes_np:
     ----------
     lines : list
         The returned value from get_lines_np(arr) where arr is of the
-        form np.arange(n ** d, dtype = int64).reshape([n] * d).
+        form np.arange(n ** d, dtype = intxx).reshape([n] * d).
         That is, arr is populated with the values 0,1,2,...,n^d - 1.
 
     dim : int 
@@ -401,7 +424,7 @@ def get_scopes_np(lines: Lines_np, d: int) -> Scopes_np:
     >>> arr
     array([[0, 1],
            [2, 3]])
-    >>> lines = get_lines_np(arr)
+    >>> lines = list(get_lines_np(arr))
     >>> lines
     [array([0, 2]), array([1, 3]), array([0, 1]), array([2, 3]), array([0, 3]), array([2, 1])]
     >>> scopes = get_scopes_np(lines, 2)
