@@ -45,8 +45,8 @@ from scipy.special import comb
 import itertools as it
 import numbers
 import re
-from collections import defaultdict, Counter as counter
-from typing import List, Callable, Union, Collection, Tuple, Any, DefaultDict, TypeVar, Counter, Dict, Iterable
+from typing import List, Callable, Union, Collection, Tuple, Any, Type
+from typing import DefaultDict, TypeVar, Counter, Dict, Iterable, Iterator
 
 Cell_coord = Tuple[int, ...]
 
@@ -369,7 +369,6 @@ def get_lines_flat_np(arr: Cube_np) -> Lines_np:
     flat = [x for y in grouped for x in y]
     return flat
 
-
 def get_scopes_np(lines: Lines_np, d: int) -> Scopes_np:
     """ Calculate the scope of each cell in a hypercube
 
@@ -431,7 +430,7 @@ def get_scopes_np(lines: Lines_np, d: int) -> Scopes_np:
     
     n = lines[0].size
     shape = [n] * d
-    scopes: DefaultDict = defaultdict(list)
+    scopes: Scopes_np = DefaultDict(list)
 
     for line in lines:
         for j in range(n):
@@ -728,7 +727,7 @@ def get_scopes_coord(lines: Lines_coord, d: int) -> Scopes_coord:
     """
 
     n = len(lines[0])
-    scopes: DefaultDict = defaultdict(list)
+    scopes: Scopes_coord = DefaultDict(list)
     cells = it.product(range(n), repeat = d) # get all possible cells
 
     for cell in cells:
@@ -805,7 +804,7 @@ def scopes_size(scopes: Scopes) -> Counter:
     True
     """
     
-    return counter([len(scope) for scope in scopes.values()])
+    return Counter([len(scope) for scope in scopes.values()])
 
 
 def scopes_size_cell(scopes: Scopes) -> DefaultDict[int, List[Cell_coord]]:
@@ -844,7 +843,7 @@ def scopes_size_cell(scopes: Scopes) -> DefaultDict[int, List[Cell_coord]]:
                  4: [(1, 1)]})
     """
 
-    scopes_size_cell: DefaultDict = defaultdict(list)
+    scopes_size_cell: DefaultDict[int, List[Cell_coord]] = DefaultDict(list)
     for cell, scope in scopes.items():
         scopes_size_cell[len(scope)].append(cell)
 
@@ -1290,6 +1289,43 @@ def str_to_tuple(d: int, n: int, cell: str, offset: int = 1) -> Cell_coord:
         raise ValueError("One or more coordinates are not valid")           
 
 
+def flatten(items: Iterable[Any], ignore_types: Union[Type, Tuple[Type, ...]] = (str, bytes)) -> Iterator[Any]:
+    """ Flatten a nested iterable.
+
+    Parameters
+    ----------
+    items : iterable
+        The iterable to be flattend
+    ignore_types : tuple, optional
+        Types that are not flattened (iterated over). Defaults to (str, bytes).
+ 
+    Returns
+    -------
+    Iterator:
+        Iterator of values from items.
+
+    Examples
+    --------
+    >>> nl = [1, 2, [3, 4, [5, 6, 7, (8, 9, 10, 'hello')]]]
+    >>> fl = list(flatten(nl))
+    >>> print(fl)
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 'hello']
+    >>> fl = list(flatten(nl), ignore_types = (bytes,))
+    >>> print(fl)
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 'h', 'e', 'l', 'l']
+
+    """
+
+    for x in items:
+        print(x)
+        print(isinstance(x, Iterable))
+        print(isinstance(x, ignore_types))
+        if isinstance(x, Iterable) and not isinstance(x, ignore_types):
+            yield from flatten(x, ignore_types)
+        else:
+            yield x
+
+
 def _lines_np_coord_check(d: int, n: int) -> bool:
     """ Checks if lines_np and lines_coord give the same lines.
 
@@ -1356,3 +1392,21 @@ def get_scope_cell_coord(d: int, n: int, cell: Cell_coord) -> Lines_coord:
                         break
 
     return lines
+
+
+
+if __name__ == "__main__":
+    
+    g = flatten('h', type(None))
+    print(g)
+    print(next(g))
+    #print(next(g))
+    #print(next(g))
+    #print(list(flatten('h', type(None))))
+    #print(list(flatten('hi there')))
+
+
+    print(type(None))
+    l = [1,2,[3,4,[5,6,7, (8,9,10, 'hello')]]]
+    c = flatten(l, ignore_types = type(None))
+    #print(list(c))

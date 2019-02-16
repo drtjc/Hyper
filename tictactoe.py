@@ -72,7 +72,7 @@ class TicTacToe():
             else:    
                 self.board, _, _ = hc.structure_np(d, n, zeros = False, OFFSET = self._MOVE_BASE)
                 #self.scopes = None
-            #self.lines = None
+            self.lines = None
         except MemoryError:
             print("The board is too big to fit into available memory")
             raise
@@ -301,42 +301,44 @@ class TicTacToe():
 
 if __name__ == "__main__":
  
-    dim = 6
-    size = 7
-    ttt = TicTacToe(dim, size, preload_scope = False)
+    dim = 4
+    size = 3
+    ttt = TicTacToe(dim, size, preload_scope = True)
     #ttt.p_names = ['Tom 2', 'Tom']
-    #ttt.p_names = 'Tom 2', 'Tom'
+    ttt.p_names = 'Tom 2', 'Tom'
     #print(ttt.p_names[0])
-    #ttt.p_marks = ["O", "X"]
+    ttt.p_marks = ["O", "X"]
 
     #_, scopes = hc.structure_coord(dim, size)
     #print(scopes[(0,0)])
+
+    #hc.get_lines_flat_coord(dim, size)
 
     #s0 = hc.get_scope_cell_coord(dim, size, (0,0))
     #print(s0)
 
     print(ttt.memory())
-    #print(ttt.state_str())
+    print(ttt.state_str())
 
-    # ttt.move('1111')
-    # ttt.display(False)
-    # print(ttt.state_str())
+    ttt.move('1111')
+    ttt.display(False)
+    print(ttt.state_str())
 
-    # ttt.move('1211')
-    # ttt.display(False)
-    # print(ttt.state_str())
+    ttt.move('1211')
+    ttt.display(False)
+    print(ttt.state_str())
 
-    # ttt.move('2222')
-    # ttt.display(False)
-    # print(ttt.state_str())
+    ttt.move('2222')
+    ttt.display(False)
+    print(ttt.state_str())
     
-    # ttt.move('1312')
-    # ttt.display(False)
-    # print(ttt.state_str())
+    ttt.move('1312')
+    ttt.display(False)
+    print(ttt.state_str())
 
-    # ttt.move('3333')
-    # ttt.display(False)
-    # print(ttt.state_str())
+    ttt.move('3333')
+    ttt.display(False)
+    print(ttt.state_str())
 
 
 
