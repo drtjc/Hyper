@@ -44,8 +44,9 @@ from scipy.special import comb # type: ignore
 import itertools as it
 import numbers
 import re
-from typing import List, Callable, Union, Collection, Tuple, Any, Type, Deque
+from typing import List, Callable, Union, Collection, Tuple, Any, Type, Deque, cast
 from typing import DefaultDict, TypeVar, Counter, Dict, Iterable, Generator, Sequence
+
 
 Cell_coord = Tuple[int, ...]
 Cube_np = TypeVar('Cube_np', np.ndarray, np.ndarray) # Cube should really be a numpy array representing h(d, n)
@@ -1221,7 +1222,7 @@ def insert_into_tuple(tup: Tuple, pos: Union[int, Collection[int]],
 
 
 def increment_cell_coord(cell: Cell_coord, pos: Sequence[int], 
-                    incr: Sequence[int]) -> Cell_coord:
+                    incr: Sequence[int], add: bool = True) -> Cell_coord:
     """ Increments coordinates of a cell.
 
     Parameters
@@ -1232,6 +1233,8 @@ def increment_cell_coord(cell: Cell_coord, pos: Sequence[int],
         The coordinates which are to be incremented
     incr : sequence of ints
         The increment values at the specified coordinates
+    add: bool, optional
+        If True, the the increments are added, else they are subtracted
 
     Returns
     -------
@@ -1250,6 +1253,8 @@ def increment_cell_coord(cell: Cell_coord, pos: Sequence[int],
     >>> incr = (1, -1)
     >>> increment_cell_coord(cell, pos, incr)
     (2, 2, 0)
+    >>> increment_cell_coord(cell, pos, incr, False)
+    (0, 2, 2)
     """
 
     if len(pos) != len(incr):
@@ -1260,7 +1265,10 @@ def increment_cell_coord(cell: Cell_coord, pos: Sequence[int],
 
     cl = list(cell)
     for i in range(len(pos)):
-        cl[pos[i]] += incr[i]
+        if add:
+            cl[pos[i]] += incr[i]
+        else:
+            cl[pos[i]] -= incr[i]
 
     return tuple(cl)
 
@@ -1380,7 +1388,7 @@ def _lines_np_coord_check(d: int, n: int) -> bool:
     lines_np = get_lines_np(arr)
     lines_coord = get_lines_coord(d, n)
 
-    t_np = [tuple(sorted(l.tolist())) for l in lines_np]
+    t_np = [tuple(sorted(l.tolist())) for l in lines_np] # type: ignore
     t_coord = [tuple(sorted([arr[c] for c in l])) for l in lines_coord] 
 
     return set(t_np) == set(t_coord)
@@ -1400,7 +1408,8 @@ def get_scope_cell_coord(d: int, n: int, cell: Cell_coord) -> Lines_coord:
     for i in range(d): 
         print(f'i = {i}')
         # loop over all possible combinations of i dimensions
-        #diagonals = get_diagonals_coord(i + 1, n)
+
+        
 
         for i_comb in it.combinations(range(d), r = i + 1): 
             print(f'i_comb = {i_comb}')   
@@ -1408,21 +1417,28 @@ def get_scope_cell_coord(d: int, n: int, cell: Cell_coord) -> Lines_coord:
             # from starting cell, move up/down n-1 times
             # if any n cells are all valid, then forms a line in scope of cell
             
-            # for all possible up/downs = 2 ^ (i+1) / 2
-            cells: Deque[Cell_coord] = Deque((cell,))
-            for j in range(1, n):
-                # move up/down for dimensions in i_comb
-                c = cell
+            incr = it.product([-1, 1], repeat = i + 1) 
+            
+            seen: Line_coord = []
+            for k in incr:
                 
+                cells: Deque[Cell_coord] = Deque((cell,))
 
-                c = tuple(k - j for k in cell)
-                #print(c)
-                cells.append(c)
-
-                c = tuple(k + j for k in cell)
-                #print(c)
-                cells.appendleft(c)
-            print(cells)
+                k_neg = tuple(-x for x in list(k))
+                if k_neg not in seen:
+                    seen.append(k)
+                    print(f'k = {k}')
+                    for j in range(1, n):
+                        print(f'j = {j}')
+                        k = tuple(x * j for x in list(k))
+                        c = increment_cell_coord(cell, i_comb, k)
+                        print(f'c1 = {c}')
+                        cells.appendleft(c)
+                        c = increment_cell_coord(cell, i_comb, k, False)
+                        print(f'c2 = {c}')
+                        cells.append(c)                        
+                
+                    print(f'cells = {cells}')
             
     return lines
 
@@ -1434,13 +1450,9 @@ if __name__ == "__main__":
     n = 3
     #arr = np.arange(n ** d).reshape([n] * d)
  
-    cell = (1,2,1)
-    pos = (0,2)
-    incr = (1,-1)
+    #print(_lines_np_coord_check(d, n))
+    
 
-    c = increment_cell_coord(cell, pos, incr)
-    print(c)
-
-    #get_scope_cell_coord(d, n, (1,2,1))
+    get_scope_cell_coord(d, n, (1,2,1))
     
     #print(num_lines(d, n))
