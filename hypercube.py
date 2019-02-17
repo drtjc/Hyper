@@ -1356,6 +1356,15 @@ def str_to_tuple(d: int, n: int, cell: str, offset: int = 1) -> Cell_coord:
         raise ValueError("One or more coordinates are not valid")           
 
 
+
+
+
+
+
+
+
+
+
 def _lines_np_coord_check(d: int, n: int) -> bool:
     """ Checks if lines_np and lines_coord give the same lines.
 
@@ -1396,6 +1405,14 @@ def _lines_np_coord_check(d: int, n: int) -> bool:
 
 
 
+def remove_invalid_coord(n:int, lines: Line_coord) -> Line_coord:
+    
+    rl = []
+    for cell in lines:
+        if all(coord in range(n) for coord in cell):
+            rl.append(cell)
+
+    return rl
 
 
 
@@ -1406,13 +1423,13 @@ def get_scope_cell_coord(d: int, n: int, cell: Cell_coord) -> Lines_coord:
 
     # loop over the numbers of dimensions
     for i in range(d): 
-        print(f'i = {i}')
+        #print(f'i = {i}')
         # loop over all possible combinations of i dimensions
 
         
 
         for i_comb in it.combinations(range(d), r = i + 1): 
-            print(f'i_comb = {i_comb}')   
+            #print(f'i_comb = {i_comb}')   
             # move values over selected dimensions
             # from starting cell, move up/down n-1 times
             # if any n cells are all valid, then forms a line in scope of cell
@@ -1422,37 +1439,51 @@ def get_scope_cell_coord(d: int, n: int, cell: Cell_coord) -> Lines_coord:
             seen: Line_coord = []
             for k in incr:
                 
-                cells: Deque[Cell_coord] = Deque((cell,))
+                line: Deque[Cell_coord] = Deque((cell,))
 
                 k_neg = tuple(-x for x in list(k))
                 if k_neg not in seen:
                     seen.append(k)
-                    print(f'k = {k}')
+                    #print(f'k = {k}')
                     for j in range(1, n):
-                        print(f'j = {j}')
+                        #print(f'j = {j}')
                         k = tuple(x * j for x in list(k))
                         c = increment_cell_coord(cell, i_comb, k)
-                        print(f'c1 = {c}')
-                        cells.appendleft(c)
+                        #print(f'c1 = {c}')
+                        line.appendleft(c)
                         c = increment_cell_coord(cell, i_comb, k, False)
-                        print(f'c2 = {c}')
-                        cells.append(c)                        
+                        #print(f'c2 = {c}')
+                        line.append(c)                        
                 
-                    print(f'cells = {cells}')
+                    line_l = remove_invalid_coord(n, list(line))
+                    #print(f'line_l = {line_l}')
+                    if len(line_l) == n:
+                        lines.append(line_l)
             
+    #print(f'LINES = {lines}')
     return lines
 
 
 
 if __name__ == "__main__":
     
-    d = 3
+    d = 4
     n = 3
     #arr = np.arange(n ** d).reshape([n] * d)
  
     #print(_lines_np_coord_check(d, n))
     
+    c = (1,2,1)
 
-    get_scope_cell_coord(d, n, (1,2,1))
-    
+    s1 = get_scope_cell_coord(d, n, (1,2,1,0))
+    print(s1)
+
+    _, s2, = structure_coord(d, n)
+    print(s2[1,2,1,0])
     #print(num_lines(d, n))
+
+    arr, _, s3, = structure_np(d, n, False)
+    #print(s3[1,2,1])
+    #print(num_lines(d, n))
+
+    #print(arr)
