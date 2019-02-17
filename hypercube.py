@@ -263,7 +263,7 @@ def get_lines_grouped_np(arr: Cube_np) -> Generator[Lines_np, None, None]:
             
     See Also
     --------
-    get_line_i_np
+    get_lines_i_np
 
     Examples
     --------
@@ -285,7 +285,7 @@ def get_lines_grouped_np(arr: Cube_np) -> Generator[Lines_np, None, None]:
 
 
 def get_lines_i_np(arr: Cube_np, i: int) -> Generator[Lines_np, None, None]: 
-    """ Returns the lines in an array that span the specified number of dimensions.
+    """ Generates the lines in an array that span the specified number of dimensions.
 
     Parameters
     ----------
@@ -301,7 +301,7 @@ def get_lines_i_np(arr: Cube_np, i: int) -> Generator[Lines_np, None, None]:
             
     See Also
     --------
-    get_line_i_np
+    num_lines_grouped
 
     Notes
     -----
@@ -344,7 +344,7 @@ def get_lines_i_np(arr: Cube_np, i: int) -> Generator[Lines_np, None, None]:
     yield lines
  
 
-def get_lines_np(arr: Cube_np) -> Generator[Lines_np, None, None]: 
+def get_lines_np(arr: Cube_np) -> Generator[Line_np, None, None]: 
     """ Returns the lines in an array
 
     Parameters
@@ -560,8 +560,6 @@ def get_diagonals_coord(d: int, n: int) -> Generator[Line_coord, None, None]:
     corners_all = it.product([0, n - 1], repeat = d)
     # restrict to corners with 0 as first coordinate. E.g.: (0,0), (0,2)
     corners_0 = [corner for corner in corners_all if corner[0] == 0]
-
-    diagonals = []
     for corner in corners_0: 
         # create the diagonals for each corner
         diagonal: Line_coord = []
@@ -579,13 +577,15 @@ def get_diagonals_coord(d: int, n: int) -> Generator[Line_coord, None, None]:
             diagonal.append(coords)
         
         yield diagonal
-        #diagonals.append(diagonal)
-
-    #return diagonals
 
 
-def get_lines_grouped_coord(d: int, n: int) -> Tuple[List[Lines_coord], int]: 
-    """ Returns the lines in a hypercube, h(d, n) grouped by dimensdion
+
+
+
+
+
+def get_lines_grouped_coord(d: int, n: int) -> Generator[Lines_coord, None, None]: 
+    """ Generate the lines in a hypercube, h(d, n) grouped by dimensdion
 
     Parameters
     ----------
@@ -594,25 +594,46 @@ def get_lines_grouped_coord(d: int, n: int) -> Tuple[List[Lines_coord], int]:
     n : int
         The number of cells in any dimension
 
-    Returns
+    Yields
     -------
-    list :
-        A list of d-gonals coordinates for the lines in h(d, n).
-    int :
-        The number of lines. 
-            
-    Raises
-    ------
-    AssertionError
-        If number of lines returned by this function does not
-        equal that calculated by the num_lines function.
-        THIS IS A CRITCAL ERROR THAT MEANS THIS FUNCTION HAS
-        A FLAWED IMPLEMENTATION.
+    generator :
+        d-gonals coordinates for the lines in h(d, n).
     
     See Also
     --------
-    num_lines
-    get_digonals_coord
+    get_lines_i_coord
+
+    Examples
+    --------
+    >>> lines = list(get_lines_grouped_coord(2, 2))
+    >>> lines
+    [[[(0, 0), (1, 0)], [(0, 1), (1, 1)], [(0, 0), (0, 1)], [(1, 0), (1, 1)]], [[(0, 0), (1, 1)], [(0, 1), (1, 0)]]]
+    """
+    
+    for i in range(d): 
+        yield from get_lines_i_coord(d, n, i)   
+        
+
+def get_lines_i_coord(d: int, n: int, i: int) -> Generator[Lines_coord, None, None]:
+    """ Generates the lines in a hypercube, h(d, n) grouped by dimensdion
+
+    Parameters
+    ----------
+    d : int
+        The number of dimensions of the hypercube
+    n : int
+        The number of cells in any dimension
+    int: i
+        The number of dimensions that the returned lines must span
+
+    Yields
+    -------
+    generator :
+        d-gonals coordinates for the lines in h(d, n).
+                
+    See Also
+    --------
+    num_lines_grouped
 
     Notes
     -----
@@ -622,46 +643,31 @@ def get_lines_grouped_coord(d: int, n: int) -> Tuple[List[Lines_coord], int]:
 
     Examples
     --------
-    >>> lines, count = get_lines_grouped_coord(2, 2)
+    >>> lines = list(get_lines_grouped_coord(2, 2))
     >>> lines
     [[[(0, 0), (1, 0)], [(0, 1), (1, 1)], [(0, 0), (0, 1)], [(1, 0), (1, 1)]], [[(0, 0), (1, 1)], [(0, 1), (1, 0)]]]
-    >>> count
-    6
-    >>> len(lines)
-    2
     """
     
     lines = []
-    count = 0
 
-    # loop over the numbers of dimensions
-    for i in range(d): 
-        lines_i = []
-        # loop over all possible combinations of i dimensions
-        
-        #diagonals = get_diagonals_coord(i + 1, n)
-        diagonals = list(get_diagonals_coord(i + 1, n))
-        for i_comb in it.combinations(range(d), r = i + 1): 
-            # a cell could be in any position in the other dimensions
-            other_d = set(range(d)) - set(i_comb)
-            for cell in it.product(range(n), repeat = d - i - 1):                                  
-                diags: Lines_coord = []
-                for diagonal in diagonals:
-                    diag = []
-                    for c in diagonal:
-                        diag.append(insert_into_tuple(c, other_d, cell))
-                    diags.append(diag)
-                    
-                count += len(diags)
-                lines_i.extend(diags)
-        
-        lines.append(lines_i)
+    diagonals = list(get_diagonals_coord(i + 1, n))
+    # loop over all possible combinations of i dimensions
+    for i_comb in it.combinations(range(d), r = i + 1): 
+        # a cell could be in any position in the other dimensions
+        other_d = set(range(d)) - set(i_comb)
+        for cell in it.product(range(n), repeat = d - i - 1):                                  
+            diags: Lines_coord = []
+            for diagonal in diagonals:
+                diag = []
+                for c in diagonal:
+                    diag.append(insert_into_tuple(c, other_d, cell))
+                diags.append(diag)
+            lines.extend(diags)
     
-    assert count == num_lines(d, n)
-    return lines, count
+    yield lines
 
 
-def get_lines_coord(d: int, n: int) -> Lines_coord: 
+def get_lines_coord(d: int, n: int) -> Generator[Line_coord, None, None]: 
     """ Returns the lines in a hypercube, h(d, n)
 
     Parameters
@@ -688,15 +694,15 @@ def get_lines_coord(d: int, n: int) -> Lines_coord:
 
     Examples
     --------
-    >>> lines = get_lines_coord(2, 2)
+    >>> lines = list(get_lines_coord(2, 2))
     >>> lines
     [[(0, 0), (1, 0)], [(0, 1), (1, 1)], [(0, 0), (0, 1)], [(1, 0), (1, 1)], [(0, 0), (1, 1)], [(0, 1), (1, 0)]]
     >>> len(lines)
     6
     """
     
-    grouped = get_lines_grouped_coord(d, n)[0]
-    flat = [x for y in grouped for x in y]
+    grouped = get_lines_grouped_coord(d, n)
+    flat = (x for y in grouped for x in y)
     return flat
 
 
@@ -727,7 +733,7 @@ def get_scopes_coord(lines: Lines_coord, d: int) -> Scopes_coord:
     Examples
     --------
     >>> from pprint import pprint
-    >>> lines = get_lines_coord(2, 2)
+    >>> lines = list(get_lines_coord(2, 2))
     >>> pprint(lines) #doctest: +NORMALIZE_WHITESPACE
     [[(0, 0), (1, 0)],
      [(0, 1), (1, 1)],
@@ -789,7 +795,7 @@ def structure_coord(d: int, n: int) -> Structure_coord:
                  (1, 1): [[(0, 1), (1, 1)], [(1, 0), (1, 1)], [(0, 0), (1, 1)]]})
     """
 
-    lines = get_lines_coord(d, n)
+    lines = list(get_lines_coord(d, n))
     scopes = get_scopes_coord(lines, d)
     return (lines, scopes)
 
@@ -1455,10 +1461,11 @@ if __name__ == "__main__":
     d = 2
     n = 3
     #arr = np.arange(n ** d).reshape([n] * d)
- 
+    #cc = get_lines_grouped_np(arr)
 
-    dd = get_diagonals_coord(d, n)
-    print(list(dd))
+
+    dd = get_lines_grouped_coord(d, n)
+    #print(list(dd))
 
     #print(_lines_np_coord_check(d, n))
     
