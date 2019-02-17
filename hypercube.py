@@ -522,17 +522,7 @@ def structure_np(d: int, n: int, zeros: bool = True, OFFSET: int = 0) -> Structu
     return (arr, lines, scopes)
 
 
-
-
-
-
-
-
-
-
-
-
-def get_diagonals_coord(d: int, n: int) -> Lines_coord:
+def get_diagonals_coord(d: int, n: int) -> Generator[Line_coord, None, None]:
     """ Returns the d-agonals coordinates of h(d, n). 
 
     Parameters
@@ -542,14 +532,14 @@ def get_diagonals_coord(d: int, n: int) -> Lines_coord:
     n : int
         The number of cells in any dimension
 
-    Returns
+    Yields
     -------
     list :
-        A list of d-gonals coordinates of the diagonals in h(d,n).
+        d-gonals coordinates of the diagonals in h(d,n).
 
     See Also
     --------
-    num_lines
+    num_lines_grouped
     get_diagonals_np
 
     Notes
@@ -560,7 +550,7 @@ def get_diagonals_coord(d: int, n: int) -> Lines_coord:
     Examples
     --------
     >>> diags = get_diagonals_coord(2, 3)
-    >>> diags
+    >>> list(diags)
     [[(0, 0), (1, 1), (2, 2)], [(0, 2), (1, 1), (2, 0)]]
     """    
     
@@ -587,9 +577,11 @@ def get_diagonals_coord(d: int, n: int) -> Lines_coord:
             # E.g.: (-2,-2) -> (2,2); (-2,0) -> (2,0) 
             coords = tuple(abs(t) for t in tmp)
             diagonal.append(coords)
-        diagonals.append(diagonal)
+        
+        yield diagonal
+        #diagonals.append(diagonal)
 
-    return diagonals
+    #return diagonals
 
 
 def get_lines_grouped_coord(d: int, n: int) -> Tuple[List[Lines_coord], int]: 
@@ -646,7 +638,9 @@ def get_lines_grouped_coord(d: int, n: int) -> Tuple[List[Lines_coord], int]:
     for i in range(d): 
         lines_i = []
         # loop over all possible combinations of i dimensions
-        diagonals = get_diagonals_coord(i + 1, n)
+        
+        #diagonals = get_diagonals_coord(i + 1, n)
+        diagonals = list(get_diagonals_coord(i + 1, n))
         for i_comb in it.combinations(range(d), r = i + 1): 
             # a cell could be in any position in the other dimensions
             other_d = set(range(d)) - set(i_comb)
@@ -1458,22 +1452,26 @@ def get_scope_cell_coord(d: int, n: int, cell: Cell_coord) -> Lines_coord:
 
 if __name__ == "__main__":
     
-    d = 4
+    d = 2
     n = 3
     #arr = np.arange(n ** d).reshape([n] * d)
  
+
+    dd = get_diagonals_coord(d, n)
+    print(list(dd))
+
     #print(_lines_np_coord_check(d, n))
     
-    c = (1,2,1)
+    #c = (1,2,1)
 
-    s1 = get_scope_cell_coord(d, n, (1,2,1,0))
-    print(s1)
+    #s1 = get_scope_cell_coord(d, n, (1,2,1,0))
+    #print(s1)
 
-    _, s2, = structure_coord(d, n)
-    print(s2[1,2,1,0])
+    #_, s2, = structure_coord(d, n)
+    #print(s2[1,2,1,0])
     #print(num_lines(d, n))
 
-    arr, _, s3, = structure_np(d, n, False)
+    #arr, _, s3, = structure_np(d, n, False)
     #print(s3[1,2,1])
     #print(num_lines(d, n))
 
