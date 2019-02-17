@@ -45,7 +45,7 @@ import itertools as it
 import numbers
 import re
 from typing import List, Callable, Union, Collection, Tuple, Any, Type, Deque
-from typing import DefaultDict, TypeVar, Counter, Dict, Iterable, Generator
+from typing import DefaultDict, TypeVar, Counter, Dict, Iterable, Generator, Sequence
 
 Cell_coord = Tuple[int, ...]
 Cube_np = TypeVar('Cube_np', np.ndarray, np.ndarray) # Cube should really be a numpy array representing h(d, n)
@@ -1168,14 +1168,14 @@ def slice_ndarray(arr: Cube_np, axes: Collection[int],
 
 
 def insert_into_tuple(tup: Tuple, pos: Union[int, Collection[int]], 
-                      val: Union[Any, Collection[Any]]) -> Tuple[int, ...]:
+                      val: Any) -> Tuple[int, ...]:
     """ Insert values into a tuple. 
 
     Parameters
     ----------
     tup : tuple
         the tuple into which values are to be inserted
-    pos : int of sized iterable container class of ints
+    pos : int or sized iterable container class of ints
         The positions into which values are to be inserted
     val : any value or sized iterable container class of any values
         The values corresponding to the positions in `pos`
@@ -1190,15 +1190,6 @@ def insert_into_tuple(tup: Tuple, pos: Union[int, Collection[int]],
     ValueError
         If length of `pos` is not equal to length of `val`
 
-    See Also
-    --------
-    list.insert
- 
-    Notes
-    -----
-    `tup` is converted to a list and the list.insert method is used to
-    insert values. the list is then converted to a tuple and returned.
-
     Examples
     --------
     >>> tup = (0, 1, 2, 3)
@@ -1209,7 +1200,7 @@ def insert_into_tuple(tup: Tuple, pos: Union[int, Collection[int]],
     >>> insert_into_tuple(tup, (), ())
     (0, 1, 2, 3)
     """
-
+    
     tl = list(tup)
 
     if isinstance(pos, int):
@@ -1222,11 +1213,56 @@ def insert_into_tuple(tup: Tuple, pos: Union[int, Collection[int]],
             return tup
 
         # sort pos so from low to high; sort val correspondingly
-        stl = list(zip(*sorted(zip(pos, val)))) 
+        stl = list(zip(*sorted(zip(pos, val))))
         for p, v in zip(stl[0], stl[1]):
             tl.insert(p, v)
 
     return tuple(tl)
+
+
+def increment_cell_coord(cell: Cell_coord, pos: Sequence[int], 
+                    incr: Sequence[int]) -> Cell_coord:
+    """ Increments coordinates of a cell.
+
+    Parameters
+    ----------
+    cell : tuple
+        the cell which will have coordinates incremented
+    pos : sequence of ints
+        The coordinates which are to be incremented
+    incr : sequence of ints
+        The increment values at the specified coordinates
+
+    Returns
+    -------
+    tuple:
+        A copy of `cell` with incremented coordinates.
+
+    Raises
+    ------
+    ValueError
+        If length of `pos` is not equal to length of `val`
+
+    Examples
+    --------
+    >>> cell = (1, 2, 1)
+    >>> pos = (0, 2)
+    >>> incr = (1, -1)
+    >>> increment_cell_coord(cell, pos, incr)
+    (2, 2, 0)
+    """
+
+    if len(pos) != len(incr):
+        raise ValueError("pos and incr must be of the same length")
+
+    if len(pos) == 0:
+        return cell
+
+    cl = list(cell)
+    for i in range(len(pos)):
+        cl[pos[i]] += incr[i]
+
+    return tuple(cl)
 
 
 def str_to_tuple(d: int, n: int, cell: str, offset: int = 1) -> Cell_coord:
@@ -1351,28 +1387,9 @@ def _lines_np_coord_check(d: int, n: int) -> bool:
     
 
 
-def increment_cell_coord(cell: Cell_coord, pos: Union[int, Collection[int]], 
-                    incr: Union[int, Collection[int]]) -> Cell_coord:
-    
-    cl = list(cell)
 
-    if isinstance(pos, int):
-        pass
-        # do stuff
-    elif not isinstance(incr, int):
-        if len(pos) != len(incr):
-            raise ValueError("pos and incr must be of the same length")
 
-        if len(pos) == 0:
-            return cell
 
-        # do stuff
-    else:
-        pass
-        # error - pos and union not of same type
-        # put this in insert_into_tuple as well
-
-    return tuple(cl)
 
 
 def get_scope_cell_coord(d: int, n: int, cell: Cell_coord) -> Lines_coord: 
@@ -1417,6 +1434,13 @@ if __name__ == "__main__":
     n = 3
     #arr = np.arange(n ** d).reshape([n] * d)
  
-    get_scope_cell_coord(d, n, (1,2,1))
+    cell = (1,2,1)
+    pos = (0,2)
+    incr = (1,-1)
+
+    c = increment_cell_coord(cell, pos, incr)
+    print(c)
+
+    #get_scope_cell_coord(d, n, (1,2,1))
     
     #print(num_lines(d, n))
