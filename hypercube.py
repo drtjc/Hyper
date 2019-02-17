@@ -1404,7 +1404,7 @@ def _lines_np_coord_check(d: int, n: int) -> bool:
     
 
 
-
+## make this a generator??
 def remove_invalid_coord(n:int, lines: Line_coord) -> Line_coord:
     
     rl = []
@@ -1423,44 +1423,35 @@ def get_scope_cell_coord(d: int, n: int, cell: Cell_coord) -> Lines_coord:
 
     # loop over the numbers of dimensions
     for i in range(d): 
-        #print(f'i = {i}')
-        # loop over all possible combinations of i dimensions
-
-        
 
         for i_comb in it.combinations(range(d), r = i + 1): 
-            #print(f'i_comb = {i_comb}')   
-            # move values over selected dimensions
-            # from starting cell, move up/down n-1 times
-            # if any n cells are all valid, then forms a line in scope of cell
-            
+       
             incr = it.product([-1, 1], repeat = i + 1) 
             
             seen: Line_coord = []
             for k in incr:
                 
-                line: Deque[Cell_coord] = Deque((cell,))
+                d_line: Deque[Cell_coord] = Deque((cell,))
 
                 k_neg = tuple(-x for x in list(k))
                 if k_neg not in seen:
                     seen.append(k)
-                    #print(f'k = {k}')
+
                     for j in range(1, n):
-                        #print(f'j = {j}')
+
                         k = tuple(x * j for x in list(k))
                         c = increment_cell_coord(cell, i_comb, k)
-                        #print(f'c1 = {c}')
-                        line.appendleft(c)
+
+                        d_line.appendleft(c)
                         c = increment_cell_coord(cell, i_comb, k, False)
-                        #print(f'c2 = {c}')
-                        line.append(c)                        
+
+                        d_line.append(c)                        
                 
-                    line_l = remove_invalid_coord(n, list(line))
-                    #print(f'line_l = {line_l}')
-                    if len(line_l) == n:
-                        lines.append(line_l)
+                    line = remove_invalid_coord(n, list(d_line))
+
+                    if len(line) == n:
+                        lines.append(line)
             
-    #print(f'LINES = {lines}')
     return lines
 
 
