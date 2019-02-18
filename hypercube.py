@@ -579,11 +579,6 @@ def get_diagonals_coord(d: int, n: int) -> Generator[Line_coord, None, None]:
         yield diagonal
 
 
-
-
-
-
-
 def get_lines_grouped_coord(d: int, n: int) -> Generator[Lines_coord, None, None]: 
     """ Generate the lines in a hypercube, h(d, n) grouped by dimensdion
 
@@ -1404,6 +1399,9 @@ def _lines_np_coord_check(d: int, n: int) -> bool:
     
 
 
+
+
+
 ## make this a generator??
 def remove_invalid_coord(n:int, lines: Line_coord) -> Line_coord:
     
@@ -1423,14 +1421,12 @@ def get_scope_cell_coord(d: int, n: int, cell: Cell_coord) -> Lines_coord:
 
     # loop over the numbers of dimensions
     for i in range(d): 
-
         for i_comb in it.combinations(range(d), r = i + 1): 
-       
-            incr = it.product([-1, 1], repeat = i + 1) 
             
+            incr = it.product([-1, 1], repeat = i + 1) 
+
             seen: Line_coord = []
             for k in incr:
-                
                 d_line: Deque[Cell_coord] = Deque((cell,))
 
                 k_neg = tuple(-x for x in list(k))
@@ -1438,12 +1434,11 @@ def get_scope_cell_coord(d: int, n: int, cell: Cell_coord) -> Lines_coord:
                     seen.append(k)
 
                     for j in range(1, n):
-
-                        k = tuple(x * j for x in list(k))
-                        c = increment_cell_coord(cell, i_comb, k)
+                        k1 = tuple(x * j for x in list(k))
+                        c = increment_cell_coord(cell, i_comb, k1)
 
                         d_line.appendleft(c)
-                        c = increment_cell_coord(cell, i_comb, k, False)
+                        c = increment_cell_coord(cell, i_comb, k1, False)
 
                         d_line.append(c)                        
                 
@@ -1458,27 +1453,42 @@ def get_scope_cell_coord(d: int, n: int, cell: Cell_coord) -> Lines_coord:
 
 if __name__ == "__main__":
     
-    d = 2
-    n = 3
-    #arr = np.arange(n ** d).reshape([n] * d)
-    #cc = get_lines_grouped_np(arr)
+    d = 1
+    n = 4
+    arr = np.arange(n ** d).reshape([n] * d)
+    print(arr)
+    
+    lines = list(get_lines_np(arr))
+    print(lines[0])
+    print(lines[0].size)
 
 
-    dd = get_lines_grouped_coord(d, n)
+    #x = get_scopes_np(cc, d)
+    #print(x)
+
+    #dd = get_lines_grouped_coord(d, n)
     #print(list(dd))
 
     #print(_lines_np_coord_check(d, n))
     
     #c = (1,2,1)
 
-    #s1 = get_scope_cell_coord(d, n, (1,2,1,0))
-    #print(s1)
-
-    #_, s2, = structure_coord(d, n)
-    #print(s2[1,2,1,0])
+    s1 = get_scope_cell_coord(d, n, (1,))
+    print(s1)
+    #print(len(s1))
+    _, tt, = structure_coord(d, n)
+    print(tt)
+    s2 = tt[(1,)]
+    print(s2)
     #print(num_lines(d, n))
+    #print(len(s2))
+    
 
-    #arr, _, s3, = structure_np(d, n, False)
+    arr, _, uu, = structure_np(d, n, False)
+    #print(uu)
+    s3 = uu[(1,)]
+    print(s3)
+    #print(len(s3))
     #print(s3[1,2,1])
     #print(num_lines(d, n))
 
