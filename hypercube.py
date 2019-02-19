@@ -1351,6 +1351,35 @@ def str_to_tuple(d: int, n: int, cell: str, offset: int = 1) -> Cell_coord:
         raise ValueError("One or more coordinates are not valid")           
 
 
+def remove_invalid_cells_coord(n:int, line: Line_coord) -> Line_coord:
+    """ Remove cells that do not have valid coordinates.
+
+    Parameters
+    ----------
+    n : int
+        The number of cells in any dimension
+    line: list
+        list of tuples representing cell coordinates (possibly invalid)
+ 
+    Returns
+    -------
+    list :
+        list of tuples representing valid cell coordinate
+
+    Examples
+    --------
+    >>> n = 3
+    >>> line = [(1, 2, 0), (-1, 0, 3), (0, 1, 2), (1, 2, 3)]
+    >>> remove_invalid_cells_coord(n, line)
+    [(1, 2, 0), (0, 1, 2)]
+    """
+
+    rl = []
+    for cell in line:
+        if all(coord in range(n) for coord in cell):
+            rl.append(cell)
+
+    return rl
 
 
 
@@ -1402,19 +1431,10 @@ def _lines_np_coord_check(d: int, n: int) -> bool:
 
 
 
-## make this a generator??
-def remove_invalid_coord(n:int, lines: Line_coord) -> Line_coord:
-    
-    rl = []
-    for cell in lines:
-        if all(coord in range(n) for coord in cell):
-            rl.append(cell)
-
-    return rl
 
 
 
-
+## make this a generator
 def get_scope_cell_coord(d: int, n: int, cell: Cell_coord) -> Lines_coord: 
     
     lines = []
