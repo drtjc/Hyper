@@ -353,16 +353,23 @@ class TicTacToe():
 
 
 if __name__ == "__main__":
- 
-    
 
-    dim = 4
-    size = 3
-    ttt = TicTacToe(dim, size, preload_scope = True)
+    from strategy import strategies
+    import heuristics
+
+    print(strategies)
+
+    t = strategies['Heuristics'](4,3)
+    print(t.drop) 
+
+
+##    dim = 4
+##    size = 3
+##    ttt = TicTacToe(dim, size, preload_scope = True)
     #ttt.p_names = ['Tom 2', 'Tom']
-    ttt.p_names = 'Tom 2', 'Tom'
+#    ttt.p_names = 'Tom 2', 'Tom'
     #print(ttt.p_names[0])
-    ttt.p_marks = "O", "X"
+#    ttt.p_marks = "O", "X"
 
     #_, scopes = hc.structure_coord(dim, size)
     #print(scopes[(0,0)])
@@ -375,25 +382,25 @@ if __name__ == "__main__":
     # print(ttt.memory())
     # print(ttt.state_str())
 
-    ttt.move('1111')
-    ttt.display(False)
-    print(ttt.state_str())
+    # ttt.move('1111')
+    # ttt.display(False)
+    # print(ttt.state_str())
 
-    ttt.move('1211')
-    ttt.display(False)
-    print(ttt.state_str())
+    # ttt.move('1211')
+    # ttt.display(False)
+    # print(ttt.state_str())
 
-    ttt.move('2222')
-    ttt.display(False)
-    print(ttt.state_str())
+    # ttt.move('2222')
+    # ttt.display(False)
+    # print(ttt.state_str())
     
-    ttt.move('1312')
-    ttt.display(False)
-    print(ttt.state_str())
+    # ttt.move('1312')
+    # ttt.display(False)
+    # print(ttt.state_str())
 
-    ttt.move('3333')
-    ttt.display(False)
-    print(ttt.state_str())
+    # ttt.move('3333')
+    # ttt.display(False)
+    # print(ttt.state_str())
 
 
 
