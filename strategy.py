@@ -1,7 +1,6 @@
 import abc
 import hypercube as hc
-from collections import UserDict
-from typing import Tuple, Dict
+from typing import Tuple, Dict, Type, Optional
 
 Cell_coord = hc.Cell_coord
 
@@ -22,23 +21,20 @@ class Strategy(abc.ABC):
         """ Undo last move played """
 
 
-class Strategies(UserDict):
+class Strategies(Dict[str, Type[Strategy]]):
 
-    def __init__(self, data, **kwargs) -> None:
-        super().__init__(data, **kwargs)
-    
+    def __init__(self) -> None:
+        super()
 
-
-
-
-Strategies2: Dict[str, Strategy] = {}
+    def register(self, s: Type[Strategy]) -> None:
+        self[s.__name__] = s 
 
 
+strategies = Strategies()
 
 
-strategies = []
 def strategy(s):
-    strategies.append(s)
+    strategies.register(s)
     return s
 
 
@@ -58,6 +54,7 @@ class Heuristics(Strategy):
 
     def __init__(self, d: int, n: int, moves_per_turn = 1, drop = False) -> None:
         super().__init__(d, n, moves_per_turn, drop)
+        print("here")
 
     def move(self, cell: Cell_coord) -> Cell_coord:
         pass
@@ -117,8 +114,13 @@ if __name__ == "__main__":
 
     d = {'a':3, 'b':4}
 
-    s = Strategies(d, c = 5)
+    #s = Strategies_test()
+    #s.add(Random)
+    #print(s)
 
+    print(strategies)
+    t = strategies['Heuristics'](4,3)
+    print(t.drop)
     #sn = [s.__name__ for s in strategies]
     #print(sn)
 
