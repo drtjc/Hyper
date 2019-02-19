@@ -1,9 +1,7 @@
 import numpy as np #type: ignore
-from collections.abc import Sequence
 from sys import getsizeof
 from enum import Enum, auto
-from typing import NamedTuple, List, Tuple, Union, Sequence
-from pprint import pprint
+from typing import NamedTuple, List, Tuple, Union
 from colorama import init, Fore, Back, Style
 init()
 
@@ -82,12 +80,13 @@ class TicTacToe():
         self.moves_per_turn = moves_per_turn
         self.drop = drop
         self.reset()
-        self._p_names = ['Player 1', 'Player 2']
-        self._p_marks = ['O', 'X']     
+        self._p_names = 'Player 1', 'Player 2'
+        self._p_marks = 'O', 'X'
         self.color_last_move = Fore.BLUE
         self.color_win_line = Back.MAGENTA
 
     def reset(self) -> None:
+        """ Reset the board. """
         self.state = GameState.IN_PROGRESS  
         self.board.fill(0)
         self.win_line: List[int] = []
@@ -99,24 +98,24 @@ class TicTacToe():
         self.moves_played: List[int] = [0, 0] # number of moves played in game by each player
 
     @property
-    def p_names(self) -> Sequence[str]:
+    def p_names(self) -> Tuple[str, str]: 
         return self._p_names
 
     @p_names.setter
-    def p_names(self, names: Sequence[str]) -> None:
+    def p_names(self, names: Tuple[str, str]) -> None:
         if not all(names):
             raise ValueError("Player names cannot be empty strings")
         elif names[0] == names[1]:
             raise ValueError("Player names must be unique")
         else:
-            self._p_names = list(names)
+            self._p_names = names
 
     @property
-    def p_marks(self) -> Sequence[str]:
+    def p_marks(self) -> Tuple[str, str]:
         return self._p_marks
 
     @p_marks.setter
-    def p_marks(self, marks: Sequence[str]) -> None:
+    def p_marks(self, marks: Tuple[str, str]) -> None:
         if not all(marks):
             raise ValueError("Player marks cannot be empty strings")
         elif len(marks[0]) != len(marks[1]):
@@ -124,25 +123,53 @@ class TicTacToe():
         elif marks[0] == marks[1]:
             raise ValueError("Player marks must be unique")
         else:
-            self._p_marks = list(marks)
+            self._p_marks = marks
 
     def state_str(self) -> str:
+        """ Description of the game state.
+
+        Returns
+        -------
+        str :
+            Description of the game state.
+        """
+        
         return self.GameState_str[self.state].replace('p1', self.p_names[0]).replace('p2', self.p_names[1])
 
+    ## TJC
     def memory(self) -> Memory:
         m = self.board.nbytes, getsizeof(self.lines), getsizeof(self.scopes)
         return Memory(self.board.dtype, *m, sum(m))
 
     def display_cell(self, v: int) -> Tuple[str, str, str]:
+        """ Callback function used by hypercube.display_np to determine display string for cell.
 
+        Parameters
+        ----------
+        v : int
+            The value in the cell
+
+        Returns
+        -------
+        tuple :
+            Three strings are returned:
+            1. The string to be displayed
+            2. Any formatting (typically applying color changes) applied before the string is displayed
+            3. Any formatting (typically removing color changes) applied afer the string is displayed
+
+        See Also
+        --------
+        hypercube.display_np
+
+        """
         f: str = Fore.RESET
         b: str = Back.RESET
 
-        if v > 0:
+        if v > 0: # player 0 move
             s = self.p_marks[0]
-        elif v < 0:
+        elif v < 0: # player 1 move
             s = self.p_marks[1]
-        else:
+        else: # cell has not been played
             s = ' ' * len(self.p_marks[0])
 
         # check if cell is last move, and adjust color if so
@@ -151,6 +178,7 @@ class TicTacToe():
             if self.board[last_move] == v:
                 f = self.color_last_move
         
+        # check if game has been won and adjust background color of winning line if so
         if self.state == GameState.WIN_P1 or self.state == GameState.WIN_P2:
             if v in self.win_line:
                 b = self.color_win_line
@@ -158,6 +186,18 @@ class TicTacToe():
         return s, f + b, Style.RESET_ALL
     
     def display(self, header: bool = False) -> None:
+        """ Display the board to the terminal.
+
+        Parameters
+        ----------
+        header
+            Is header information shown or not
+
+        Returns
+        -------
+        None
+
+        """
         b = hc.display_np(self.board, self.display_cell) + '\n'
         if header:
             b = f'\nd = {self.d}, n = {self.n}\n\n' + b
@@ -165,6 +205,24 @@ class TicTacToe():
 
 
     def move(self, cell: Union[str, Cell_coord], offset: int = 1) -> None:
+        """ Player makes a move.
+
+        Parameters
+        ----------
+        cell: str or tuple
+            The cell being played
+        offset: int, optional
+            For a cell specified as a string, what is first dimension.
+            Defaults to 1; typically 0 would be the other choice 
+
+        Returns
+        -------
+        None
+
+        Example
+        -------
+
+        """
         if self.state != GameState.IN_PROGRESS:
             raise GameOverError("The game is over")
 
@@ -184,9 +242,8 @@ class TicTacToe():
         else:
             pass
 
+        # check if cell has already been played
         if abs(v) > self._MOVE_BASE:
-            # if players whose turn it is is interative then get them
-            # to put another move in rather than raise error
             raise MoveError("The cell has already been played", t_cell)
 
         # we now have an empty cell
@@ -195,14 +252,14 @@ class TicTacToe():
         self.board[t_cell] = sgn * (self.moves_played[self.active_player] + self._MOVE_BASE)
         self.moves.append(Move(self.active_player, t_cell))
 
-        # don't check for win yet as undo function can undo a win, but will
+        # don't check for win or tie yet as undo function can undo a win or tie, but will
         # not work properly unless code below is executed
         self.active_moves += 1
         if self.active_moves == self.moves_per_turn:
             self.active_moves = 0
             self.active_player = int(not self.active_player)
 
-        # check for win now
+        # check for win or tie now
         if self.is_win(): 
             self.state = GameState.WIN_P2 if self.active_player else GameState.WIN_P1
             return
@@ -212,7 +269,6 @@ class TicTacToe():
         else:
             self.state = GameState.IN_PROGRESS
             return
-
 
     def is_tie(self) -> bool:
         if self.state == GameState.TIE:
@@ -239,7 +295,6 @@ class TicTacToe():
                         self.win_line = line
                         return True
                 return False
-
 
     def undo(self, replace: int = 0) -> None:
         """ Undo the last move.
@@ -294,20 +349,20 @@ class TicTacToe():
 
 
 
-## TO DO
-#hypercube - numlines by dimension
-# turn into generators
+
 
 
 if __name__ == "__main__":
  
+    
+
     dim = 4
     size = 3
     ttt = TicTacToe(dim, size, preload_scope = True)
     #ttt.p_names = ['Tom 2', 'Tom']
     ttt.p_names = 'Tom 2', 'Tom'
     #print(ttt.p_names[0])
-    ttt.p_marks = ["O", "X"]
+    ttt.p_marks = "O", "X"
 
     #_, scopes = hc.structure_coord(dim, size)
     #print(scopes[(0,0)])

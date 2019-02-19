@@ -1,6 +1,7 @@
 import abc
 import hypercube as hc
-from typing import Tuple
+from collections import UserDict
+from typing import Tuple, Dict
 
 Cell_coord = hc.Cell_coord
 
@@ -19,6 +20,21 @@ class Strategy(abc.ABC):
     @abc.abstractmethod
     def undo(self, cell: Cell_coord) -> Cell_coord:
         """ Undo last move played """
+
+
+class Strategies(UserDict):
+
+    def __init__(self, data, **kwargs) -> None:
+        super().__init__(data, **kwargs)
+    
+
+
+
+
+Strategies2: Dict[str, Strategy] = {}
+
+
+
 
 strategies = []
 def strategy(s):
@@ -98,8 +114,13 @@ class Interactive(Strategy):
 
 if __name__ == "__main__":
 
-    sn = [s.__name__ for s in strategies]
-    print(sn)
 
-    h = Heuristics(3, 4)
-    print(h.d)
+    d = {'a':3, 'b':4}
+
+    s = Strategies(d, c = 5)
+
+    #sn = [s.__name__ for s in strategies]
+    #print(sn)
+
+    #h = Heuristics(3, 4)
+    #print(h.d)
