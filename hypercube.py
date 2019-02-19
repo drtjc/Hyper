@@ -756,6 +756,77 @@ def get_scopes_coord(lines: Lines_coord, d: int) -> Scopes_coord:
     return scopes
 
 
+
+def get_scope_cell_coord(d: int, n: int, cell: Cell_coord) -> Generator[Line_coord, None, None]: 
+    """ Calculate the scope for a cell (provided as coordinates).
+
+    Parameters
+    ----------
+    d : int
+        The number of dimensions of the hypercube
+    n : int
+        The number of cells in any dimension
+    cell: tuple
+        The cell whose scope is to be calculated
+
+    Yields
+    ------
+    list :
+        list of cells representing a line within the scope of the cell
+
+    See Also
+    --------
+    get_scopes_coord
+
+    Notes
+    -----    
+    The scope for a specific cell can also be found by calling get_scopes_coord and 
+    indexing with the cell. get_scopes_coord calculates the scope for every cell and
+    stores this in a dictionary. get_scope_cell_coord only calculates the scope
+    for the specified cell.
+
+    Examples
+    --------
+    >>> d = 3
+    >>> n = 4
+    >>> arr = np.arange(n ** d).reshape([n] * d)
+    >>> list(get_scope_cell_coord(d, n, (1,2,3))) # doctest: +NORMALIZE_WHITESPACE
+    [[(0, 2, 3), (1, 2, 3), (2, 2, 3), (3, 2, 3)], [(1, 0, 3), (1, 1, 3), (1, 2, 3), (1, 3, 3)], 
+     [(1, 2, 0), (1, 2, 1), (1, 2, 2), (1, 2, 3)], [(0, 3, 3), (1, 2, 3), (2, 1, 3), (3, 0, 3)]]
+    """
+
+    # loop over the numbers of dimensions
+    for i in range(d): 
+        # for each combination of i dimensions
+        for i_comb in it.combinations(range(d), r = i + 1): 
+            # increment call coordinates along all potential lines
+            incr = it.product([-1, 1], repeat = i + 1) 
+            seen: Line_coord = []
+            for j in incr:
+                
+                # store potential lines. Could use a list but deque
+                # makes it clear we are moving "up and down" the line
+                d_line: Deque[Cell_coord] = Deque((cell,))
+                
+                # since we are moving "up and down" we don't need
+                # to move "down and up" as well
+                j_neg = tuple(-x for x in list(j))
+                if j_neg not in seen:
+                    seen.append(j)
+
+                    for k in range(1, n):
+                        jk = tuple(x * k for x in list(j)) # size of increments
+                        # record cells positions of increments
+                        d_line.appendleft(increment_cell_coord(cell, i_comb, jk))
+                        d_line.append(increment_cell_coord(cell, i_comb, jk, False))                        
+                
+                    # some calculated cells will simply not be part of the board
+                    line = remove_invalid_cells_coord(n, list(d_line))
+                    # we only want lines that are winning lines
+                    if len(line) == n:
+                        yield line
+            
+
 def structure_coord(d: int, n: int) -> Structure_coord:
     """ Return lines, and the scopes of its cells, for h(d, n)
 
@@ -1382,13 +1453,7 @@ def remove_invalid_cells_coord(n:int, line: Line_coord) -> Line_coord:
     return rl
 
 
-
-
-
-
-
-
-
+# used in internal testing
 def _lines_np_coord_check(d: int, n: int) -> bool:
     """ Checks if lines_np and lines_coord give the same lines.
 
@@ -1434,53 +1499,19 @@ def _lines_np_coord_check(d: int, n: int) -> bool:
 
 
 
-## make this a generator
-def get_scope_cell_coord(d: int, n: int, cell: Cell_coord) -> Lines_coord: 
-    
-    lines = []
-
-    # loop over the numbers of dimensions
-    for i in range(d): 
-        for i_comb in it.combinations(range(d), r = i + 1): 
-            
-            incr = it.product([-1, 1], repeat = i + 1) 
-
-            seen: Line_coord = []
-            for k in incr:
-                d_line: Deque[Cell_coord] = Deque((cell,))
-
-                k_neg = tuple(-x for x in list(k))
-                if k_neg not in seen:
-                    seen.append(k)
-
-                    for j in range(1, n):
-                        k1 = tuple(x * j for x in list(k))
-                        c = increment_cell_coord(cell, i_comb, k1)
-
-                        d_line.appendleft(c)
-                        c = increment_cell_coord(cell, i_comb, k1, False)
-
-                        d_line.append(c)                        
-                
-                    line = remove_invalid_coord(n, list(d_line))
-
-                    if len(line) == n:
-                        lines.append(line)
-            
-    return lines
 
 
 
 if __name__ == "__main__":
     
-    d = 1
+    d = 3
     n = 4
     arr = np.arange(n ** d).reshape([n] * d)
-    print(arr)
+    #print(arr)
     
     lines = list(get_lines_np(arr))
-    print(lines[0])
-    print(lines[0].size)
+    #print(lines[0])
+    #print(lines[0].size)
 
 
     #x = get_scopes_np(cc, d)
@@ -1493,22 +1524,22 @@ if __name__ == "__main__":
     
     #c = (1,2,1)
 
-    s1 = get_scope_cell_coord(d, n, (1,))
+    s1 = list(get_scope_cell_coord(d, n, (1,2,3)))
     print(s1)
-    #print(len(s1))
+    print(len(s1))
     _, tt, = structure_coord(d, n)
-    print(tt)
-    s2 = tt[(1,)]
+    #print(tt)
+    s2 = tt[1,2,3]
     print(s2)
     #print(num_lines(d, n))
-    #print(len(s2))
+    print(len(s2))
     
 
     arr, _, uu, = structure_np(d, n, False)
     #print(uu)
-    s3 = uu[(1,)]
+    s3 = uu[1,2,3]
     print(s3)
-    #print(len(s3))
+    print(len(s3))
     #print(s3[1,2,1])
     #print(num_lines(d, n))
 
