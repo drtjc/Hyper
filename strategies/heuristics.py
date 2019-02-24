@@ -25,7 +25,7 @@ class Heuristics(Strategy):
         super().__init__(d, n, moves_per_turn, drop)
 
     def move(self, cell: Cell_coord) -> Cell_coord:
-        pass
+        print("heur move")
 
     def undo(self, cell: Cell_coord) -> Cell_coord:
         pass
@@ -48,28 +48,3 @@ class Heuristics(Strategy):
     #     return -1 # no winning line
 
 
-@dec_strategy
-class Random(Strategy):
-    
-    def __init__(self, d: int, n: int, moves_per_turn = 1, drop = False) -> None:
-        super().__init__(d, n, moves_per_turn, drop)
-
-    def move(self, cell: Cell_coord) -> Cell_coord:
-        pass
-
-    def undo(self, cell: Cell_coord) -> Cell_coord:
-        pass
-
-
-
-@dec_strategy
-class Interactive(Strategy):
-    
-    def __init__(self, d: int, n: int, moves_per_turn = 1, drop = False) -> None:
-        super().__init__(d, n, moves_per_turn, drop)
-
-    def move(self, cell: Cell_coord) -> Cell_coord:
-        pass
-
-    def undo(self, cell: Cell_coord) -> Cell_coord:
-        pass

@@ -3,6 +3,8 @@ from strategy import dec_strategy, Strategy
 
 Cell_coord = hc.Cell_coord
 
+print("RRRRRandom")
+
 @dec_strategy
 class Random(Strategy):
     

@@ -19,6 +19,11 @@ class Strategy(abc.ABC):
     def undo(self, cell: Cell_coord) -> Cell_coord:
         """ Undo last move played """
 
+    @classmethod
+    def __subclasshook__(cls, C):
+        if cls is Strategy:
+            pass
+        return NotImplemented
 
 class Strategies(Dict[str, Type[Strategy]]):
 
