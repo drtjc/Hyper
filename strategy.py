@@ -1,5 +1,5 @@
 import abc
-from typing import Tuple, Dict, Type, Optional
+from typing import Tuple, Dict, Type
 
 Cell_coord = Tuple[int, ...]
 
@@ -36,6 +36,3 @@ def dec_strategy(s):
     strategies.register(s)
     return s
 
-
-import strategies.heuristics
-print("here")

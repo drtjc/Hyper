@@ -355,6 +355,7 @@ class TicTacToe():
 if __name__ == "__main__":
 
     from strategy import strategies
+    import strategies as st
     #import heuristics
 
     print(strategies)
