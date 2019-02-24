@@ -29,13 +29,13 @@ class Strategies(Dict[str, Type[Strategy]]):
         self[s.__name__] = s 
 
 
-strategies_ = Strategies()
+strategies = Strategies()
 
 
 def dec_strategy(s):
-    strategies_.register(s)
+    strategies.register(s)
     return s
 
 
-import strategies
+import strategies.heuristics
 print("here")
