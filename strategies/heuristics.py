@@ -3,6 +3,21 @@ from strategy import dec_strategy, Strategy
 
 Cell_coord = hc.Cell_coord
 
+
+
+#import heuristics
+
+
+#class LineState(NamedTuple):
+#    P1_total_marks: int
+#    P1_consecutive_marks: int
+#    P2_total_marks: int
+#    P2_consecutive_marks: int
+
+
+
+
+
 @dec_strategy
 class Heuristics(Strategy):
 

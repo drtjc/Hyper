@@ -355,12 +355,13 @@ class TicTacToe():
 if __name__ == "__main__":
 
     from strategy import strategies
-    import heuristics
+    #import heuristics
 
     print(strategies)
 
-    t = strategies['Heuristics'](4,3)
-    print(t.drop) 
+    
+    #t = strategies['Heuristics'](4,3)
+    #print(t.drop) 
 
 
 ##    dim = 4

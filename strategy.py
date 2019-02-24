@@ -1,8 +1,7 @@
 import abc
-import hypercube as hc
 from typing import Tuple, Dict, Type, Optional
 
-Cell_coord = hc.Cell_coord
+Cell_coord = Tuple[int, ...]
 
 class Strategy(abc.ABC):
 
@@ -30,45 +29,13 @@ class Strategies(Dict[str, Type[Strategy]]):
         self[s.__name__] = s 
 
 
-strategies = Strategies()
+strategies_ = Strategies()
 
 
 def dec_strategy(s):
-    strategies.register(s)
+    strategies_.register(s)
     return s
 
 
-
-#import heuristics
-
-
-#class LineState(NamedTuple):
-#    P1_total_marks: int
-#    P1_consecutive_marks: int
-#    P2_total_marks: int
-#    P2_consecutive_marks: int
-
-
-
-
-
-
-
-if __name__ == "__main__":
-
-    #import strategy
-    print(f'y1')
-    import heuristics as he
-    print("2")
-    
-
-
-    print(len(strategies))
-    print(strategies)
-    t = strategies['Heuristics'](4,3)
-    print(t.drop)
-    #sn = [s.__name__ for s in strategies]
-    #print(sn)
-
-    #h = Heuristics(3, 4)
-    #print(h.d)
+import strategies
+print("here")
