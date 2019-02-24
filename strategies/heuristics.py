@@ -1,5 +1,5 @@
 import hypercube as hc
-from strategy import dec_strategy, Strategy
+from strategy import Strategy
 
 Cell_coord = hc.Cell_coord
 
@@ -16,9 +16,6 @@ Cell_coord = hc.Cell_coord
 
 
 
-
-
-@dec_strategy
 class Heuristics(Strategy):
 
     def __init__(self, d: int, n: int, moves_per_turn = 1, drop = False) -> None:
@@ -29,6 +26,8 @@ class Heuristics(Strategy):
 
     def undo(self, cell: Cell_coord) -> Cell_coord:
         pass
+
+
 
     # def get_lines_state(self) -> int:
     #     # list of tuples - each tuple containg number of +ves and -eves in a line

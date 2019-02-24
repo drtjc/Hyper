@@ -375,6 +375,7 @@ if __name__ == "__main__":
     t2 = st.Heuristics(5,6)
     print(t2.d)
 
+    print(dir(st))
 
 ##    dim = 4
 ##    size = 3

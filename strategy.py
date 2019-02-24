@@ -25,19 +25,7 @@ class Strategy(abc.ABC):
             pass
         return NotImplemented
 
-class Strategies(Dict[str, Type[Strategy]]):
 
-    def __init__(self) -> None:
-        super()
+strategies: Dict[str, Type[Strategy]] = {}
 
-    def register(self, s: Type[Strategy]) -> None:
-        self[s.__name__] = s 
-
-
-strategies = Strategies()
-
-
-def dec_strategy(s):
-    strategies.register(s)
-    return s
 

@@ -1,11 +1,9 @@
 import hypercube as hc
-from strategy import dec_strategy, Strategy
+from strategy import Strategy
 
 Cell_coord = hc.Cell_coord
 
-print("RRRRRandom")
 
-@dec_strategy
 class Random(Strategy):
     
     def __init__(self, d: int, n: int, moves_per_turn = 1, drop = False) -> None:
