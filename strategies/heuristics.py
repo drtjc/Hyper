@@ -22,9 +22,9 @@ class Heuristics(Strategy):
         super().__init__(d, n, moves_per_turn, drop)
 
     def move(self, cell: Cell_coord) -> Cell_coord:
-        print("heur move")
+        return (1,)
 
-    def undo(self, cell: Cell_coord) -> Cell_coord:
+    def undo(self):
         pass
 
 
