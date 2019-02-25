@@ -354,28 +354,18 @@ class TicTacToe():
 
 if __name__ == "__main__":
 
-    from strategy import strategies
-    import strategy as s
-    import strategies as st
-    #import heuristics
-
-    print(strategies)
-
-    #print(issubclass(strategies['Interactive'], s.Strategy))
+    import strategies as st    
     
-    t = strategies['Heuristics'](4,3)
-    print(t.d) 
-    print(type(strategies['Heuristics']))
+    
 
-    #@s.Strategy.register
-    #class test(): pass
-    #print(issubclass(test, s.Strategy))
+    print(st.strategies_cls)
+    for k in st.strategies_cls.keys():
+        print(k)
+    
+    #t = strategies['Heuristics'](4,3)
+    #print(t.d) 
+    #print(type(strategies['Heuristics']))
 
-
-    #t2 = st.Heuristics(5,6)
-    #print(t2.d)
-
-    print(dir(st))
 
 ##    dim = 4
 ##    size = 3

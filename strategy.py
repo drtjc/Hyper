@@ -1,6 +1,5 @@
 import abc
-from inspect import signature, _empty
-from typing import Tuple, Dict, Type
+from typing import Tuple
 
 Cell_coord = Tuple[int, ...]
 
@@ -24,31 +23,21 @@ class Strategy(abc.ABC):
     @classmethod
     def __subclasshook__(cls, C):
         if cls is Strategy:
+
             move_found = False
             undo_found = False
             for B in C.__mro__:
                 for attr in B.__dict__:
-                    if attr in ["move", "undo"]: 
-                        try:
-                            sig = signature(B.__dict__[attr])
-                            params = sig.parameters
-                            ret = sig.return_annotation
-                        except:
-                            continue
+                    if attr == "move":
+                        move_found = True
+                    
+                    if attr == "undo":                        
+                        undo_found = True
+                    
+                    if move_found and undo_found:
+                        return True
 
-                        if attr == "move":
-                            if len(params) == 2 and ret is not _empty and ret is not None:
-                                move_found = True
-                    
-                        if attr == "undo":                        
-                            if len(params) == 1 and (ret is _empty or ret is None):
-                                undo_found = True
-                    
-                if move_found and undo_found:
-                    return True
         return NotImplemented
 
-
-strategies: Dict[str, Type[Strategy]] = {}
 
 
