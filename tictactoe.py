@@ -356,11 +356,48 @@ if __name__ == "__main__":
 
     import strategies as st    
     
-    
+    from pprint import pprint
 
-    print(st.strategies_cls)
-    for k in st.strategies_cls.keys():
-        print(k)
+    msg2 = ''
+    d2 = {}
+    for i, (k, v) in enumerate(st.strategies_cls.items(), 1):
+        msg2 = msg2 + str(i) + '. ' + k + '\n'
+        d2[i] = k
+    print(msg2)
+    print(d2)
+
+    msg = "Choose a strategy:\n"
+    idx_i = range(1, 1 + len(st.strategies_cls))
+    idx_s = '\n'.join(map(lambda x: str(x) + '.', idx_i))
+    strat_s = [k for k in st.strategies_cls]
+    strats = '\n'.join(strat_s)
+    msg = msg + hc.join_multiline((idx_s, strats)) + '\n'
+
+    #pprint(msg)
+    #strat_sel_s = input(msg)
+    #pprint(strat_sel_s)
+    #print(st.strategies_cls[strat_s[int(strat_sel_s) - 1]])
+    #try:
+    #    st_1 = st.strategies_cls[strat_s[int(strat_sel_s) - 1]](4,3)
+    #except:
+    #    print("bugger")
+    #    raise
+
+    #print(st_1.d)
+    #i = '\n'.join(map(lambda x: str(x) + '.', idx))
+    #print(i)
+
+
+    #msg = '\n'.join(st.strategies_cls)
+    #print(msg)
+
+    #print('\n\n')
+
+    #tt = hc.join_multiline([i, msg])
+    #print(tt)
+    #print(st.strategies_cls)
+    #for k in st.strategies_cls.keys():
+    #    print(k)
     
     #t = strategies['Heuristics'](4,3)
     #print(t.d) 
