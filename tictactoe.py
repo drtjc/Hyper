@@ -367,13 +367,13 @@ if __name__ == "__main__":
     print(t.d) 
     print(type(strategies['Heuristics']))
 
-    @s.Strategy.register
-    class test(): pass
-    print(issubclass(test, s.Strategy))
+    #@s.Strategy.register
+    #class test(): pass
+    #print(issubclass(test, s.Strategy))
 
 
-    t2 = st.Heuristics(5,6)
-    print(t2.d)
+    #t2 = st.Heuristics(5,6)
+    #print(t2.d)
 
     print(dir(st))
 

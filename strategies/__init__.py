@@ -20,7 +20,7 @@ for _, mod_name, _ in iter_modules([Path(__file__).parent.name]):
 
         if isclass(attribute) and issubclass(attribute, Strategy) and not isabstract(attribute):
             class_name = attribute.__name__.split('.')[-1]
-            setattr(modules[__name__], class_name, attribute)
+            #setattr(modules[__name__], class_name, attribute)
             strategies[class_name] = attribute
             protocol_found = True
             continue
