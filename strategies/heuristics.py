@@ -21,13 +21,13 @@ class Heuristics(Strategy):
     def __init__(self, shared: bool, d: int, n: int, moves_per_turn = 1, drop = False) -> None:
         self.shared = shared
 
-    @property
-    def shared(self):
-        return self._shared
+    # @property
+    # def shared(self):
+    #     return self._shared
 
-    @shared.setter
-    def shared(self, val):
-        self._shared = val
+    # @shared.setter
+    # def shared(self, val):
+    #     self._shared = val
 
 
     def move(self, cell: Cell_coord) -> Cell_coord:

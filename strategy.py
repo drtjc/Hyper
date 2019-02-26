@@ -12,15 +12,23 @@ class Strategy(abc.ABC):
     #    self.shared = shared
     #    super().__init__()
 
+    # @property
+    # @abc.abstractmethod
+    # def shared(self):
+    #      """ ## """
+
+    # @shared.setter
+    # @abc.abstractmethod
+    # def shared(self, val):
+    #      """ ## """
+
     @property
-    @abc.abstractmethod
     def shared(self):
-         """ ## """
+        return self._shared
 
     @shared.setter
-    @abc.abstractmethod
     def shared(self, val):
-         """ ## """
+        self._shared = val
 
     @abc.abstractmethod
     def move(self, cell: Cell_coord) -> Cell_coord:
