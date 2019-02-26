@@ -1,7 +1,7 @@
 import numpy as np #type: ignore
 from sys import getsizeof
 from enum import Enum, auto
-from typing import NamedTuple, List, Tuple, Union
+from typing import NamedTuple, List, Tuple, Union, Any
 from colorama import init, Fore, Back, Style
 init()
 
@@ -14,10 +14,18 @@ class Error(Exception):
     pass
 
 
-class MoveError(Error):
+class DuplicateMoveError(Error):
     """ Raised if a cell has already been played."""
 
     def __init__(self, message: str, cell: Cell_coord):
+        self.message = message
+        self.cell = cell
+
+
+class UnknownMoveError(Error):
+    """ Raised if cell is not a valid cell."""
+
+    def __init__(self, message: str, cell: Any):
         self.message = message
         self.cell = cell
 
@@ -61,7 +69,6 @@ class TicTacToe():
                      GameState.TIE: "It's a tie", GameState.IN_PROGRESS: 'In progress'}
 
     def __init__(self, d: int, n: int, moves_per_turn: int = 1, drop: bool = False, 
-                 strategy_1: Strategy = None, strategy_2: Strategy = None, 
                  preload_scope: bool = True) -> None:
 
         try:            
@@ -81,7 +88,6 @@ class TicTacToe():
         self.n = n
         self.moves_per_turn = moves_per_turn
         self.drop = drop
-        self.strategies = strategy_1, strategy_2
         self._names = 'Player 1', 'Player 2'
         self._marks = 'O', 'X'
         self.reset()
@@ -199,7 +205,6 @@ class TicTacToe():
         Returns
         -------
         None
-
         """
         b = hc.display_np(self.board, self.display_cell) + '\n'
         if header:
@@ -222,6 +227,10 @@ class TicTacToe():
         -------
         None
 
+        Raises
+        ------
+        ##TO DO
+
         Example
         -------
 
@@ -237,7 +246,7 @@ class TicTacToe():
             
             v = self.board[t_cell]
         except:
-            raise Error("Invalid cell argument was provided")
+            raise UnknownMoveError("Invalid cell argument was provided", cell)
 
         # we now have a validly defined cell
         if self.drop:
@@ -247,7 +256,7 @@ class TicTacToe():
 
         # check if cell has already been played
         if abs(v) > self._MOVE_BASE:
-            raise MoveError("The cell has already been played", t_cell)
+            raise DuplicateMoveError("The cell has already been played", t_cell)
 
         # we now have an empty cell
         self.moves_played[self.active_player] += 1
@@ -349,12 +358,6 @@ class TicTacToe():
         del self.moves[-1]
 
 
-
-
-
-
-
-
 if __name__ == "__main__":
 
     import strategies as st    
@@ -368,6 +371,7 @@ if __name__ == "__main__":
 
     def create_board() -> TicTacToe:
         while True:
+            print('')
             d = input_q("Number of dimensions:")
             n = input_q("Size of board:")
 
@@ -378,10 +382,11 @@ if __name__ == "__main__":
                 print("The board is too big to fit into available memory")
             except Exception as e:
                 print("Could not create board. Please provide valid parameters")
-                print(f'{e}\n')
+                print(f'{e}')
 
     def choose_names(ttt: TicTacToe) -> None:
         while True:
+            print('')
             p1_name = input_q("Name of player 1:")
             p2_name = input_q("Name of player 2:")
 
@@ -389,45 +394,44 @@ if __name__ == "__main__":
                 ttt.names = p1_name, p2_name
                 return
             except Exception as e:
-                print(f'{e}\n')
+                print(f'{e}')
 
-    def choose_strategy(ttt: TicTacToe): #return type is object bound by Strategy
+    def choose_strategy(ttt: TicTacToe, p: int): #return type is object bound by Strategy
         idx_cls = {}
-        msg = "Choose strategy:\n"
+        msg = f'Choose strategy for {str(ttt.names[p])}:\n'
         for i, (k, v) in enumerate(st.strategies_cls.items(), 1):
             msg = msg + '  ' + str(i) + '. ' + k + '\n'
             idx_cls[str(i)] = v
         msg = msg + 'Selection:'
         
         while True:
+            print('')
             s = input_q(msg)
 
             try:    
                 # should add strat to ttt
-                return idx_cls[s](ttt.d, ttt.n, ttt.moves_per_turn, ttt.drop)
+                return idx_cls[s](True, ttt.d, ttt.n, ttt.moves_per_turn, ttt.drop)
             except Exception as e:
-                print(f'Invalid selection: {e}\n')
+                print(f'Invalid selection: {e}')
         
 
 
     # Display welcome message and instructions
-    msg = "Welcome to HyperOXO.\n"
+    msg = "Welcome to HyperOXO."
     print(msg)
 
-    # Get board parameters and create instance of TicTacToe
+    # set up game
     ttt = create_board()
-    print('')
-    #print(ttt.d)
-
-    # Choose player names
     choose_names(ttt)
-    print('')
-    #print(ttt.p_names)
+    st_1 = choose_strategy(ttt, 0)
+    st_2 = choose_strategy(ttt, 1)
 
-    # Choose player strategies
-    ss = choose_strategy(ttt)
-    print(ss)
-    print(ss.move((9,)))
+    print(st_1.shared)
+    #ttt.strategies = st_1, st_2
+
+
+    #print(ttt.strategies[0].move((9,)))
+    #print(ttt.strategies[1].move((9,)))
     
 
     # choose
@@ -435,9 +439,7 @@ if __name__ == "__main__":
     #sel = input(msg)
     
 
-    def choose_strategy(p):
-        pass
-
+ 
    
     
     #t = strategies['Heuristics'](4,3)

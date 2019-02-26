@@ -6,11 +6,21 @@ Cell_coord = Tuple[int, ...]
 
 class Strategy(abc.ABC):
 
-    def __init__(self, d: int, n: int, moves_per_turn = 1, drop = False) -> None:
-        self.d = d
-        self.n = n
-        self.moves_per_turn = moves_per_turn
-        self.drop = drop
+    #def __init__(self, d: int, n: int, moves_per_turn = 1, drop = False) -> None:
+    #    pass
+    #def __init__(self, shared: bool) -> None:
+    #    self.shared = shared
+    #    super().__init__()
+
+    @property
+    @abc.abstractmethod
+    def shared(self):
+         """ ## """
+
+    @shared.setter
+    @abc.abstractmethod
+    def shared(self, val):
+         """ ## """
 
     @abc.abstractmethod
     def move(self, cell: Cell_coord) -> Cell_coord:
@@ -38,6 +48,5 @@ class Strategy(abc.ABC):
                         return True
 
         return NotImplemented
-
 
 
