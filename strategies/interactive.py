@@ -10,7 +10,7 @@ class Interactive(Strategy):
         super().__init__(d, n, moves_per_turn, drop)
 
     def move(self, cell: Cell_coord) -> Cell_coord:
-        return (1,)
+        return (3,)
 
     def undo(self):
         pass

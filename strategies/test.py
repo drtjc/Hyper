@@ -17,8 +17,8 @@ class SCH:
         
 
     def move(self, cell: Cell_coord) -> Cell_coord:
-        print("SCH")
-        return (1,)
+        #print("SCH")
+        return (4,)
 
     def undo(self) -> None:
         return None

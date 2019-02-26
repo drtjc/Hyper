@@ -72,7 +72,7 @@ class TicTacToe():
                 #self.scopes = None
             self.lines = None
         except MemoryError:
-            print("The board is too big to fit into available memory")
+            #print("The board is too big to fit into available memory")
             raise
 
         self.d = d
@@ -355,49 +355,86 @@ class TicTacToe():
 if __name__ == "__main__":
 
     import strategies as st    
+
+    def input_q(msg: str): ## may not return
+        resp = input(msg)
+        if resp.upper() in ["Q", "QUIT"]:
+            raise SystemExit
+        else:
+            return resp
+
+    def create_board() -> TicTacToe:
+        while True:
+            d = input_q("Number of dimensions:")
+            n = input_q("Size of board:")
+
+            try:
+                return TicTacToe(int(d), int(n))
+            except MemoryError:
+                print("The board is too big to fit into available memory")
+            except Exception as e:
+                print("Could not create board. Please provide valid parameters")
+                print(f'{e}\n')
+
+    def choose_names(ttt: TicTacToe) -> None:
+        while True:
+            p1_name = input_q("Name of player 1:")
+            p2_name = input_q("Name of player 2:")
+
+            try:
+                ttt.p_names = p1_name, p2_name
+                return
+            except Exception as e:
+                print(f'{e}\n')
+
+    def choose_strategy(ttt: TicTacToe): #return type is object bound by Strategy
+        idx_cls = {}
+        msg = "Choose strategy:\n"
+        for i, (k, v) in enumerate(st.strategies_cls.items(), 1):
+            msg = msg + '  ' + str(i) + '. ' + k + '\n'
+            idx_cls[str(i)] = v
+        msg = msg + 'Selection:'
+        
+        while True:
+            s = input_q(msg)
+
+            try:    
+                # should add strat to ttt
+                return idx_cls[s](ttt.d, ttt.n, ttt.moves_per_turn, ttt.drop)
+            except Exception as e:
+                print(f'Invalid selection: {e}\n')
+        
+
+
+    # Display welcome message and instructions
+    msg = "Welcome to HyperOXO.\n"
+    print(msg)
+
+    # Get board parameters and create instance of TicTacToe
+    ttt = create_board()
+    print('')
+    #print(ttt.d)
+
+    # Choose player names
+    choose_names(ttt)
+    print('')
+    #print(ttt.p_names)
+
+    # Choose player strategies
+    ss = choose_strategy(ttt)
+    print(ss)
+    print(ss.move((9,)))
     
-    from pprint import pprint
 
-    msg2 = ''
-    d2 = {}
-    for i, (k, v) in enumerate(st.strategies_cls.items(), 1):
-        msg2 = msg2 + str(i) + '. ' + k + '\n'
-        d2[i] = k
-    print(msg2)
-    print(d2)
+    # choose
 
-    msg = "Choose a strategy:\n"
-    idx_i = range(1, 1 + len(st.strategies_cls))
-    idx_s = '\n'.join(map(lambda x: str(x) + '.', idx_i))
-    strat_s = [k for k in st.strategies_cls]
-    strats = '\n'.join(strat_s)
-    msg = msg + hc.join_multiline((idx_s, strats)) + '\n'
+    #sel = input(msg)
+    
 
-    #pprint(msg)
-    #strat_sel_s = input(msg)
-    #pprint(strat_sel_s)
-    #print(st.strategies_cls[strat_s[int(strat_sel_s) - 1]])
-    #try:
-    #    st_1 = st.strategies_cls[strat_s[int(strat_sel_s) - 1]](4,3)
-    #except:
-    #    print("bugger")
-    #    raise
+    def choose_strategy(p):
+        pass
 
-    #print(st_1.d)
-    #i = '\n'.join(map(lambda x: str(x) + '.', idx))
-    #print(i)
-
-
-    #msg = '\n'.join(st.strategies_cls)
-    #print(msg)
-
-    #print('\n\n')
-
-    #tt = hc.join_multiline([i, msg])
-    #print(tt)
-    #print(st.strategies_cls)
-    #for k in st.strategies_cls.keys():
-    #    print(k)
+   
     
     #t = strategies['Heuristics'](4,3)
     #print(t.d) 
