@@ -5,6 +5,7 @@ from typing import NamedTuple, List, Tuple, Union
 from colorama import init, Fore, Back, Style
 init()
 
+from strategy import Strategy
 import hypercube as hc
 Cell_coord = hc.Cell_coord
 
@@ -59,8 +60,9 @@ class TicTacToe():
     GameState_str = {GameState.WIN_P1: 'p1 wins', GameState.WIN_P2: 'p2 wins',
                      GameState.TIE: "It's a tie", GameState.IN_PROGRESS: 'In progress'}
 
-    def __init__(self, d: int, n: int, moves_per_turn: int = 1, 
-                 drop: bool = False, preload_scope: bool = True) -> None:
+    def __init__(self, d: int, n: int, moves_per_turn: int = 1, drop: bool = False, 
+                 strategy_1: Strategy = None, strategy_2: Strategy = None, 
+                 preload_scope: bool = True) -> None:
 
         try:            
             #self.board, self.lines, self.scopes = hc.structure_np(d, n, zeros = False, OFFSET = self._MOVE_BASE)
@@ -79,9 +81,10 @@ class TicTacToe():
         self.n = n
         self.moves_per_turn = moves_per_turn
         self.drop = drop
+        self.strategies = strategy_1, strategy_2
+        self._names = 'Player 1', 'Player 2'
+        self._marks = 'O', 'X'
         self.reset()
-        self._p_names = 'Player 1', 'Player 2'
-        self._p_marks = 'O', 'X'
         self.color_last_move = Fore.BLUE
         self.color_win_line = Back.MAGENTA
 
@@ -98,24 +101,24 @@ class TicTacToe():
         self.moves_played: List[int] = [0, 0] # number of moves played in game by each player
 
     @property
-    def p_names(self) -> Tuple[str, str]: 
-        return self._p_names
+    def names(self) -> Tuple[str, str]: 
+        return self._names
 
-    @p_names.setter
-    def p_names(self, names: Tuple[str, str]) -> None:
+    @names.setter
+    def names(self, names: Tuple[str, str]) -> None:
         if not all(names):
             raise ValueError("Player names cannot be empty strings")
         elif names[0] == names[1]:
             raise ValueError("Player names must be unique")
         else:
-            self._p_names = names
+            self._names = names
 
     @property
-    def p_marks(self) -> Tuple[str, str]:
-        return self._p_marks
+    def marks(self) -> Tuple[str, str]:
+        return self._marks
 
-    @p_marks.setter
-    def p_marks(self, marks: Tuple[str, str]) -> None:
+    @marks.setter
+    def marks(self, marks: Tuple[str, str]) -> None:
         if not all(marks):
             raise ValueError("Player marks cannot be empty strings")
         elif len(marks[0]) != len(marks[1]):
@@ -123,7 +126,7 @@ class TicTacToe():
         elif marks[0] == marks[1]:
             raise ValueError("Player marks must be unique")
         else:
-            self._p_marks = marks
+            self._marks = marks
 
     def state_str(self) -> str:
         """ Description of the game state.
@@ -134,7 +137,7 @@ class TicTacToe():
             Description of the game state.
         """
         
-        return self.GameState_str[self.state].replace('p1', self.p_names[0]).replace('p2', self.p_names[1])
+        return self.GameState_str[self.state].replace('p1', self.names[0]).replace('p2', self.names[1])
 
     ## TJC
     def memory(self) -> Memory:
@@ -166,11 +169,11 @@ class TicTacToe():
         b: str = Back.RESET
 
         if v > 0: # player 0 move
-            s = self.p_marks[0]
+            s = self.marks[0]
         elif v < 0: # player 1 move
-            s = self.p_marks[1]
+            s = self.marks[1]
         else: # cell has not been played
-            s = ' ' * len(self.p_marks[0])
+            s = ' ' * len(self.marks[0])
 
         # check if cell is last move, and adjust color if so
         if len(self.moves) > 0:
@@ -369,6 +372,7 @@ if __name__ == "__main__":
             n = input_q("Size of board:")
 
             try:
+                ##TJC thread this in case takes a long time
                 return TicTacToe(int(d), int(n))
             except MemoryError:
                 print("The board is too big to fit into available memory")
@@ -382,7 +386,7 @@ if __name__ == "__main__":
             p2_name = input_q("Name of player 2:")
 
             try:
-                ttt.p_names = p1_name, p2_name
+                ttt.names = p1_name, p2_name
                 return
             except Exception as e:
                 print(f'{e}\n')
