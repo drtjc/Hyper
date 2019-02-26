@@ -8,9 +8,9 @@ class Strategy(abc.ABC):
 
     #def __init__(self, d: int, n: int, moves_per_turn = 1, drop = False) -> None:
     #    pass
-    #def __init__(self, shared: bool) -> None:
-    #    self.shared = shared
-    #    super().__init__()
+    def __init__(self) -> None:
+        self.shared = False
+        super().__init__()
 
     # @property
     # @abc.abstractmethod
@@ -22,13 +22,13 @@ class Strategy(abc.ABC):
     # def shared(self, val):
     #      """ ## """
 
-    @property
-    def shared(self):
-        return self._shared
+    # @property
+    # def shared(self):
+    #     return self._shared
 
-    @shared.setter
-    def shared(self, val):
-        self._shared = val
+    # @shared.setter
+    # def shared(self, val):
+    #     self._shared = val
 
     @abc.abstractmethod
     def move(self, cell: Cell_coord) -> Cell_coord:
