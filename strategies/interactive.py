@@ -1,5 +1,6 @@
 import hypercube as hc
 from strategy import Strategy
+from typing import Union
 
 Cell_coord = hc.Cell_coord
 
@@ -17,8 +18,8 @@ class Interactive(Strategy):
     # def shared(self, val):
     #     self._shared = val
 
-    def move(self, cell: Cell_coord) -> Cell_coord:
-        return (3,)
+    def move(self, cell: Union[Cell_coord]) -> Cell_coord:
+        return (3,3,3)
 
     def undo(self):
         pass

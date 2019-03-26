@@ -1,5 +1,5 @@
 import abc
-from typing import Tuple
+from typing import Tuple, Union
 
 Cell_coord = Tuple[int, ...]
 
@@ -31,7 +31,7 @@ class Strategy(abc.ABC):
     #     self._shared = val
 
     @abc.abstractmethod
-    def move(self, cell: Cell_coord) -> Cell_coord:
+    def move(self, cell: Union[Cell_coord]) -> Cell_coord:
         """ Calculate the move to be played """
 
     @abc.abstractmethod

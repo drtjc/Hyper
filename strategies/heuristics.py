@@ -1,5 +1,6 @@
 import hypercube as hc
 from strategy import Strategy
+from typing import Union
 
 Cell_coord = hc.Cell_coord
 
@@ -30,7 +31,7 @@ class Heuristics(Strategy):
     #     self._shared = val
 
 
-    def move(self, cell: Cell_coord) -> Cell_coord:
+    def move(self, cell: Union[Cell_coord]) -> Cell_coord:
         return (1,)
 
     def undo(self):

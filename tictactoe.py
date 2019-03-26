@@ -372,11 +372,11 @@ if __name__ == "__main__":
     def create_board() -> TicTacToe:
         while True:
             print('')
-            d = input_q("Number of dimensions:")
-            n = input_q("Size of board:")
+            d = input_q("Number of dimensions: ")
+            n = input_q("Size of board: ")
 
             try:
-                ##TJC thread this in case takes a long time
+                ##TJC thread this in case takes a long time??
                 return TicTacToe(int(d), int(n))
             except MemoryError:
                 print("The board is too big to fit into available memory")
@@ -387,8 +387,8 @@ if __name__ == "__main__":
     def choose_names(ttt: TicTacToe) -> None:
         while True:
             print('')
-            p1_name = input_q("Name of player 1:")
-            p2_name = input_q("Name of player 2:")
+            p1_name = input_q("Name of player 1: ")
+            p2_name = input_q("Name of player 2: ")
 
             try:
                 ttt.names = p1_name, p2_name
@@ -402,7 +402,7 @@ if __name__ == "__main__":
         for i, (k, v) in enumerate(st.strategies_cls.items(), 1):
             msg = msg + '  ' + str(i) + '. ' + k + '\n'
             idx_cls[str(i)] = v
-        msg = msg + 'Selection:'
+        msg = msg + 'Selection: '
         
         while True:
             print('')
@@ -414,6 +414,23 @@ if __name__ == "__main__":
             except Exception as e:
                 print(f'Invalid selection: {e}')
         
+    def require_move_confirmation() -> bool: 
+        print('')
+        res = input_q("Require player confirmation before next move? (y/n): ")
+        return res.upper() in ['TRUE', 'T', 'YES', 'Y']
+
+    def confirm_move(ttt: TicTacToe) -> None:
+        while True:
+            print('')
+            res = input("Quit(q), undo(u) or move(m): ")
+
+            # if quit, game is forfeit
+            # if undo, 
+            try:
+                ttt.names = p1_name, p2_name
+                return
+            except Exception as e:
+                print(f'{e}')
 
 
     # Display welcome message and instructions
@@ -423,8 +440,31 @@ if __name__ == "__main__":
     # set up game
     ttt = create_board()
     choose_names(ttt)
-    st_1 = choose_strategy(ttt, 0)
-    st_2 = choose_strategy(ttt, 1)
+    #st_1 = choose_strategy(ttt, 0)
+    #st_2 = choose_strategy(ttt, 1)
+    st = choose_strategy(ttt, 0), choose_strategy(ttt, 1)
+
+    # ask if move confirmation is required
+    req_move_conf = require_move_confirmation()
+
+    print(f'\nActive player: {ttt.names[ttt.active_player]}')
+    ttt.move(st[ttt.active_player].move(None))
+    ttt.display()
+    while ttt.state == GameState.IN_PROGRESS:
+        # active player to move
+        # if ask to move then allow quit, undo as well
+
+        #if req_move_conf:
+        #    confirm_move(ttt)
+    
+        print(f'\nActive player: {ttt.names[ttt.active_player]}')
+        ttt.move(st[ttt.active_player].move(ttt.moves[-1]))
+        #ttt.move(st_1.move((-1,-1,-1)))
+        ttt.display()
+
+
+
+    # use a co-routine to play?
 
     #print(st_1.shared)
     #ttt.strategies = st_1, st_2

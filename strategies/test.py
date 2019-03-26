@@ -1,5 +1,5 @@
 from strategy import Strategy
-
+from typing import Union
 
 
 @Strategy.register
@@ -16,7 +16,7 @@ class SCH:
         #super().__init__(d, n, moves_per_turn, drop)
         
 
-    def move(self, cell: Cell_coord) -> Cell_coord:
+    def move(self, cell: Union[Cell_coord]) -> Cell_coord:
         #print("SCH")
         return (4,)
 
