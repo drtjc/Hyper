@@ -426,7 +426,7 @@ if __name__ == "__main__":
     st_1 = choose_strategy(ttt, 0)
     st_2 = choose_strategy(ttt, 1)
 
-    print(st_1.shared)
+    #print(st_1.shared)
     #ttt.strategies = st_1, st_2
 
 
