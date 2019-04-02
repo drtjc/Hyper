@@ -447,6 +447,7 @@ if __name__ == "__main__":
     # ask if move confirmation is required
     req_move_conf = require_move_confirmation()
 
+    ttt.display()
     print(f'\nActive player: {ttt.names[ttt.active_player]}')
     ttt.move(st[ttt.active_player].move(None))
     ttt.display()

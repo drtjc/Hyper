@@ -1,4 +1,5 @@
 import abc
+from tictactoe import TicTacToe as ttt
 from typing import Tuple, Union
 
 Cell_coord = Tuple[int, ...]
@@ -6,32 +7,16 @@ Cell_coord = Tuple[int, ...]
 
 class Strategy(abc.ABC):
 
-    #def __init__(self, d: int, n: int, moves_per_turn = 1, drop = False) -> None:
-    #    pass
-    def __init__(self) -> None:
-        self.shared = False
+    def __init__(self, board: ttt) -> None:
         super().__init__()
-
-    # @property
-    # @abc.abstractmethod
-    # def shared(self):
-    #      """ ## """
-
-    # @shared.setter
-    # @abc.abstractmethod
-    # def shared(self, val):
-    #      """ ## """
-
-    # @property
-    # def shared(self):
-    #     return self._shared
-
-    # @shared.setter
-    # def shared(self, val):
-    #     self._shared = val
+        self.ttt = ttt
 
     @abc.abstractmethod
-    def move(self, cell: Union[Cell_coord]) -> Cell_coord:
+    def reset(self) -> None:
+        """ Play resets """
+
+    @abc.abstractmethod
+    def move(self, cell: Union[Cell_coord]) -> Cell_coord: ## or return string
         """ Calculate the move to be played """
 
     @abc.abstractmethod
@@ -42,17 +27,21 @@ class Strategy(abc.ABC):
     def __subclasshook__(cls, C):
         if cls is Strategy:
 
+            reset_found = False
             move_found = False
             undo_found = False
             for B in C.__mro__:
                 for attr in B.__dict__:
+                    if attr == "reset":
+                        reset_found = True                    
+                    
                     if attr == "move":
                         move_found = True
                     
                     if attr == "undo":                        
                         undo_found = True
                     
-                    if move_found and undo_found:
+                    if reset_found and move_found and undo_found:
                         return True
 
         return NotImplemented

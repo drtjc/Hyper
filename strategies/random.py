@@ -1,5 +1,6 @@
 import hypercube as hc
 from strategy import Strategy
+from tictactoe import TicTacToe as ttt
 from typing import Union
 
 Cell_coord = hc.Cell_coord
@@ -8,15 +9,13 @@ Cell_coord = hc.Cell_coord
 class Random(Strategy):
     
     def __init__(self, shared: bool, d: int, n: int, moves_per_turn = 1, drop = False) -> None:
+        super().__init__()
         self.shared = shared
 
-    # @property
-    # def shared(self):
-    #     return self._shared
 
-    # @shared.setter
-    # def shared(self, val):
-    #     self._shared = val
+
+    def reset(self) -> None:
+        pass
 
     def move(self, cell: Union[Cell_coord]) -> Cell_coord:
         return (2,)
