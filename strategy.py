@@ -1,13 +1,13 @@
 import abc
-from tictactoe import TicTacToe as ttt
-from typing import Tuple, Union
+from tictactoe import TicTacToe
+from typing import Tuple, Union, Optional
 
 Cell_coord = Tuple[int, ...]
 
 
 class Strategy(abc.ABC):
 
-    def __init__(self, board: ttt) -> None:
+    def __init__(self, ttt: TicTacToe) -> None:
         super().__init__()
         self.ttt = ttt
 
@@ -16,7 +16,7 @@ class Strategy(abc.ABC):
         """ Play resets """
 
     @abc.abstractmethod
-    def move(self, cell: Union[Cell_coord]) -> Cell_coord: ## or return string
+    def move(self, cell: Optional[Cell_coord]) -> Union[Cell_coord, str]: 
         """ Calculate the move to be played """
 
     @abc.abstractmethod
