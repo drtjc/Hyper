@@ -15,7 +15,6 @@ strategies_cls: Dict[str, Type[Strategy]] = {}
 for _, mod_name, _ in iter_modules([Path(__file__).parent.name]):
     mod = import_module('.' + mod_name, package = __name__)
 
-    print(mod)
     # add any subclass of Strategy as an attribute of strategies
     # and to the strategies dictionary attribute
     protocol_found = False
@@ -33,4 +32,3 @@ for _, mod_name, _ in iter_modules([Path(__file__).parent.name]):
     if not protocol_found:
         warn(f'Strategy module {mod_name} did not contain a Strategy class')
 
-print(strategies_cls)

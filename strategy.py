@@ -11,17 +11,17 @@ class Strategy(abc.ABC):
         super().__init__()
         self.ttt = ttt
 
-    @abc.abstractmethod
     def reset(self) -> None:
         """ Play resets """
+        self.ttt.reset()
 
     @abc.abstractmethod
     def move(self, cell: Optional[Cell_coord]) -> Union[Cell_coord, str]: 
         """ Calculate the move to be played """
 
-    @abc.abstractmethod
     def undo(self):
         """ Undo last move played """
+        self.ttt.undo()
 
     @classmethod
     def __subclasshook__(cls, C):

@@ -17,7 +17,7 @@ class Error(Exception):
 class DuplicateMoveError(Error):
     """ Raised if a cell has already been played."""
 
-    def __init__(self, message: str, cell: Cell_coord):
+    def __init__(self, message: str, cell: Any):
         self.message = message
         self.cell = cell
 
@@ -102,6 +102,8 @@ class TicTacToe():
         
         self.active_player = 0
         self.active_moves = 0
+
+        self.forfeited = False
 
         self.moves: List[Move] = []
         self.moves_played: List[int] = [0, 0] # number of moves played in game by each player
@@ -256,7 +258,7 @@ class TicTacToe():
 
         # check if cell has already been played
         if abs(v) > self._MOVE_BASE:
-            raise DuplicateMoveError("The cell has already been played", t_cell)
+            raise DuplicateMoveError("The cell has already been played", cell)
 
         # we now have an empty cell
         self.moves_played[self.active_player] += 1
@@ -342,10 +344,14 @@ class TicTacToe():
         [(0, (1, 1)), (1, (0, 0))]
         """
 
+        self.state = GameState.IN_PROGRESS
+
+        if self.forfeited:
+            self.forfeited = False
+            return    
+
         if len(self.moves) == 0:
             return
-
-        self.state = GameState.IN_PROGRESS
         
         if self.active_moves == 0:
             self.active_moves = self.moves_per_turn - 1
@@ -357,3 +363,6 @@ class TicTacToe():
         self.board[self.moves[-1][1]] = replace
         del self.moves[-1]
 
+    def forfeit(self) -> None:
+        self.forfeited = True
+        self.state = GameState.WIN_P1 if self.active_player else GameState.WIN_P2
