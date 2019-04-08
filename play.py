@@ -90,6 +90,9 @@ if __name__ == "__main__":
     # ask if move confirmation is required
     req_move_conf = require_move_confirmation()
 
+    ###### ?????
+    ##s[0].reset()
+    ##s[1].reset()
     ttt.display()
     while ttt.state == GameState.IN_PROGRESS:
         print(f'\nActive player: {ttt.names[ttt.active_player]}')
