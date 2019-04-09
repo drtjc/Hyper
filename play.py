@@ -12,6 +12,7 @@ def input_q(msg: str) -> str:
     else:
         return resp
 
+
 def create_board() -> TicTacToe:
     while True:
         print('')
@@ -27,6 +28,7 @@ def create_board() -> TicTacToe:
             print("Could not create board. Please provide valid parameters")
             print(f'{e}')
 
+
 def choose_names(ttt: TicTacToe) -> None:
     while True:
         print('')
@@ -38,6 +40,7 @@ def choose_names(ttt: TicTacToe) -> None:
             return
         except Exception as e:
             print(f'{e}')
+
 
 def choose_strategy(ttt: TicTacToe, p: int) -> Strategy:
     idx_cls = {}
@@ -61,11 +64,13 @@ def choose_strategy(ttt: TicTacToe, p: int) -> Strategy:
             return idx_cls[s](ttt)
         except Exception as e:
             print(f'Invalid selection: {e}')
-    
+
+
 def require_move_confirmation() -> bool: 
     print('')
     resp = input_q("Require player confirmation before next move? (y/n): ")
     return resp.upper() in ['TRUE', 'T', 'YES', 'Y']
+
 
 def confirm_move(ttt: TicTacToe, s: Tuple[Strategy, Strategy]) -> None:
     while True:
@@ -88,6 +93,7 @@ def confirm_move(ttt: TicTacToe, s: Tuple[Strategy, Strategy]) -> None:
         except Exception as e:
             print(f'{e}')
 
+
 def restart(ttt: TicTacToe, s: Tuple[Strategy, Strategy], req_move_conf: bool) -> None:
     s[0].reset()
     s[1].reset()  
@@ -104,11 +110,13 @@ def restart(ttt: TicTacToe, s: Tuple[Strategy, Strategy], req_move_conf: bool) -
         s[ttt.active_player].move(m)        
         ttt.display()
 
-        if req_move_conf:
+        if req_move_conf and not ttt.forfeited:
             confirm_move(ttt, s)
 
     # game has finished without user resart or new game
-    print("game over")
+    print(ttt.state_str())
+    play_again(ttt, s, req_move_conf)
+
 
 def new_game():
     ttt = create_board()
@@ -117,8 +125,21 @@ def new_game():
     req_move_conf = require_move_confirmation()
     restart(ttt, s, req_move_conf)
 
-def play_again():
-    pass
+
+def play_again(ttt: TicTacToe, s: Tuple[Strategy, Strategy], req_move_conf: bool) -> None:
+    while True:
+        print('')
+        resp = input_q("Restart(r), new game(n) or quit(q): ")
+
+        try:
+            if resp.upper() in ['RESTART', 'R']:
+                restart(ttt, s, req_move_conf)
+                return
+            elif resp.upper() in ['NEWGAME', 'N']:
+                new_game()
+                return
+        except Exception as e:
+            print(f'{e}')    
 
 
 if __name__ == "__main__":
