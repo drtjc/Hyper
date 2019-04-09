@@ -9,23 +9,7 @@ Cell_coord = hc.Cell_coord
 
 class Random(Strategy):
     
-    def __init__(self, ttt: TicTacToe) -> None:
-        super().__init__(ttt)
-        self.unplayed: List = []
-
-    def reset(self) -> None:
-        super().reset()
-        self.shape = [self.ttt.n] * self.ttt.d
-        self.unplayed = [i for i in range(self.ttt.n ** self.ttt.d)]
-
-    def move(self, cell: Optional[Cell_coord]) -> Union[Cell_coord, str]: 
-        if cell is None or not self.unplayed:
-            self.reset()
-
-        m_idx = self.unplayed[randrange(len(self.unplayed))]
-        self.unplayed.remove(m_idx)
-        m = hc.np.unravel_index(m_idx, self.shape)
+    def move(self, cell: Optional[Cell_coord]) -> Union[Cell_coord, str]:     
+        m = self.ttt.unplayed[randrange(len(self.ttt.unplayed))]
+        self.ttt.move(m)
         return m
-
-    def undo(self):
-        pass

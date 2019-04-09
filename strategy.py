@@ -7,6 +7,11 @@ Cell_coord = Tuple[int, ...]
 
 class Strategy(abc.ABC):
 
+    @classmethod
+    def validate(cls, d: int, n: int, moves_per_turn: int, drop: bool) -> bool:
+        """ Are the supplied game paramters valid for the strategy? """
+        return True
+
     def __init__(self, ttt: TicTacToe) -> None:
         super().__init__()
         self.ttt = ttt
@@ -27,11 +32,15 @@ class Strategy(abc.ABC):
     def __subclasshook__(cls, C):
         if cls is Strategy:
 
+            validate_found = False
             reset_found = False
             move_found = False
             undo_found = False
             for B in C.__mro__:
                 for attr in B.__dict__:
+                    if attr == "validate":
+                        validate_found = True                    
+                
                     if attr == "reset":
                         reset_found = True                    
                     
@@ -41,7 +50,7 @@ class Strategy(abc.ABC):
                     if attr == "undo":                        
                         undo_found = True
                     
-                    if reset_found and move_found and undo_found:
+                    if validate_found and reset_found and move_found and undo_found:
                         return True
 
         return NotImplemented

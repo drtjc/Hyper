@@ -86,6 +86,7 @@ class TicTacToe():
 
         self.d = d
         self.n = n
+        self.shape = [n] * d
         self.moves_per_turn = moves_per_turn
         self.drop = drop
         self._names = 'Player 1', 'Player 2'
@@ -107,6 +108,7 @@ class TicTacToe():
 
         self.moves: List[Move] = []
         self.moves_played: List[int] = [0, 0] # number of moves played in game by each player
+        self.unplayed = [np.unravel_index(i, self.shape) for i in range(self.n ** self.d)]
 
     @property
     def names(self) -> Tuple[str, str]: 
@@ -264,7 +266,10 @@ class TicTacToe():
         self.moves_played[self.active_player] += 1
         sgn = -1 if self.active_player == 1 else 1 # player 0 is positive, player 1 negative
         self.board[t_cell] = sgn * (self.moves_played[self.active_player] + self._MOVE_BASE)
+        
+        # add to list of moves played and remove from unplayed list
         self.moves.append(Move(self.active_player, t_cell))
+        self.unplayed.remove(t_cell)
 
         # don't check for win or tie yet as undo function can undo a win or tie, but will
         # not work properly unless code below is executed
@@ -361,6 +366,7 @@ class TicTacToe():
 
         self.moves_played[self.active_player] -= 1
         self.board[self.moves[-1][1]] = replace
+        self.unplayed.append(self.moves[-1][1])
         del self.moves[-1]
 
     def forfeit(self) -> None:

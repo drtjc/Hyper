@@ -20,6 +20,13 @@ Cell_coord = hc.Cell_coord
 
 class Heuristics(Strategy):
 
+    @classmethod
+    def validate(cls, d: int, n: int, moves_per_turn: int, drop: bool) -> bool:
+        if d == 3 and n == 4 and moves_per_turn == 1 and drop == False:
+            return True
+        return False
+    #    return True
+
     def __init__(self, ttt: TicTacToe) -> None:
         super().__init__(ttt)
 
