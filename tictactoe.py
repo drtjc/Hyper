@@ -271,23 +271,21 @@ class TicTacToe():
         self.moves.append(Move(self.active_player, t_cell))
         self.unplayed.remove(t_cell)
 
-        # don't check for win or tie yet as undo function can undo a win or tie, but will
-        # not work properly unless code below is executed
+        # check for win or tie
+        if self.is_win(): 
+            self.state = GameState.WIN_P2 if self.active_player else GameState.WIN_P1
+        elif self.is_tie():
+            self.state = GameState.TIE
+        else:
+            self.state = GameState.IN_PROGRESS
+
+        # note that undo function can undo a win or tie
         self.active_moves += 1
         if self.active_moves == self.moves_per_turn:
             self.active_moves = 0
             self.active_player = int(not self.active_player)
 
-        # check for win or tie now
-        if self.is_win(): 
-            self.state = GameState.WIN_P2 if self.active_player else GameState.WIN_P1
-            return
-        elif self.is_tie():
-            self.state = GameState.TIE
-            return
-        else:
-            self.state = GameState.IN_PROGRESS
-            return
+        return
 
     def is_tie(self) -> bool:
         if self.state == GameState.TIE:
