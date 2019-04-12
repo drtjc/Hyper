@@ -1,9 +1,8 @@
-from tictactoe import TicTacToe
-from tictactoe import GameState
-from tictactoe import Cell_coord
+from tictactoe import TicTacToe, GameState, Cell_coord
 from strategy import Strategy
 from typing import Optional, Tuple
 import strategies as st  
+
 
 def input_q(msg: str) -> str: 
     resp = input(msg)

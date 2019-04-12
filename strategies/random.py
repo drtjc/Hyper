@@ -1,10 +1,7 @@
-import hypercube as hc
-from strategy import Strategy
+from strategy import Strategy, Cell_coord
 from tictactoe import TicTacToe
 from random import randrange
-from typing import Union, Optional, List
-
-Cell_coord = hc.Cell_coord
+from typing import Union, Optional, Tuple
 
 
 class Random(Strategy):

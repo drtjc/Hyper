@@ -1,9 +1,6 @@
-import hypercube as hc
-from strategy import Strategy
+from strategy import Strategy, Cell_coord
 from tictactoe import TicTacToe, DuplicateMoveError, UnknownMoveError
-from typing import Union, Optional
-
-Cell_coord = hc.Cell_coord
+from typing import Union, Optional, Tuple
 
 
 class Interactive(Strategy):

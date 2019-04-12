@@ -5,9 +5,8 @@ from typing import NamedTuple, List, Tuple, Union, Any
 from colorama import init, Fore, Back, Style
 init()
 
-#from strategy import Strategy
 import hypercube as hc
-Cell_coord = hc.Cell_coord
+from hypercube import Line_np, Cell_coord
 
 class Error(Exception):
     """ Base class for exceptions in this module."""
@@ -59,6 +58,13 @@ class Move(NamedTuple):
     Cell: Cell_coord
 
 
+class LineState(NamedTuple):
+    P1_total_marks: int
+    P1_consecutive_marks: int
+    P2_total_marks: int
+    P2_consecutive_marks: int
+
+
 class TicTacToe():
     """ TO DO
     """
@@ -68,20 +74,12 @@ class TicTacToe():
     GameState_str = {GameState.WIN_P1: 'p1 wins', GameState.WIN_P2: 'p2 wins',
                      GameState.TIE: "It's a tie", GameState.IN_PROGRESS: 'In progress'}
 
-    def __init__(self, d: int, n: int, moves_per_turn: int = 1, drop: bool = False, 
-                 preload_scope: bool = True) -> None:
+    def __init__(self, d: int, n: int, moves_per_turn: int = 1, drop: bool = False) -> None:
 
         try:            
-            #self.board, self.lines, self.scopes = hc.structure_np(d, n, zeros = False, OFFSET = self._MOVE_BASE)
-            ## TJC
-            if preload_scope:
-                self.board, _, self.scopes = hc.structure_np(d, n, zeros = False, OFFSET = self._MOVE_BASE)
-            else:    
-                self.board, _, _ = hc.structure_np(d, n, zeros = False, OFFSET = self._MOVE_BASE)
-                #self.scopes = None
-            self.lines = None
+            self.board, self.lines, self.scopes = hc.structure_np(d, n, zeros = False, OFFSET = self._MOVE_BASE)
         except MemoryError:
-            #print("The board is too big to fit into available memory")
+            print("The board is too big to fit into available memory")
             raise
 
         self.d = d
@@ -94,6 +92,7 @@ class TicTacToe():
         self.reset()
         self.color_last_move = Fore.BLUE
         self.color_win_line = Back.MAGENTA
+        self._maintain_lines_states = False
 
     def reset(self) -> None:
         """ Reset the board. """
@@ -109,6 +108,20 @@ class TicTacToe():
         self.moves: List[Move] = []
         self.moves_played: List[int] = [0, 0] # number of moves played in game by each player
         self.unplayed = [np.unravel_index(i, self.shape) for i in range(self.n ** self.d)]
+
+    @property
+    def maintain_lines_states(self) -> bool: 
+        return self._maintain_lines_states
+
+    @maintain_lines_states.setter
+    def maintain_lines_states(self, maintain: bool) -> None:
+        if not self._maintain_lines_states and maintain and self.state == GameState.IN_PROGRESS:
+            # Trying to start maintaining line states while games is in progress
+            # Require full calculation of all line states
+            pass
+            ## TO DO
+        else:
+            self._maintain_lines_states = maintain
 
     @property
     def names(self) -> Tuple[str, str]: 
@@ -370,3 +383,6 @@ class TicTacToe():
     def forfeit(self) -> None:
         self.forfeited = True
         self.state = GameState.WIN_P1 if self.active_player else GameState.WIN_P2
+
+    def calc_line_state(self, line: Line_np) -> LineState:
+        pass

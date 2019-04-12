@@ -1,34 +1,20 @@
-import hypercube as hc
-from strategy import Strategy
+from strategy import Strategy, Cell_coord
 from tictactoe import TicTacToe
 from typing import Union, Optional
-
-Cell_coord = hc.Cell_coord
-
-
-
-#import heuristics
-
-
-#class LineState(NamedTuple):
-#    P1_total_marks: int
-#    P1_consecutive_marks: int
-#    P2_total_marks: int
-#    P2_consecutive_marks: int
-
 
 
 class Heuristics(Strategy):
 
     @classmethod
     def validate(cls, d: int, n: int, moves_per_turn: int, drop: bool) -> bool:
-        if d == 3 and n == 4 and moves_per_turn == 1 and drop == False:
-            return True
-        return False
-    #    return True
+        #if d == 3 and n == 4 and moves_per_turn == 1 and drop == False:
+        #    return True
+        #return False
+        return True
 
     def __init__(self, ttt: TicTacToe) -> None:
         super().__init__(ttt)
+
 
     def reset(self) -> None:
         pass

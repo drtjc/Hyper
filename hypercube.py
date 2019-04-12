@@ -34,7 +34,7 @@ hypercube. These functions have the suffix _np. An array of d dimensions
 may be referred to as a d-array
 2. Those that do not implement the undelying hypercube but
 provide information as coordinates that can be used with
-a user-implementation of the hypercube. These funtions have
+a user-implementation of the hypercube. These functions have
 the suffix _coord.
 """
 
@@ -389,7 +389,7 @@ def get_scopes_np(lines: Lines_np, d: int) -> Scopes_np:
     Parameters
     ----------
     lines : list
-        The returned value from get_lines_np(arr) where arr is of the
+        The returned value from get_lines_np(arr) (###BUT THIS IS KNOW A GENERATOR SO EITHER ACCEPT GENERATOR OR LIST IT) where arr is of the
         form np.arange(n ** d, dtype = intxx).reshape([n] * d).
         That is, arr is populated with the values 0,1,2,...,n^d - 1.
 

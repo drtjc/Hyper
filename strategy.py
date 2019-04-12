@@ -1,8 +1,6 @@
 import abc
-from tictactoe import TicTacToe
+from tictactoe import TicTacToe, Cell_coord
 from typing import Tuple, Union, Optional
-
-Cell_coord = Tuple[int, ...]
 
 
 class Strategy(abc.ABC):
