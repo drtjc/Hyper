@@ -1,12 +1,15 @@
-import numpy as np #type: ignore
+from numpy import unravel_index
+from itertools import groupby
 from sys import getsizeof
 from enum import Enum, auto
 from typing import NamedTuple, List, Tuple, Union, Any
 from colorama import init, Fore, Back, Style
 init()
 
+
 import hypercube as hc
 from hypercube import Line_np, Cell_coord
+
 
 class Error(Exception):
     """ Base class for exceptions in this module."""
@@ -107,7 +110,7 @@ class TicTacToe():
 
         self.moves: List[Move] = []
         self.moves_played: List[int] = [0, 0] # number of moves played in game by each player
-        self.unplayed = [np.unravel_index(i, self.shape) for i in range(self.n ** self.d)]
+        self.unplayed = [unravel_index(i, self.shape) for i in range(self.n ** self.d)]
 
     @property
     def maintain_lines_states(self) -> bool: 
@@ -298,6 +301,10 @@ class TicTacToe():
             self.active_moves = 0
             self.active_player = int(not self.active_player)
 
+        ##
+        for l in self.scopes[t_cell]:
+            print(self.calc_line_state(l))
+        print(self.board)
         return
 
     def is_tie(self) -> bool:
@@ -385,4 +392,15 @@ class TicTacToe():
         self.state = GameState.WIN_P1 if self.active_player else GameState.WIN_P2
 
     def calc_line_state(self, line: Line_np) -> LineState:
-        pass
+        P1_total_marks = sum(line > self._MOVE_BASE)
+        
+        P1_consecutive_marks = max((len(list(seq)) for val, seq in 
+            groupby(line, key=lambda x: x > self._MOVE_BASE) if val), default = 0)
+        
+        P2_total_marks = sum(line < -self._MOVE_BASE)
+        
+        P2_consecutive_marks = max((len(list(seq)) for val, seq in 
+            groupby(line, key=lambda x: x < -self._MOVE_BASE) if val), default = 0)
+        
+        ls = LineState(P1_total_marks, P1_consecutive_marks, P2_total_marks, P2_consecutive_marks)
+        return ls
