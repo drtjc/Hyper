@@ -2,7 +2,7 @@ from numpy import unravel_index
 from itertools import groupby
 from sys import getsizeof
 from enum import Enum, auto
-from typing import NamedTuple, List, Tuple, Union, Any
+from typing import NamedTuple, List, Tuple, Union, Any, Dict
 from colorama import init, Fore, Back, Style
 init()
 
@@ -111,6 +111,11 @@ class TicTacToe():
         self.moves: List[Move] = []
         self.moves_played: List[int] = [0, 0] # number of moves played in game by each player
         self.unplayed = [unravel_index(i, self.shape) for i in range(self.n ** self.d)]
+
+        # reset lines states
+        #self.lines_states: Dict[Line_np, LineState] = dict()
+        #for k in self.lines.keys():
+        #    self.lines_states[k] = LineState(0, 0, 0, 0)
 
     @property
     def maintain_lines_states(self) -> bool: 
@@ -324,6 +329,7 @@ class TicTacToe():
             return False
         else: # check to see if last move was a winning move
             if len(self.moves) < 2 * self.n - 1:
+                # not enough moves played for a winner to be possible
                 return False
             else:
                 t_cell = self.moves[-1][1]
@@ -395,12 +401,14 @@ class TicTacToe():
         P1_total_marks = sum(line > self._MOVE_BASE)
         
         P1_consecutive_marks = max((len(list(seq)) for val, seq in 
-            groupby(line, key=lambda x: x > self._MOVE_BASE) if val), default = 0)
+            groupby(line, key = lambda x: x > self._MOVE_BASE) if val), default = 0)
         
         P2_total_marks = sum(line < -self._MOVE_BASE)
         
         P2_consecutive_marks = max((len(list(seq)) for val, seq in 
-            groupby(line, key=lambda x: x < -self._MOVE_BASE) if val), default = 0)
+            groupby(line, key = lambda x: x < -self._MOVE_BASE) if val), default = 0)
         
         ls = LineState(P1_total_marks, P1_consecutive_marks, P2_total_marks, P2_consecutive_marks)
         return ls
+
+    
