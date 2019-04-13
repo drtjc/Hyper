@@ -1,25 +1,27 @@
 """ Provides functionalilty for working with celled hypercubes.
 
-Hypercubes are extensions of lines, squares and cubes into higher dimensions.
-Celled hypercubes can be thought as a grid or lattice structure.
-From this point, hypercubes is used to mean celled hypercubes.
+Hypercubes are extensions of lines, squares and cubes into higher 
+dimensions. Celled hypercubes can be thought as a grid or lattice
+structure. From this point, hypercubes is used to mean celled
+hypercubes.
 
-A celled hypercube can be described by its dimension and the number of
+A hypercube can be described by its dimension and the number of
 cells in any dimension. We denote this as h(d, n).
 For example: h(2, 3) is a 3x3 grid; h(3, 4) is a 4x4x4 lattice.
 A hypercube of dimension d may also be referred to as a d-cube.
 
 A cell's position can be specified in coordinate style. 
-For example, given h(3, 4) then some valid coordinates are (1,1,1), 
-(2,1,3) and (4,4,4).
+For example, given h(3, 4) and an agreed ordering of dimension
+then some valid coordinates are (1,1,1), (2,1,3) and (4,4,4).
 
-The term m-agonal is a shortened function version of 
-"m-dimensional diagonal". So in 3-cube you would find a 1-agonal, 2-agonal
-and 3-agonal. A 1-agonal is customarily known as a row, column or pillar. 
-If 3 coordinates change in an 5-cube, while the others remain constant, this
-constitutes a 3-agonal.
+The term m-agonal is a short for "m-dimensional diagonal" and can be
+thought of as a line of contiguous cells that span m dimensions. 
+For example, in a 3-cube you would find many 1-agonals, 2-agonals and
+3-agonals. A 1-agonal is customarily known as a row, column or pillar. 
+In another example, if a line of contiguous cells in a 5-cell have the
+property that 3 coordinates change, while the others remain constant,
+these cells constitute a 3-agonal.
 For a given h(d, n), 1 <= m <= n, a m-agonal always has n cells.
-
 The term line is used to refer to any m-agonal in general.
 
 A cell apppears in multiple lines, which are refered to as the 
@@ -32,10 +34,15 @@ This module essentially has 2 classes of functions:
 1. Those that use a numpy ndarray to implement the underlying
 hypercube. These functions have the suffix _np. An array of d dimensions 
 may be referred to as a d-array
-2. Those that do not implement the undelying hypercube but
+2. Those that do not implement the underlying hypercube but
 provide information as coordinates that can be used with
 a user-implementation of the hypercube. These functions have
 the suffix _coord.
+
+########################################################################
+Type annotations are used in this module. In addition to the standard
+types defined in the typing module, several aliases are also defined
+which can be viewed in the source code.
 """
 
 # numpy (and scipy) don't yet have type annotations
@@ -44,13 +51,13 @@ from scipy.special import comb # type: ignore
 import itertools as it
 import numbers
 import re
-from typing import List, Callable, Union, Collection, Tuple, Any, Type, Deque, cast
+from typing import List, Callable, Union, Collection, Tuple, Any, Type, Deque
 from typing import DefaultDict, TypeVar, Counter, Dict, Iterable, Generator, Sequence
 
 
 Cell_coord = Tuple[int, ...]
-Cube_np = TypeVar('Cube_np', np.ndarray, np.ndarray) # Cube should really be a numpy array representing h(d, n)
-Line_np = TypeVar('Line_np', np.ndarray, np.ndarray) # Line should really be a 1d numpy array with n elements
+Cube_np = TypeVar('Cube_np', np.ndarray, np.ndarray) # Cube_np should really be a numpy array representing h(d, n)
+Line_np = TypeVar('Line_np', np.ndarray, np.ndarray) # Line_np should really be a 1d numpy array with n elements
 Lines_np = List[Line_np]
 Scopes_np = DefaultDict[Cell_coord, Lines_np]  
 Structure_np = Tuple[Cube_np, Lines_np, Scopes_np]
@@ -62,8 +69,13 @@ Structure_coord = Tuple[Lines_coord, Scopes_coord]
 
 Scopes = Union[Scopes_np, Scopes_coord]
 
+
 def num_lines_grouped(d: int, n: int) -> Generator[int, None, None]: 
     """ Calculate the number of lines in a hypercube.  
+
+    Signature
+    ---------
+    num_lines_grouped(d: int, n: int) -> Generator[int, None, None]: 
 
     Parameters
     ----------
@@ -75,7 +87,8 @@ def num_lines_grouped(d: int, n: int) -> Generator[int, None, None]:
     Yields
     -------
     generator:
-        The number of lines in a hypercube h(d, n) by dimension.
+        The number of lines in a hypercube h(d, n), grouped 
+        by dimension.
 
     Notes
     -----
