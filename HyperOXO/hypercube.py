@@ -69,7 +69,7 @@ Structure_coord = Tuple[Lines_coord, Scopes_coord]
 
 Scopes = Union[Scopes_np, Scopes_coord]
 
-##TEST
+##TEST test
 def num_lines_grouped(d: int, n: int) -> Generator[int, None, None]: 
     """ Calculate the number of lines in a hypercube.  
 
