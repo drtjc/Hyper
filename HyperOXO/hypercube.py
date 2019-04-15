@@ -30,6 +30,15 @@ scope of the cell.
 The combination of lines and cell scopes is referred to
 as the structure of the hypercube.
 
+We define a slice as a sub-cube of a hypercube. For example,
+consder h(2,3), a 3x3 hypercube. Let the dimensions be denoted as 
+d1 and d2, respectively, where 1 <= d1, d2 <= 3.
+If we consider d1 as rows, and d2 as columns, then the slice that is
+the first column is defined by d1 = 1, 2, 3, and d2 = 1. This has the
+form h(1, 3).
+The slice that is the top left 2x2 corner is defined by d1, d2 = 1, 2.
+This has the form h(2, 2).
+
 This module essentially has 2 classes of functions:
 1. Those that use a numpy ndarray to implement the underlying
 hypercube. These functions have the suffix _np. An array of d dimensions 
@@ -45,6 +54,7 @@ types defined in the typing module, several aliases are also defined
 which can be viewed in the source code.
 """
 
+
 # numpy (and scipy) don't yet have type annotations
 import numpy as np # type: ignore
 from scipy.special import comb # type: ignore
@@ -57,38 +67,47 @@ from typing import DefaultDict, TypeVar, Counter, Dict, Iterable, Generator, Seq
 
 Cell_coord = Tuple[int, ...]
 Cube_np = TypeVar('Cube_np', np.ndarray, np.ndarray) # Cube_np should really be a numpy array representing h(d, n)
+
 Line_np = TypeVar('Line_np', np.ndarray, np.ndarray) # Line_np should really be a 1d numpy array with n elements
-Lines_np = List[Line_np]
-Scopes_np = DefaultDict[Cell_coord, Lines_np]  
-Structure_np = Tuple[Cube_np, Lines_np, Scopes_np]
-
+Line_enum_np = Tuple[int, Line_np]
 Line_coord = List[Cell_coord]
+Line_enum_coord = Tuple[int, Line_coord]
+
+Lines_np = List[Line_np]
+Lines_enum_np = List[Line_enum_np]
 Lines_coord = List[Line_coord]
+Lines_enum_coord = List[Line_enum_coord]
+
+Scopes_np = DefaultDict[Cell_coord, Lines_np]  
 Scopes_coord = DefaultDict[Cell_coord, Lines_coord]
+Scopes_enum = DefaultDict[Cell_coord, List[int]]  
+Scopes = Union[Scopes_np, Scopes_coord, Scopes_enum]
+
+Structure_np = Tuple[Cube_np, Lines_np, Scopes_np]
+Structure_enum_np = Tuple[Cube_np, Lines_enum_np, Scopes_enum]
 Structure_coord = Tuple[Lines_coord, Scopes_coord]
+Structure_enum_coord = Tuple[Lines_enum_coord, Scopes_enum]
 
-Scopes = Union[Scopes_np, Scopes_coord]
 
-##TEST test
 def num_lines_grouped(d: int, n: int) -> Generator[int, None, None]: 
-    """ Calculate the number of lines in a hypercube.  
-
-    Signature
-    ---------
-    num_lines_grouped(d: int, n: int) -> Generator[int, None, None]: 
+    """ 
+    num_lines_grouped(d: int, n: int) -> Generator[int, None, None]:
+    
+    Calculate the number of lines in a hypercube, grouped by the 
+    number of dimensions spanned.  
 
     Parameters
     ----------
-    d : int
+    d
         The number of dimensions of the hypercube
-    n : int
+    n
         The number of cells in any dimension
  
     Yields
     -------
-    generator:
-        The number of lines in a hypercube h(d, n), grouped 
-        by dimension.
+    
+        The number of lines in a hypercube, grouped by number of 
+        dimensions spanned.
 
     Notes
     -----
@@ -100,14 +119,14 @@ def num_lines_grouped(d: int, n: int) -> Generator[int, None, None]:
     where dCi is 'd choose i'.
 
     Sketch of proof:
-    Let l_i be the number of i-agonal lines (exist in exactly i dimensions).
-    For example, consider the following square (2-cube):
+    Let l_i be the number of i-agonals (lines that span exactly 
+    i dimensions). For example, consider the following square (2-cube):
 
         [[0, 1],
          [2, 3]]
 
-    The 1-agonal lines are [0, 1], [2, 3], [0, 2] and [1, 3] and l_1 = 4.  
-    The 2-agonal lines are [0, 3] and [1, 2]  and l_2 = 2.
+    The 1-agonals are [0, 1], [2, 3], [0, 2] and [1, 3] and l_1 = 4.  
+    The 2-agonals are [0, 3] and [1, 2]  and l_2 = 2.
     
     Hence l = l_1 + l_2 = 6
 
@@ -122,13 +141,14 @@ def num_lines_grouped(d: int, n: int) -> Generator[int, None, None]:
     For example if d=3 and i=2, then the 3 combinations of 
     2 dimensions (squares) are (1, 2), (1, 3) and (2, 3).
 
-    The number of remaining dimensions is d-i, and the number of cells
-    in these dimensions is n^(d-i). Any one of theses cells could be 
-    fixed relative to a given i-dimensional hypercube, h(i, n).
+    Given a fixed set of i dimension, the number of remaining dimensions
+    is d-i, and the number of cells in these dimensions is n^(d-i).
+    Any one of these cells could be chosen relative to the
+    fixed i dimensions.
 
     Hence the distinct number of h(i, n) is dCi * n^(d-i).
 
-    Finally, for any h(i, n), the number of i-agonal lines is (2^i)/2. 
+    Finally, for any h(i, n), the number of i-agonals is (2^i)/2. 
     This is because an i-cube has 2^i corners and a line has 2 corners.
 
     Hence l_i = dCi * n^(d-i) * (2^i)/2 and thus:
@@ -148,19 +168,22 @@ def num_lines_grouped(d: int, n: int) -> Generator[int, None, None]:
 
 
 def num_lines(d: int, n: int) -> int: 
-    """ Calculate the number of lines in a hypercube.  
+    """ 
+    num_lines(d: int, n: int) -> int:
+    
+    Calculate the number of lines in a hypercube.  
 
     Parameters
     ----------
-    d : int
+    d
         The number of dimensions of the hypercube
-    n : int
+    n
         The number of cells in any dimension
  
     Returns
     -------
-    int:
-        The number of lines in a hypercube h(d, n).
+
+        The number of lines in a hypercube.
 
     See Also
     --------
@@ -181,67 +204,70 @@ def num_lines(d: int, n: int) -> int:
     return sum(list(num_lines_grouped(d, n)))
 
 
-def get_diagonals_np(arr: Cube_np) -> Generator[Line_np, None, None]:
-    """ Calculate the d-agonals of a d-array. 
+def get_diagonals_np(hc: Cube_np) -> Generator[Line_np, None, None]:
+    """ 
+    get_diagonals_np(hc: Cube_np) -> Generator[Line_np, None, None]:
+    
+    Calculate the d-agonals of a d-cube h(d, n). 
 
     Parameters
     ----------
-    arr : numpy.ndarray
-        A d-array whose d-agonals are to be calculated
+    hc
+        A d-cube whose d-agonals are to be calculated
 
     Yields
     -------
-    generator :
-        numpy.ndarray views of the d-gonals of `arr`.
+
+        numpy.ndarray views of the d-gonals of `hc`.
 
     Notes
     -----
-    The number of corners of `arr` is 2^d. The number of d-agonals 
+    The number of corners of `hc` is 2^d. The number of d-agonals 
     is 2^d / 2 since two connecting corners form a line. 
 
     Examples
     --------
     >>> import numpy as np
-    >>> arr = np.arange(8).reshape(2, 2, 2)
-    >>> arr
+    >>> hc = np.arange(8).reshape(2, 2, 2)
+    >>> hc
     array([[[0, 1],
             [2, 3]],
     <BLANKLINE>
            [[4, 5],
             [6, 7]]])
-    >>> diagonals = list(get_diagonals_np(arr))
+    >>> diagonals = list(get_diagonals_np(hc))
     >>> diagonals
     [array([0, 7]), array([1, 6]), array([4, 3]), array([5, 2])]
-    >>> arr[0, 0, 0] = 99
+    >>> hc[0, 0, 0] = 99
     >>> diagonals
     [array([99,  7]), array([1, 6]), array([4, 3]), array([5, 2])]
     """
     
     # The function is recursive. How it works is best shown by example.
-    # 1d: arr = [0, 1] then the diagonal is also [0, 1].
+    # 1d: hc = [0, 1] then the diagonal is also [0, 1].
     
-    # 2d: arr = [[0, 1],
-    #            [2, 3]]
+    # 2d: hc = [[0, 1],
+    #           [2, 3]]
     # The numpy diagonal method gives the main diagonal = [0, 3], a 1d array
     # which is recursively passed to the function.
     # To get the opposite diagonal we first use the numpy flip function to
     # reverse the order of the elements along the given dimension, 0 in this case.
     # This gives [[2, 3],
     #              0, 1]]
-    # The numpy diagonal method gives the main diagonal = [2, 1], a 2d array
+    # The numpy diagonal method gives the main diagonal = [2, 1], a 1d array
     # which is recursively passed to the function.
 
-    # 3d: arr = [[[0, 1],
-    #             [2, 3]],
-    #            [[4, 5],
-    #             [6, 7]]]
+    # 3d: hc = [[[0, 1],
+    #            [2, 3]],
+    #           [[4, 5],
+    #            [6, 7]]]
     # The numpy diagonal method gives the main diagonals in the 3rd dimension
     # as rows.
     #            [[0, 6],
     #             [1, 7]]
     # Note that the diagonals of this array are [0, 7] and [6, 1] which are
     # retrieved by a recurive call to the function.
-    # We now have 2 of the 4 3-agonals of the orginal 3d arr.
+    # We now have 2 of the 4 3-agonals of the orginal 3-cube hc.
     # To get the opposite 3-agonals we first use the numpy flip function which
     # gives
     #           [[[4, 5],
@@ -252,27 +278,33 @@ def get_diagonals_np(arr: Cube_np) -> Generator[Line_np, None, None]:
     #            [[4, 2],
     #             [5, 3]]
     # The diagonals of this array are [4, 3] and [2, 5]
-    # We now have all four 3-agonals of the original 3d arr.
+    # We now have all four 3-agonals of the original 3-cube hc.
 
-    if arr.ndim == 1:
-        yield arr
+    if hc.ndim == 1:
+        yield hc
     else:
-        yield from get_diagonals_np(arr.diagonal())
-        yield from get_diagonals_np(np.flip(arr, 0).diagonal())
+        yield from get_diagonals_np(hc.diagonal())
+        yield from get_diagonals_np(np.flip(hc, 0).diagonal())
 
 
-def get_lines_grouped_np(arr: Cube_np) -> Generator[Lines_np, None, None]: 
-    """ Generate the lines in an array grouped by dimension
+def get_lines_grouped_np(hc: Cube_np) -> Generator[Lines_np, None, None]: 
+    """ 
+    get_lines_grouped_np(hc: Cube_np) -> 
+        Generator[Lines_np, None, None]:
+    
+    Generate the lines of a hypercube, grouped by the number of
+    dimensions spanned.
 
     Parameters
     ----------
-    arr : numpy.ndarray
-        The array whose lines are to be calculated
+    hc
+        The hypercube whose lines are to be calculated
 
     Yields
     -------
-    generator :
-        numpy.ndarray views of the lines in `arr` by dimension.
+
+        numpy.ndarray views of the lines in `hc`, grouped by the
+        numbers of dimensions spanned.
             
     See Also
     --------
@@ -281,36 +313,42 @@ def get_lines_grouped_np(arr: Cube_np) -> Generator[Lines_np, None, None]:
     Examples
     --------
     >>> import numpy as np
-    >>> arr = np.arange(4).reshape(2, 2)
-    >>> arr
+    >>> hc = np.arange(4).reshape(2, 2)
+    >>> hc
     array([[0, 1],
            [2, 3]])
-    >>> lines = list(get_lines_grouped_np(arr))
+    >>> lines = list(get_lines_grouped_np(hc))
     >>> lines
     [[array([0, 2]), array([1, 3]), array([0, 1]), array([2, 3])], [array([0, 3]), array([2, 1])]]
-    >>> arr[0, 0] = 99
+    >>> hc[0, 0] = 99
     >>> lines
     [[array([99,  2]), array([1, 3]), array([99,  1]), array([2, 3])], [array([99,  3]), array([2, 1])]]
     """
     
-    for i in range(arr.ndim):
-        yield from get_lines_i_np(arr, i)
+    for i in range(hc.ndim):
+        yield from get_lines_i_np(hc, i)
 
 
-def get_lines_i_np(arr: Cube_np, i: int) -> Generator[Lines_np, None, None]: 
-    """ Generates the lines in an array that span the specified number of dimensions.
+def get_lines_i_np(hc: Cube_np, i: int) -> Generator[Lines_np, None, None]: 
+    """ 
+    get_lines_i_np(hc: Cube_np, i: int) -> 
+        Generator[Lines_np, None, None]:
+    
+    Generates the lines of a hypercube that span the specified
+    number of dimensions.
 
     Parameters
     ----------
-    arr : numpy.ndarray
-        The array whose lines are to be calculated
-    int : i
+    hc
+        The hypercube whose lines are to be calculated
+    i
         The number of dimensions that the returned lines must span
 
     Yields
     -------
-    generator :
-        numpy.ndarray views of the lines in `arr` spanning i dimensions.
+
+        numpy.ndarray views of the lines in `hc` that span 
+        `i` dimensions.
             
     See Also
     --------
@@ -318,30 +356,30 @@ def get_lines_i_np(arr: Cube_np, i: int) -> Generator[Lines_np, None, None]:
 
     Notes
     -----
-    The notes section for the function num_lines_grouped provides a sketch
-    of a constructive proof for the number of lines in a hypercube. This has
-    been used to implement this function. 
+    The notes section for the function num_lines_grouped provides a
+    sketchof a constructive proof for the number of lines in a 
+    hypercube. This has been used to implement this function. 
 
     Examples
     --------
     >>> import numpy as np
-    >>> arr = np.arange(4).reshape(2, 2)
-    >>> arr
+    >>> hc = np.arange(4).reshape(2, 2)
+    >>> hc
     array([[0, 1],
            [2, 3]])
-    >>> lines = list(get_lines_i_np(arr, 0))
+    >>> lines = list(get_lines_i_np(hc, 0))
     >>> lines
     [[array([0, 2]), array([1, 3]), array([0, 1]), array([2, 3])]]
-    >>> lines = list(get_lines_i_np(arr, 1))
+    >>> lines = list(get_lines_i_np(hc, 1))
     >>> lines
     [[array([0, 3]), array([2, 1])]]
-    >>> arr[0, 0] = 99
+    >>> hc[0, 0] = 99
     >>> lines
     [[array([99,  3]), array([2, 1])]]
     """
  
-    d = arr.ndim
-    n = arr.shape[0]
+    d = hc.ndim
+    n = hc.shape[0]
     lines = []
 
     # loop over all possible combinations of i dimensions
@@ -349,26 +387,29 @@ def get_lines_i_np(arr: Cube_np, i: int) -> Generator[Lines_np, None, None]:
         # a cell could be in any position in the other dimensions
         other_d = set(range(d)) - set(i_comb)
         for cell in it.product(range(n), repeat = d - i - 1):
-            # take a slice of i dimensions given cell
-            sl = slice_ndarray(arr, other_d, cell)
+            # take a slice of selected i dimensions given a cell
+            sl = slice_ndarray(hc, other_d, cell)
             # get all possible lines from slice
             lines.extend(list(get_diagonals_np(sl)))
 
     yield lines
- 
 
-def get_lines_np(arr: Cube_np) -> Generator[Line_np, None, None]: 
-    """ Returns the lines in an array
+
+def get_lines_np(hc: Cube_np) -> Generator[Line_np, None, None]: 
+    """ 
+    get_lines_np(hc: Cube_np) -> Generator[Line_np, None, None]:
+    
+    Returns the lines in a hypercube
 
     Parameters
     ----------
-    arr : numpy.ndarray
-        The array whose lines are to be calculated
+    hc
+        The hypercube whose lines are to be calculated
 
     Yields
     -------
-    generator :
-        numpy.ndarray views of the lines in `arr`.
+
+        numpy.ndarray views of the lines in `hc`.
                 
     See Also
     --------
@@ -377,44 +418,47 @@ def get_lines_np(arr: Cube_np) -> Generator[Line_np, None, None]:
     Examples
     --------
     >>> import numpy as np
-    >>> arr = np.arange(4).reshape(2, 2)
-    >>> arr
+    >>> hc = np.arange(4).reshape(2, 2)
+    >>> hc
     array([[0, 1],
            [2, 3]])
-    >>> lines = list(get_lines_np(arr))
+    >>> lines = list(get_lines_np(hc))
     >>> lines
     [array([0, 2]), array([1, 3]), array([0, 1]), array([2, 3]), array([0, 3]), array([2, 1])]
     >>> len(lines)
     6
-    >>> arr[0, 0] = 99
+    >>> hc[0, 0] = 99
     >>> lines
     [array([99,  2]), array([1, 3]), array([99,  1]), array([2, 3]), array([99,  3]), array([2, 1])]
     """
 
-    grouped = get_lines_grouped_np(arr)
+    grouped = get_lines_grouped_np(hc)
     flat = (x for y in grouped for x in y)
-    return flat
+    yield from flat # return flat works as well but yield from this is explicit as to being a generator
 
 
 def get_scopes_np(lines: Lines_np, d: int) -> Scopes_np:
-    """ Calculate the scope of each cell in a hypercube
+    """ 
+    get_scopes_np(lines: Lines_np, d: int) -> Scopes_np:
+
+    Calculate the scope of each cell in a hypercube
 
     Parameters
     ----------
-    lines : list
-        The returned value from get_lines_np(arr) (###BUT THIS IS KNOW A GENERATOR SO EITHER ACCEPT GENERATOR OR LIST IT) where arr is of the
-        form np.arange(n ** d, dtype = intxx).reshape([n] * d).
-        That is, arr is populated with the values 0,1,2,...,n^d - 1.
+    lines
+        The returned value from get_lines_np(hc) where hc is of the
+        form np.arange(n ** d, dtype = intx__).reshape([n] * d).
+        That is, hc is populated with the values 0,1,2,...,n^d - 1.
 
-    dim : int 
-        The dimension of the array (hypercube) that was used to
-        generate the `lines` parameter.
+    dim
+        The dimension of the hypercube that was used to
+        generate `lines`.
 
     Returns
     -------
-    defaultdict :
-        A dictionary with keys equal to each cell coordinates of the 
-        hypercube. For each cell key, the value is cell's
+
+        A dictionary with keys equal to the coordinates of each cell in
+        the hypercube. For each cell key, the value is the cell's
         scope - a list of numpy.ndarray views that are lines containing
         the cell.
             
@@ -424,19 +468,19 @@ def get_scopes_np(lines: Lines_np, d: int) -> Scopes_np:
 
     Notes
     -----
-    The implementation of this function uses np.unravel_index, and relies
-    uopn the lines parameter being generated from an array populated with
-    values 0,1,2,...
+    The implementation of this function uses np.unravel_index, and
+    relies uopn the lines parameter being generated from an array
+    populated with values 0,1,2,...
  
     Examples
     --------
     >>> import numpy as np
     >>> from pprint import pprint
-    >>> arr = np.arange(4).reshape(2, 2)
-    >>> arr
+    >>> hc = np.arange(4).reshape(2, 2)
+    >>> hc
     array([[0, 1],
            [2, 3]])
-    >>> lines = list(get_lines_np(arr))
+    >>> lines = list(get_lines_np(hc))
     >>> lines
     [array([0, 2]), array([1, 3]), array([0, 1]), array([2, 3]), array([0, 3]), array([2, 1])]
     >>> scopes = get_scopes_np(lines, 2)
@@ -446,7 +490,7 @@ def get_scopes_np(lines: Lines_np, d: int) -> Scopes_np:
                  (0, 1): [array([1, 3]), array([0, 1]), array([2, 1])],
                  (1, 0): [array([0, 2]), array([2, 3]), array([2, 1])],
                  (1, 1): [array([1, 3]), array([2, 3]), array([0, 3])]})
-    >>> arr[0, 0] = 99
+    >>> hc[0, 0] = 99
     >>> pprint(scopes) #doctest: +NORMALIZE_WHITESPACE
     defaultdict(<class 'list'>,
                 {(0, 0): [array([99,  2]), array([99,  1]), array([99,  3])],
@@ -467,25 +511,29 @@ def get_scopes_np(lines: Lines_np, d: int) -> Scopes_np:
 
 
 def structure_np(d: int, n: int, zeros: bool = True, OFFSET: int = 0) -> Structure_np:
-    """ Return a celled hypercube, its lines, and the scopes of its cells.
+    """ 
+    structure_np(d: int, n: int, zeros: bool = True, OFFSET: int = 0) -> 
+        Structure_np:
+    
+    Return a hypercube, its lines, and the scopes of its cells.
 
     Parameters
     ----------
-    d : int
+    d
         The number of dimensions of the hypercube
-    n : int
+    n
         The number of cells in any dimension
-    zeros: bool, default = True
+    zeros
         If true, all values in array are 0, else they are 0,1,2,...
-    base: int
-        Tne number of cells is n^d. If this greater than 
+    OFFSET
+        The number of cells is n^d. If this greater than 
         (2^31 - OFFSET - 1) then we use np.int64 (instead of np.int32)
-        as the dtype  of numpy array.
+        as the dtype of the numpy array.
  
     Returns
     -------
-    tuple :
-        A tuple containing the hypercube, its lines, and the scopes of
+
+        The hypercube (as a numpy array), its lines, and the scopes of
         its cells.
             
     See Also
@@ -524,36 +572,209 @@ def structure_np(d: int, n: int, zeros: bool = True, OFFSET: int = 0) -> Structu
     """
 
     # number of cells is n^d. If this greater than (2^31 - OFFSET - 1)
-    # then we use int64. This is because the the get_scopes 
+    # then we use int64. This is because the get_scopes 
     # function populates the arrays with values 0,1,2, ...
     dtype = np.int64 if n ** d > 2 ** 31 - OFFSET - 1 else np.int32
-    arr = np.arange(n ** d, dtype = dtype).reshape([n] * d)
-    lines = list(get_lines_np(arr))
+    hc = np.arange(n ** d, dtype = dtype).reshape([n] * d)
+    lines = list(get_lines_np(hc))
     scopes = get_scopes_np(lines, d)
     if zeros:
-        arr.fill(0)
-    return (arr, lines, scopes)
+        hc.fill(0)
+    return (hc, lines, scopes)
 
 
-def get_diagonals_coord(d: int, n: int) -> Generator[Line_coord, None, None]:
-    """ Returns the d-agonals coordinates of h(d, n). 
+def get_lines_enum_np(hc: Cube_np) -> Generator[Line_enum_np, None, None]:
+    """ 
+    get_lines_enum_np(hc: Cube_np) -> 
+        Generator[Line_enum_np, None, None]:
+    
+    Returns emunerated lines of a hypercube
 
     Parameters
     ----------
-    d : int
+    hc
+        The hypercube whose lines are to be calculated
+
+    Yields
+    -------
+    
+        Enumerated numpy.ndarray views of the lines in `hc`.
+                
+    See Also
+    --------
+    get_lines_np
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> hc = np.arange(4).reshape(2, 2)
+    >>> hc
+    array([[0, 1],
+           [2, 3]])
+    >>> lines = list(get_lines_enum_np(hc))
+    >>> lines
+    [(0, array([0, 2])), (1, array([1, 3])), (2, array([0, 1])), (3, array([2, 3])), (4, array([0, 3])), (5, array([2, 1]))]
+    """
+    
+    idx = 0
+    for line in get_lines_np(hc):
+        yield (idx, line)
+        idx += 1
+
+
+def get_scopes_enum_np(lines: Lines_enum_np, d: int) -> Scopes_enum:
+    """ 
+    get_scopes_enum_np(lines: Lines_enum_np, d: int) -> Scopes_enum:
+    
+    Calculate the scope of each cell in a hypercube
+
+    Parameters
+    ----------
+    lines
+        The returned value from get_lines_enum_np(hc) where hc is of the
+        form np.arange(n ** d, dtype = intxx).reshape([n] * d).
+        That is, hc is populated with the values 0,1,2,...,n^d - 1.
+
+    dim
+        The dimension of the hypercube that was used to
+        generate `lines`.
+
+    Returns
+    -------
+    
+        A dictionary with keys equal to each cell coordinates of the 
+        hypercube. For each cell key, the value is the cell's
+        scope - a list of line enumerations that are lines containing
+        the cell.
+
+    See Also
+    --------
+    get_lines_enum_np
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from pprint import pprint
+    >>> hc = np.arange(4).reshape(2, 2)
+    >>> hc
+    array([[0, 1],
+           [2, 3]])
+    >>> lines = list(get_lines_enum_np(hc))
+    >>> lines
+    [(0, array([0, 2])), (1, array([1, 3])), (2, array([0, 1])), (3, array([2, 3])), (4, array([0, 3])), (5, array([2, 1]))]
+    >>> scopes = get_scopes_enum_np(lines, 2)
+    >>> pprint(scopes) #doctest: +NORMALIZE_WHITESPACE
+    defaultdict(<class 'list'>,
+                {(0, 0): [0, 2, 4],
+                 (0, 1): [1, 2, 5],
+                 (1, 0): [0, 3, 5],
+                 (1, 1): [1, 3, 4]})
+    """
+
+    n = lines[0][1].size
+    shape = [n] * d
+    scopes: Scopes_enum = DefaultDict(list)
+
+    for line in lines:
+        for j in range(n):
+            cell = np.unravel_index(line[1][j], shape)
+            scopes[cell].append(line[0]) 
+    return scopes
+
+
+def structure_enum_np(d: int, n: int, zeros: bool = True, OFFSET: int = 0) -> Structure_enum_np:
+    """ 
+    structure_enum_np(d: int, n: int, zeros: bool = True, 
+                      OFFSET: int = 0) -> 
+            Structure_enum_np:
+
+    Return a hypercube, its enumerated lines and the scopes of 
+    its cell scopes.
+
+   Parameters
+    ----------
+    d
         The number of dimensions of the hypercube
-    n : int
+    n
+        The number of cells in any dimension
+    zeros
+        If true, all values in array are 0, else they are 0,1,2,...
+    base: int
+        Tne number of cells is n^d. If this greater than 
+        (2^31 - OFFSET - 1) then we use np.int64 (instead of np.int32)
+        as the dtype of the numpy array.
+ 
+    Returns
+    -------
+    
+        A tuple containing the hypercube, its enumerated lines, and the
+        scopes of its cells.
+            
+    See Also
+    --------
+    get_lines_enum_np
+    get_scopes_enum_np
+ 
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from pprint import pprint
+    >>> struct = structure_enum_np(2, 2) 
+    >>> struct[0]
+    array([[0, 0],
+           [0, 0]])
+    >>> struct[1]
+    [(0, array([0, 0])), (1, array([0, 0])), (2, array([0, 0])), (3, array([0, 0])), (4, array([0, 0])), (5, array([0, 0]))]
+    >>> pprint(struct[2]) #doctest: +NORMALIZE_WHITESPACE
+    defaultdict(<class 'list'>,
+                {(0, 0): [0, 2, 4],
+                 (0, 1): [1, 2, 5],
+                 (1, 0): [0, 3, 5],
+                 (1, 1): [1, 3, 4]})
+    >>> struct = structure_enum_np(2, 2, False) 
+    >>> struct[0]
+    array([[0, 1],
+           [2, 3]])
+    >>> struct[1]
+    [(0, array([0, 2])), (1, array([1, 3])), (2, array([0, 1])), (3, array([2, 3])), (4, array([0, 3])), (5, array([2, 1]))]
+    >>> pprint(struct[2]) #doctest: +NORMALIZE_WHITESPACE
+    defaultdict(<class 'list'>,
+                {(0, 0): [0, 2, 4],
+                 (0, 1): [1, 2, 5],
+                 (1, 0): [0, 3, 5],
+                 (1, 1): [1, 3, 4]})
+    """
+
+    # number of cells is n^d. If this greater than (2^31 - OFFSET - 1)
+    # then we use int64. This is because the the get_scopes 
+    # function populates the arrays with values 0,1,2, ...
+    dtype = np.int64 if n ** d > 2 ** 31 - OFFSET - 1 else np.int32
+    hc = np.arange(n ** d, dtype = dtype).reshape([n] * d)
+    lines = list(get_lines_enum_np(hc))
+    scopes = get_scopes_enum_np(lines, d)
+    if zeros:
+        hc.fill(0)
+    return (hc, lines, scopes)
+
+
+def get_diagonals_coord(d: int, n: int) -> Generator[Line_coord, None, None]:
+    """ 
+    get_diagonals_coord(d: int, n: int) -> 
+        Generator[Line_coord, None, None]:
+    
+    Calculates the d-agonals coordinates of h(d, n). 
+
+    Parameters
+    ----------
+    d
+        The number of dimensions of the hypercube
+    n
         The number of cells in any dimension
 
     Yields
     -------
-    list :
+    
         d-gonals coordinates of the diagonals in h(d,n).
-
-    See Also
-    --------
-    num_lines_grouped
-    get_diagonals_np
 
     Notes
     -----
@@ -593,19 +814,24 @@ def get_diagonals_coord(d: int, n: int) -> Generator[Line_coord, None, None]:
 
 
 def get_lines_grouped_coord(d: int, n: int) -> Generator[Lines_coord, None, None]: 
-    """ Generate the lines in a hypercube, h(d, n) grouped by dimensdion
+    """ 
+    get_lines_grouped_coord(d: int, n: int) -> 
+        Generator[Lines_coord, None, None]:
+    
+    Generate the lines of a hypercube, h(d, n), grouped by the 
+    number of dimensions spanned.
 
     Parameters
     ----------
-    d : int
+    d
         The number of dimensions of the hypercube
-    n : int
+    n
         The number of cells in any dimension
 
     Yields
     -------
-    generator :
-        d-gonals coordinates for the lines in h(d, n).
+
+        lines (as coordinates) in h(d, n).
     
     See Also
     --------
@@ -623,21 +849,26 @@ def get_lines_grouped_coord(d: int, n: int) -> Generator[Lines_coord, None, None
         
 
 def get_lines_i_coord(d: int, n: int, i: int) -> Generator[Lines_coord, None, None]:
-    """ Generates the lines in a hypercube, h(d, n) grouped by dimensdion
+    """ 
+    get_lines_i_coord(d: int, n: int, i: int) -> 
+        Generator[Lines_coord, None, None]:
+
+    Generates the lines of a hypercube that span the specified number
+    of dimensions
 
     Parameters
     ----------
-    d : int
+    d
         The number of dimensions of the hypercube
-    n : int
+    n
         The number of cells in any dimension
-    int: i
+    i
         The number of dimensions that the returned lines must span
 
     Yields
     -------
-    generator :
-        d-gonals coordinates for the lines in h(d, n).
+    
+        Lines in h(d, n) that span `i` dimensions.
                 
     See Also
     --------
@@ -645,9 +876,9 @@ def get_lines_i_coord(d: int, n: int, i: int) -> Generator[Lines_coord, None, No
 
     Notes
     -----
-    The notes section for the function num_lines provides a sketch of a 
-    constructive proof for the number of lines in a hypercube. This has
-    been used to implement this function. 
+    The notes section for the function num_lines_grouped provides a 
+    sketch of a constructive proof for the number of lines in a 
+    hypercube. This has been used to implement this function. 
 
     Examples
     --------
@@ -676,29 +907,27 @@ def get_lines_i_coord(d: int, n: int, i: int) -> Generator[Lines_coord, None, No
 
 
 def get_lines_coord(d: int, n: int) -> Generator[Line_coord, None, None]: 
-    """ Returns the lines in a hypercube, h(d, n)
+    """ 
+    get_lines_coord(d: int, n: int) -> 
+        Generator[Line_coord, None, None]:
+
+    Returns the lines in a hypercube
 
     Parameters
     ----------
-    d : int
+    d
         The number of dimensions of the hypercube
-    n : int
+    n
         The number of cells in any dimension
 
-    Returns
+    Yields
     -------
-    list :
-        A list of d-gonals coordinates for the lines in h(d, n).
+    
+        Lines in h(d, n).
                 
     See Also
     --------
     get_lines_grouped_coord
-    num_lines
-    get_diagonals_coord
-
-    Notes
-    -----
-    Calls the function get_lines_grouped_coord
 
     Examples
     --------
@@ -711,26 +940,29 @@ def get_lines_coord(d: int, n: int) -> Generator[Line_coord, None, None]:
     
     grouped = get_lines_grouped_coord(d, n)
     flat = (x for y in grouped for x in y)
-    return flat
+    yield from flat # return flat works as well but yield from this is explicit as to being a generator
 
 
 def get_scopes_coord(lines: Lines_coord, d: int) -> Scopes_coord:
-    """ Calculate the scope of each cell in a hypercube
+    """ 
+    get_scopes_coord(lines: Lines_coord, d: int) -> Scopes_coord:
+
+    Calculate the scope of each cell in a hypercube
 
     Parameters
     ----------
-    lines : list
-        The first returned value from get_lines_coord(d, n).
+    lines
+        The returned value from get_lines_coord(d, n).
 
-    dim : int 
+    dim 
         The dimension of the hypercube that was used to
-        generate the `lines` parameter.
+        generate `lines`.
 
     Returns
     -------
-    defaultdict :
-        A dictionary with keys equal to each cell coordinates of the 
-        hypercube. For each cell key, the value is cell's
+    
+        A dictionary with keys equal to the coordinates of each cell in
+        the hypercube. For each cell key, the value is the cell's
         scope - a list of coordinates that are lines containing
         the cell.
             
@@ -769,23 +1001,206 @@ def get_scopes_coord(lines: Lines_coord, d: int) -> Scopes_coord:
     return scopes
 
 
-
-def get_scope_cell_coord(d: int, n: int, cell: Cell_coord) -> Generator[Line_coord, None, None]: 
-    """ Calculate the scope for a cell (provided as coordinates).
+def structure_coord(d: int, n: int) -> Structure_coord:
+    """ 
+    structure_coord(d: int, n: int) -> Structure_coord:
+    
+    Return lines, and the scopes of its cells, for h(d, n)
 
     Parameters
     ----------
-    d : int
+    d
         The number of dimensions of the hypercube
-    n : int
+    n
         The number of cells in any dimension
-    cell: tuple
+ 
+    Returns
+    -------
+    
+        Lines, and the scopes of its cells, for h(d, n)
+            
+    See Also
+    --------
+    get_lines_coord
+    get_scopes_coord
+ 
+    Examples
+    --------
+    >>> from pprint import pprint
+    >>> struct = structure_coord(2, 2) 
+    >>> struct[0]
+    [[(0, 0), (1, 0)], [(0, 1), (1, 1)], [(0, 0), (0, 1)], [(1, 0), (1, 1)], [(0, 0), (1, 1)], [(0, 1), (1, 0)]]
+    >>> pprint(struct[1]) #doctest: +NORMALIZE_WHITESPACE
+    defaultdict(<class 'list'>,
+                {(0, 0): [[(0, 0), (1, 0)], [(0, 0), (0, 1)], [(0, 0), (1, 1)]],
+                 (0, 1): [[(0, 1), (1, 1)], [(0, 0), (0, 1)], [(0, 1), (1, 0)]],
+                 (1, 0): [[(0, 0), (1, 0)], [(1, 0), (1, 1)], [(0, 1), (1, 0)]],
+                 (1, 1): [[(0, 1), (1, 1)], [(1, 0), (1, 1)], [(0, 0), (1, 1)]]})
+    """
+
+    lines = list(get_lines_coord(d, n))
+    scopes = get_scopes_coord(lines, d)
+    return (lines, scopes)
+
+
+def get_lines_enum_coord(d: int, n: int) -> Generator[Line_enum_coord, None, None]: 
+    """ 
+    get_lines_enum_coord(d: int, n: int) -> 
+        Generator[Line_enum_coord, None, None]:
+
+    Returns enumerated lines of a hypercube
+
+    Parameters
+    ----------
+    d
+        The number of dimensions of the hypercube
+    n
+        The number of cells in any dimension
+
+    Yields
+    -------
+    
+        Enumerated lines in h(d, n).
+                
+    See Also
+    --------
+    get_lines_coord
+
+    Examples
+    --------
+    >>> lines = list(get_lines_enum_coord(2, 2))
+    >>> lines
+    [(0, [(0, 0), (1, 0)]), (1, [(0, 1), (1, 1)]), (2, [(0, 0), (0, 1)]), (3, [(1, 0), (1, 1)]), (4, [(0, 0), (1, 1)]), (5, [(0, 1), (1, 0)])]
+    """
+    
+    idx = 0
+    for line in get_lines_coord(d, n):
+        yield (idx, line)
+        idx += 1
+
+
+def get_scopes_enum_coord(lines: Lines_enum_coord, d: int) -> Scopes_enum:
+    """ 
+    get_scopes_enum_coord(lines: Lines_enum_coord, d: int) -> 
+        Scopes_enum:
+
+    Calculate the scope of each cell in a hypercube
+
+    Parameters
+    ----------
+    lines
+        The returned value from get_lines_enum_coord(d, n).
+
+    dim 
+        The dimension of the hypercube that was used to
+        generate `lines`.
+
+    Returns
+    -------
+    
+        A dictionary with keys equal to each cell coordinates of the 
+        hypercube. For each cell key, the value is the cell's
+        scope - a list of line enumerations that are lines containing
+        the cell.
+            
+    See Also
+    --------
+    get_lines_enum_coord
+ 
+    Examples
+    --------
+    >>> from pprint import pprint
+    >>> lines = list(get_lines_enum_coord(2, 2))
+    >>> pprint(lines) #doctest: +NORMALIZE_WHITESPACE
+    [(0, [(0, 0), (1, 0)]),
+     (1, [(0, 1), (1, 1)]),
+     (2, [(0, 0), (0, 1)]),
+     (3, [(1, 0), (1, 1)]),
+     (4, [(0, 0), (1, 1)]),
+     (5, [(0, 1), (1, 0)])]
+    >>> scopes = get_scopes_enum_coord(lines, 2)
+    >>> pprint(scopes) #doctest: +NORMALIZE_WHITESPACE
+    defaultdict(<class 'list'>,
+                {(0, 0): [0, 2, 4],
+                 (0, 1): [1, 2, 5],
+                 (1, 0): [0, 3, 5],
+                 (1, 1): [1, 3, 4]})
+    """
+
+    n = len(lines[0][1])
+    scopes: Scopes_enum = DefaultDict(list)
+    cells = it.product(range(n), repeat = d) # get all possible cells
+
+    for cell in cells:
+        for line in lines:
+            if cell in line[1]:
+                scopes[cell].append(line[0])
+    return scopes
+
+
+def structure_enum_coord(d: int, n: int) -> Structure_enum_coord:
+    """ 
+    structure_enum_coord(d: int, n: int) -> 
+        Structure_enum_coord:
+    
+    Return enumerated lines, and the scopes of its cells, for h(d, n)
+
+    Parameters
+    ----------
+    d
+        The number of dimensions of the hypercube
+    n
+        The number of cells in any dimension
+ 
+    Returns
+    -------
+    
+        Enumerated lines, and the scopes of its cells, for h(d, n)
+            
+    See Also
+    --------
+    get_lines_enum_coord
+    get_scopes_enum_coord
+ 
+    Examples
+    --------
+    >>> from pprint import pprint
+    >>> struct = structure_enum_coord(2, 2) 
+    >>> struct[0]
+    [(0, [(0, 0), (1, 0)]), (1, [(0, 1), (1, 1)]), (2, [(0, 0), (0, 1)]), (3, [(1, 0), (1, 1)]), (4, [(0, 0), (1, 1)]), (5, [(0, 1), (1, 0)])]
+    >>> pprint(struct[1]) #doctest: +NORMALIZE_WHITESPACE
+    defaultdict(<class 'list'>,
+                {(0, 0): [0, 2, 4],
+                 (0, 1): [1, 2, 5],
+                 (1, 0): [0, 3, 5],
+                 (1, 1): [1, 3, 4]})
+    """
+
+    lines = list(get_lines_enum_coord(d, n))
+    scopes = get_scopes_enum_coord(lines, d)
+    return (lines, scopes)
+
+
+def get_scope_cell_coord(d: int, n: int, cell: Cell_coord) -> Generator[Line_coord, None, None]: 
+    """ 
+    get_scope_cell_coord(d: int, n: int, cell: Cell_coord) -> 
+        Generator[Line_coord, None, None]:
+    
+    Calculate the scope for a cell.
+
+    Parameters
+    ----------
+    d
+        The number of dimensions of the hypercube
+    n
+        The number of cells in any dimension
+    cell
         The cell whose scope is to be calculated
 
     Yields
     ------
-    list :
-        list of cells representing a line within the scope of the cell
+
+        Lines that form the scope of `cell`.
 
     See Also
     --------
@@ -793,16 +1208,16 @@ def get_scope_cell_coord(d: int, n: int, cell: Cell_coord) -> Generator[Line_coo
 
     Notes
     -----    
-    The scope for a specific cell can also be found by calling get_scopes_coord and 
-    indexing with the cell. get_scopes_coord calculates the scope for every cell and
-    stores this in a dictionary. get_scope_cell_coord only calculates the scope
-    for the specified cell.
+    The scope for a specific cell can also be found by calling 
+    get_scopes_coord and indexing with the cell. get_scopes_coord
+    calculates the scope for every cell and stores this in a dictionary.
+    get_scope_cell_coord only calculates the scope for the 
+    specified cell.
 
     Examples
     --------
     >>> d = 3
     >>> n = 4
-    >>> arr = np.arange(n ** d).reshape([n] * d)
     >>> list(get_scope_cell_coord(d, n, (1,2,3))) # doctest: +NORMALIZE_WHITESPACE
     [[(0, 2, 3), (1, 2, 3), (2, 2, 3), (3, 2, 3)], [(1, 0, 3), (1, 1, 3), (1, 2, 3), (1, 3, 3)], 
      [(1, 2, 0), (1, 2, 1), (1, 2, 2), (1, 2, 3)], [(0, 3, 3), (1, 2, 3), (2, 1, 3), (3, 0, 3)]]
@@ -838,63 +1253,28 @@ def get_scope_cell_coord(d: int, n: int, cell: Cell_coord) -> Generator[Line_coo
                     # we only want lines that are winning lines
                     if len(line) == n:
                         yield line
-            
-
-def structure_coord(d: int, n: int) -> Structure_coord:
-    """ Return lines, and the scopes of its cells, for h(d, n)
-
-    Parameters
-    ----------
-    d : int
-        The number of dimensions of the hypercube
-    n : int
-        The number of cells in any dimension
- 
-    Returns
-    -------
-    tuple :
-        A tuple lines, and the scopes of its cells, for h(d, n)
-            
-    See Also
-    --------
-    get_lines_coord
-    get_scopes_coord
- 
-    Examples
-    --------
-    >>> from pprint import pprint
-    >>> struct = structure_coord(2, 2) 
-    >>> struct[0]
-    [[(0, 0), (1, 0)], [(0, 1), (1, 1)], [(0, 0), (0, 1)], [(1, 0), (1, 1)], [(0, 0), (1, 1)], [(0, 1), (1, 0)]]
-    >>> pprint(struct[1]) #doctest: +NORMALIZE_WHITESPACE
-    defaultdict(<class 'list'>,
-                {(0, 0): [[(0, 0), (1, 0)], [(0, 0), (0, 1)], [(0, 0), (1, 1)]],
-                 (0, 1): [[(0, 1), (1, 1)], [(0, 0), (0, 1)], [(0, 1), (1, 0)]],
-                 (1, 0): [[(0, 0), (1, 0)], [(1, 0), (1, 1)], [(0, 1), (1, 0)]],
-                 (1, 1): [[(0, 1), (1, 1)], [(1, 0), (1, 1)], [(0, 0), (1, 1)]]})
-    """
-
-    lines = list(get_lines_coord(d, n))
-    scopes = get_scopes_coord(lines, d)
-    return (lines, scopes)
 
 
 def scopes_size(scopes: Scopes) -> Counter:
-    """ Calculate the different scope lengths.
+    """ 
+    scopes_size(scopes: Scopes) -> Counter:
+
+    Calculate the different scope lengths.
 
     Parameters
     ----------
-    scopes : DefaultDict
+    scopes
         Dictionary of cells (keys) and their scopes
  
     Returns
     -------
-    Counter :
+    
         Counter of scopes lengths (key) and their frequency (values).
             
     See Also
     --------
-    get_scopes
+    get_scopes_np
+    get_scopes_coord
  
     Examples
     --------
@@ -902,7 +1282,13 @@ def scopes_size(scopes: Scopes) -> Counter:
     >>> scopes = structure_np(2, 3)[2] 
     >>> scopes_size(scopes) == Counter({2: 4, 3: 4, 4: 1})
     True
+    >>> scopes = structure_enum_np(2, 3)[2] 
+    >>> scopes_size(scopes) == Counter({2: 4, 3: 4, 4: 1})
+    True
     >>> scopes = structure_coord(2, 3)[1]
+    >>> scopes_size(scopes) == Counter({2: 4, 3: 4, 4: 1})
+    True
+    >>> scopes = structure_enum_coord(2, 3)[1]
     >>> scopes_size(scopes) == Counter({2: 4, 3: 4, 4: 1})
     True
     """
@@ -911,22 +1297,27 @@ def scopes_size(scopes: Scopes) -> Counter:
 
 
 def scopes_size_cell(scopes: Scopes) -> DefaultDict[int, List[Cell_coord]]:
-    """ Group cells by length of their scope.
+    """ 
+    scopes_size_cell(scopes: Scopes) -> 
+        DefaultDict[int, List[Cell_coord]]:
+
+    Group cells by length of their scope.
 
     Parameters
     ----------
-    scopes : DefaultDict
+    scopes
         Dictionary of cells (keys) and their scopes
  
     Returns
     -------
-    DefaultDict :
+
         Dictonary of scopes lengths (key) and the list of cells with scopes of that length.
             
     See Also
     --------
     get_scopes_np
     get_scopes_coord
+    get_scopes_enum
  
     Examples
     --------
@@ -938,7 +1329,19 @@ def scopes_size_cell(scopes: Scopes) -> DefaultDict[int, List[Cell_coord]]:
                 {2: [(1, 0), (0, 1), (2, 1), (1, 2)],
                  3: [(0, 0), (2, 0), (0, 2), (2, 2)],
                  4: [(1, 1)]})
+    >>> scopes = structure_enum_np(2, 3)[2] 
+    >>> pprint(scopes_size_cell(scopes))
+    defaultdict(<class 'list'>,
+                {2: [(1, 0), (0, 1), (2, 1), (1, 2)],
+                 3: [(0, 0), (2, 0), (0, 2), (2, 2)],
+                 4: [(1, 1)]})
     >>> scopes = structure_coord(2, 3)[1] 
+    >>> pprint(scopes_size_cell(scopes))
+    defaultdict(<class 'list'>,
+                {2: [(0, 1), (1, 0), (1, 2), (2, 1)],
+                 3: [(0, 0), (0, 2), (2, 0), (2, 2)],
+                 4: [(1, 1)]})
+    >>> scopes = structure_enum_coord(2, 3)[1] 
     >>> pprint(scopes_size_cell(scopes))
     defaultdict(<class 'list'>,
                 {2: [(0, 1), (1, 0), (1, 2), (2, 1)],
@@ -953,34 +1356,40 @@ def scopes_size_cell(scopes: Scopes) -> DefaultDict[int, List[Cell_coord]]:
     return scopes_size_cell
 
 
-# The following 3 functions are for the displaying of a
-# hypercube to a terminal. 
-# It is assumed that an numpy ndarray has been used to
-# represent the hypercube
+####################################################################################################
+# The following 3 functions are for the displaying of a hypercube to a terminal. 
+# It is assumed that an numpy ndarray has been used to represent the hypercube
 
-def display_np(arr: Cube_np, display_cell: Callable[[Any], Tuple[str, str, str]] = None, ul = False) -> str:
-    """ Construct a string to display the hypercube in the terminal.
+def display_np(hc: Cube_np, display_cell: Callable[[Any], Tuple[str, str, str]] = None, ul = False) -> str:
+    """ 
+    display_np(hc: Cube_np, display_cell: Callable[[Any], 
+               Tuple[str, str, str]] = None, ul = False) -> 
+        str:
+    
+    Construct a string to display the hypercube in the terminal.
 
     Parameters
     ----------
-    arr: numpy.ndarray
-        The array to be displayed
-    display_cell: callback function, optional
+    hc
+        The hypercube to be displayed
+    display_cell
         A callback function called with the value of each cell value.
-        It returns a tuple of strings - the character/string to be displayed, 
-        and any formatting to be applied (typically ansi color sequences). 
-        See Examples for how colors are specified.
+        It returns a tuple of strings - the character/string to be 
+        displayed,  and any formatting to be applied (typically ansi 
+        color sequences). See Examples for how colors are specified.
         If display_cell is not provided, the cell value is displayed.
-    ul: bool, optional
-        display_np calls itself recursively (see Notes). This parameter is used 
-        to track whether a cell is on the bottom row of a 2-d array. It has direct
-        impact when the user calls dislay_np unless the array is 1-d, in which
-        case it determines if cell values are underlined when displayed. 
+    ul
+        display_np calls itself recursively (see Notes). This parameter 
+        is used to track whether a cell is on the bottom row of a 
+        2-d array. It has direct impact when the user calls dislay_np
+        unless the array is 1-d, in which case it determines if cell
+        values are underlined when displayed. 
 
     Returns
     -------
-    str:
-        a string that can be printed to the terminal to display the hypercube
+
+        A string that can be printed to the terminal to display the
+        hypercube.
 
     See Also
     --------
@@ -990,11 +1399,12 @@ def display_np(arr: Cube_np, display_cell: Callable[[Any], Tuple[str, str, str]]
     Notes
     -----
     The '|' character is used to represent the board horizontally.
-    Cell contents are underlined in order to represent the board vertically. For example,
-    the character 'X' is underlined to give 'X̲'. 
-    This function is recursive, it starts with hypercube and keeps removing dimensions
-    until at a single cell, which can be given a string value.
-    We are trying to display d dimensions in 2 dimension. to do this, odd dimensions are 
+    Cell contents are underlined in order to represent the board
+    vertically. For example, the character 'X' is underlined to 
+    give 'X̲'. This function is recursive, it starts with hypercube and 
+    keeps removing dimensions until at a single cell, which can be
+    given a string value. We are trying to display d dimensions in 
+    two dimensions. To do this, odd dimensions are 
     shown horizontally; even dimensions are shown vertically.
 
     Examples
@@ -1018,21 +1428,21 @@ def display_np(arr: Cube_np, display_cell: Callable[[Any], Tuple[str, str, str]]
     
     >>> d = 3
     >>> n = 3 
-    >>> arr = np.zeros((n,) * d, dtype = int)
-    >>> arr[0, 0, 0] = 1
-    >>> arr[1, 1, 1] = -1
-    >>> disp = display_np(arr, dc)
+    >>> hc = np.zeros((n,) * d, dtype = int)
+    >>> hc[0, 0, 0] = 1
+    >>> hc[1, 1, 1] = -1
+    >>> disp = display_np(hc, dc)
     >>> print(disp) #doctest: +SKIP
     X̲|_|_   _|_|_   _|_|_
     _|_|_   _|O̲|_   _|_|_
      | |     | |     | | 
     """
 
-    if arr.size == 1: # arr is a single cell
+    if hc.size == 1: # hc is a single cell
         if display_cell is None:
-            s, pre_fmt, post_fmt = str(arr), '', ''
+            s, pre_fmt, post_fmt = str(hc), '', ''
         else:
-            s, pre_fmt, post_fmt = display_cell(arr)
+            s, pre_fmt, post_fmt = display_cell(hc)
 
         # underline displayed string (to repsent board structure) unless 
         # string is in the bottom row of array
@@ -1041,52 +1451,55 @@ def display_np(arr: Cube_np, display_cell: Callable[[Any], Tuple[str, str, str]]
             
         return pre_fmt + s + post_fmt
 
-    # arr is not a single cell
-    d = arr.ndim
+    # hc is not a single cell
+    d = hc.ndim
     # break the array into sub arrays along the first dimension
-    sub_arr = [arr[i] for i in range(arr.shape[0])]
+    sub_hc = [hc[i] for i in range(hc.shape[0])]
 
     # constuct a string for each sub array
-    sub_arr_str = []
-    for c, a in enumerate(sub_arr):
-        if d == 2 and c == len(sub_arr) - 1:
+    sub_hc_str = []
+    for c, a in enumerate(sub_hc):
+        if d == 2 and c == len(sub_hc) - 1:
             # sub arr is 2-dimensional and last row - don't underline
             ul = False
         elif d != 1:
             ul = True
 
-        sub_arr_str.append(display_np(a, display_cell, ul))
+        sub_hc_str.append(display_np(a, display_cell, ul))
 
     # join the sub strings
     if d % 2 == 0: # even number of dimensions - display down the screen
         if d == 2:
-            return ''.join('\n'.join(sub_arr_str))
+            return ''.join('\n'.join(sub_hc_str))
         else:
             sp = '\n' + '\n' * (int((d / 2) ** 1.5) - 1) # increase space between higher dimesions  
-            return sp.join(sub_arr_str)
+            return sp.join(sub_hc_str)
     else: # odd number of dimensions - display across the screen
         if d == 1:
-            return '|'.join(sub_arr_str)
+            return '|'.join(sub_hc_str)
         else:
-            return join_multiline(sub_arr_str, ' ' + ' ' * int((d - 2) ** 1.5) + ' ', False)
+            return join_multiline(sub_hc_str, ' ' + ' ' * int((d - 2) ** 1.5) + ' ', False)
 
 
 def underline(s: str, alpha_only = True) -> str:
-    """ Underlines a string
+    """ 
+    underline(s: str, alpha_only = True) -> str
+    
+    Underlines a string.
 
     Parameters
     ----------
-    s: str
+    s
         The string to be underlined
 
     Returns
     -------
-    str:
+
         An underlined string 
 
     Notes
     -----
-    The code appears only to work properly with alphabetic characters
+    The code appears only to work properly with alphabetic characters.
 
     Examples
     --------
@@ -1117,24 +1530,32 @@ def underline(s: str, alpha_only = True) -> str:
 
 def join_multiline(iter: Iterable[str], divider: str = ' ', divide_empty_lines: bool = False,
                    fill_value: str = '_') -> str:
-    """ Join multiline string line by line.
+    """ 
+    join_multiline(iter: Iterable[str], divider: str = ' ', 
+                   divide_empty_lines: bool = False, 
+                   fill_value: str = '_') -> 
+        str
+    
+    Join multiline string line by line.
 
     Parameters
     ----------
-    iter: iterable
+    iter
         An iterable of multiline (or single line) strings 
-    divider: str, optional
-        string to divided the corresponding lines in each iterable
-    divide_empty_lines: bool, optional
-        If the corresponding line in each iterable is blank, then determines if the lines
-        are still divided by divider, or divided by ''.
-    fill_value: str, optional
-        If the number of lines in each multiline string in iter differs, then fill_value
-        is used to fill in values of the shorter strings.
+    divider
+        String to divide the corresponding lines in each iterable
+    divide_empty_lines
+        If the corresponding line in each iterable is blank, then 
+        determines if the lines are still divided by divider, or 
+        divided by ''.
+    fill_value
+        If the number of lines in each multiline string in iter
+        differs, then fill_value is used to fill in values of the
+        shorter strings.
 
     Returns
     -------
-    str:
+
         The joined string.
 
     Examples
@@ -1191,32 +1612,38 @@ def join_multiline(iter: Iterable[str], divider: str = ' ', divide_empty_lines: 
 
     # finally, join each string separated by a new line 
     return '\n'.join(st)            
+####################################################################################################
 
 
+####################################################################################################
 # The following functions are helper functions
 
-def slice_ndarray(arr: Cube_np, axes: Collection[int], 
-                coords: Collection[int]) -> Cube_np:
-    """ Returns a slice of an array. 
+def slice_ndarray(arr: Cube_np, dims: Collection[int], coords: Collection[int]) -> Cube_np:
+    """ 
+    slice_ndarray(arr: Cube_np, dims: Collection[int], 
+                  coords: Collection[int]) -> 
+        Cube_np:
+    
+    Returns a slice of a hypercube. 
 
     Parameters
     ----------
-    arr : numpy.ndarray
-        The array to be sliced
-    axes : Collection[int]
-        The axes that are fixed
-    coords : Collection[int]
-        The coordinates corresponding to the fixed axes
+    arr
+        The hypercube to be sliced
+    dims
+        The dims to slice along
+    coords
+        The coordinates corresponding to the dimensions being sliced
 
     Returns
     -------
-    numpy.ndarray:
+
         A view of a slice of `arr`.
 
     Raises
     ------
     ValueError
-        If length of `axes` is not equal to length of `coords`
+        If length of `dims` is not equal to length of `coords`
 
     Examples
     --------
@@ -1238,31 +1665,35 @@ def slice_ndarray(arr: Cube_np, axes: Collection[int],
     # create a list of slice objects, one for each dimension of the array
     # Note: slice(None) is the same as ":". E.g. arr[:, 4] = arr[slice(none), 4)]
     sl: List[Union[slice, int]] = [slice(None)] * arr.ndim    
-    if len(axes) != len(coords):
-        raise ValueError("axes and coords must be of the same length")
+    if len(dims) != len(coords):
+        raise ValueError("dims and coords must be of the same length")
     
-    for axis, coord in zip(axes, coords):
-        sl[axis] = coord
+    for dim, coord in zip(dims, coords):
+        sl[dim] = coord
     
     return arr[tuple(sl)]
 
 
-def insert_into_tuple(tup: Tuple, pos: Union[int, Collection[int]], 
-                      val: Any) -> Tuple[int, ...]:
-    """ Insert values into a tuple. 
+def insert_into_tuple(tup: Tuple, pos: Union[int, Collection[int]], val: Any) -> Tuple[int, ...]:
+    """ 
+    insert_into_tuple(tup: Tuple, pos: Union[int, Collection[int]], 
+                      val: Any) -> 
+        Tuple[int, ...]:
+    
+    Insert values into a tuple. 
 
     Parameters
     ----------
-    tup : tuple
+    tup
         the tuple into which values are to be inserted
-    pos : int or sized iterable container class of ints
+    pos
         The positions into which values are to be inserted
-    val : any value or sized iterable container class of any values
+    val
         The values corresponding to the positions in `pos`
 
     Returns
     -------
-    tuple:
+
         A copy of `tup` with values inserted.
 
     Raises
@@ -1300,24 +1731,28 @@ def insert_into_tuple(tup: Tuple, pos: Union[int, Collection[int]],
     return tuple(tl)
 
 
-def increment_cell_coord(cell: Cell_coord, pos: Sequence[int], 
-                    incr: Sequence[int], add: bool = True) -> Cell_coord:
-    """ Increments coordinates of a cell.
+def increment_cell_coord(cell: Cell_coord, pos: Sequence[int], incr: Sequence[int], add: bool = True) -> Cell_coord:
+    """
+    increment_cell_coord(cell: Cell_coord, pos: Sequence[int], 
+                         incr: Sequence[int], add: bool = True) -> 
+        Cell_coord:
+    
+    Increments coordinates of a cell.
 
     Parameters
     ----------
-    cell : tuple
+    cell
         the cell which will have coordinates incremented
-    pos : sequence of ints
+    pos
         The coordinates which are to be incremented
-    incr : sequence of ints
+    incr
         The increment values at the specified coordinates
-    add: bool, optional
+    add
         If True, the the increments are added, else they are subtracted
 
     Returns
     -------
-    tuple:
+
         A copy of `cell` with incremented coordinates.
 
     Raises
@@ -1353,36 +1788,42 @@ def increment_cell_coord(cell: Cell_coord, pos: Sequence[int],
 
 
 def str_to_tuple(d: int, n: int, cell: str, offset: int = 1) -> Cell_coord:
-    """ Returns cells coordinates provided as a string as a tuple of integers.
+    """ 
+    str_to_tuple(d: int, n: int, cell: str, offset: int = 1) -> 
+        Cell_coord:
+    
+    Returns cells coordinates provided as a string as a tuple 
+    of integers.
 
     Parameters
     ----------
-    d : int
+    d
         The number of dimensions of the hypercube
-    n : int
+    n
         The number of cells in any dimension
-    cell: str
-        cell coordinates specified as a string (see Notes).
-        Will accept a non-string arguments which is attempted to
-        be cast to a string.
-    offset: int
+    cell
+        Cell coordinates specified as a string (see Notes).
+        Will accept a non-string argument which will be cast
+        to a string.
+    offset
         idx offset - typically 0 or 1.
  
     Raises
     ------
-    ValueError:
+    ValueError
         1. if digits are not separated and the n is greater than 9
         2. Incorrect numbers of coordinates provided
         3. One or more coordinates is not valid
 
     Notes
     -----
-    If the string is all digits then assumes that each digit is a coordinate.
-    If non-digit character as provided then assumes that these split coordinates.
+    If the string is all digits then assumes that each digit is a 
+    coordinate. If non-digit characters are provided then assumes that
+    these split coordinates.
 
     Returns
     -------
-    tuple :
+
         A tuple containing the cell coordinates.
              
     Examples
@@ -1436,18 +1877,21 @@ def str_to_tuple(d: int, n: int, cell: str, offset: int = 1) -> Cell_coord:
 
 
 def remove_invalid_cells_coord(n:int, line: Line_coord) -> Line_coord:
-    """ Remove cells that do not have valid coordinates.
+    """ 
+    remove_invalid_cells_coord(n:int, line: Line_coord) -> Line_coord
+
+    Remove cells that do not have valid coordinates.
 
     Parameters
     ----------
-    n : int
+    n
         The number of cells in any dimension
-    line: list
+    line
         list of tuples representing cell coordinates (possibly invalid)
  
     Returns
     -------
-    list :
+
         list of tuples representing valid cell coordinate
 
     Examples
@@ -1465,21 +1909,26 @@ def remove_invalid_cells_coord(n:int, line: Line_coord) -> Line_coord:
 
     return rl
 
+####################################################################################################
+
 
 # used in internal testing
 def _lines_np_coord_check(d: int, n: int) -> bool:
-    """ Checks if lines_np and lines_coord give the same lines.
+    """ 
+    _lines_np_coord_check(d: int, n: int) -> bool
+
+    Checks if lines_np and lines_coord give the same lines.
 
     Parameters
     ----------
-    d : int
+    d
         The number of dimensions of the hypercube
-    n : int
+    n
         The number of cells in any dimension
 
     Returns
     -------
-    bool :
+
         True if lines_np and lines_coord give the same lines.
         False otherwise.
 
