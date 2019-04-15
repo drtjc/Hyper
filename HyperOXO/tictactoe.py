@@ -80,7 +80,7 @@ class TicTacToe():
     def __init__(self, d: int, n: int, moves_per_turn: int = 1, drop: bool = False) -> None:
 
         try:            
-            self.board, self.lines, self.scopes = hc.structure_np(d, n, zeros = False, OFFSET = self._MOVE_BASE)
+            self.board, self.lines, self.scopes = hc.structure_enum_np(d, n, zeros = False, OFFSET = self._MOVE_BASE)
         except MemoryError:
             print("The board is too big to fit into available memory")
             raise
@@ -307,10 +307,10 @@ class TicTacToe():
             self.active_player = int(not self.active_player)
 
         ##
-        for l in self.scopes[t_cell]:
-            print(self.calc_line_state(l))
-        print(self.board)
-        return
+        #for l in self.scopes[t_cell]:
+        #    print(self.calc_line_state(l))
+        #print(self.board)
+        #return
 
     def is_tie(self) -> bool:
         if self.state == GameState.TIE:
@@ -333,7 +333,8 @@ class TicTacToe():
                 return False
             else:
                 t_cell = self.moves[-1][1]
-                for line in self.scopes[t_cell]:
+                for line_enum in self.scopes[t_cell]:
+                    line = self.lines[line_enum][1]
                     if sum(line > self._MOVE_BASE) == self.n or sum(line < -self._MOVE_BASE) == self.n:
                         self.win_line = line
                         return True
