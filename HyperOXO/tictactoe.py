@@ -113,9 +113,12 @@ class TicTacToe():
         self.unplayed = [unravel_index(i, self.shape) for i in range(self.n ** self.d)]
 
         # reset lines states
-        #self.lines_states: Dict[Line_np, LineState] = dict()
+        #self.lines_states: Dict[int, LineState] = dict()
+        #print(self.lines)
         #for k in self.lines.keys():
         #    self.lines_states[k] = LineState(0, 0, 0, 0)
+
+        #print(self.lines_states)
 
     @property
     def maintain_lines_states(self) -> bool: 
