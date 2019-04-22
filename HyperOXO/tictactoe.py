@@ -119,7 +119,7 @@ class TicTacToe():
         #    print(k)
             #self.lines_states[k] = LineState(0, 0, 0, 0)
 
-        print(self.lines_states)
+        #print(self.lines_states)
 
     @property
     def maintain_lines_states(self) -> bool: 
@@ -338,7 +338,7 @@ class TicTacToe():
             else:
                 t_cell = self.moves[-1][1]
                 for line_enum in self.scopes[t_cell]:
-                    line = self.lines[line_enum][1]
+                    line = self.lines[line_enum]
                     if sum(line > self._MOVE_BASE) == self.n or sum(line < -self._MOVE_BASE) == self.n:
                         self.win_line = line
                         return True
