@@ -95,7 +95,7 @@ class TicTacToe():
         self.reset()
         self.color_last_move = Fore.BLUE
         self.color_win_line = Back.MAGENTA
-        self._maintain_lines_states = False
+        self._maintain_lines_states = True
 
     def reset(self) -> None:
         """ Reset the board. """
@@ -113,13 +113,7 @@ class TicTacToe():
         self.unplayed = [unravel_index(i, self.shape) for i in range(self.n ** self.d)]
 
         # reset lines states
-        #self.lines_states: Dict[int, LineState] = dict()
-        #print(self.lines)
-        #for k in self.lines.keys():
-        #    print(k)
-            #self.lines_states[k] = LineState(0, 0, 0, 0)
-
-        #print(self.lines_states)
+        self.reset_lines_states()
 
     @property
     def maintain_lines_states(self) -> bool: 
@@ -130,10 +124,11 @@ class TicTacToe():
         if not self._maintain_lines_states and maintain and self.state == GameState.IN_PROGRESS:
             # Trying to start maintaining line states while games is in progress
             # Require full calculation of all line states
-            pass
-            ## TO DO
-        else:
-            self._maintain_lines_states = maintain
+            self.calc_all_lines_states()
+        elif not maintain:
+            self.reset_lines_states()
+        
+        self._maintain_lines_states = maintain
 
     @property
     def names(self) -> Tuple[str, str]: 
@@ -297,7 +292,7 @@ class TicTacToe():
         self.unplayed.remove(t_cell)
 
         # check for win or tie
-        if self.is_win(): 
+        if self.is_win(t_cell): 
             self.state = GameState.WIN_P2 if self.active_player else GameState.WIN_P1
         elif self.is_tie():
             self.state = GameState.TIE
@@ -310,11 +305,9 @@ class TicTacToe():
             self.active_moves = 0
             self.active_player = int(not self.active_player)
 
-        ##
-        #for l in self.scopes[t_cell]:
-        #    print(self.calc_line_state(l))
-        #print(self.board)
-        #return
+        # update lines states
+        if self.maintain_lines_states:
+            self.calc_lines_states(t_cell)
 
     def is_tie(self) -> bool:
         if self.state == GameState.TIE:
@@ -326,7 +319,7 @@ class TicTacToe():
             else:
                 return False
 
-    def is_win(self) -> bool:
+    def is_win(self, cell: Cell_coord) -> bool:
         if self.state == GameState.WIN_P1 or self.state == GameState.WIN_P2:
             return True
         elif self.state == GameState.TIE:
@@ -336,8 +329,7 @@ class TicTacToe():
                 # not enough moves played for a winner to be possible
                 return False
             else:
-                t_cell = self.moves[-1][1]
-                for line_enum in self.scopes[t_cell]:
+                for line_enum in self.scopes[cell]:
                     line = self.lines[line_enum]
                     if sum(line > self._MOVE_BASE) == self.n or sum(line < -self._MOVE_BASE) == self.n:
                         self.win_line = line
@@ -416,4 +408,13 @@ class TicTacToe():
         ls = LineState(P1_total_marks, P1_consecutive_marks, P2_total_marks, P2_consecutive_marks)
         return ls
 
-    ### TEST
+    def calc_lines_states(self, cell: Cell_coord) -> None:
+        for idx in self.scopes[cell]:
+            self.lines_states[idx] = self.calc_line_state(self.lines[idx])        
+
+    def calc_all_lines_states(self) -> None:
+        for idx, line in self.lines.items():
+            self.lines_states[idx] = self.calc_line_state(line)
+
+    def reset_lines_states(self) -> None:
+        self.lines_states = {k: LineState(0, 0, 0, 0) for k in self.lines.keys()}
