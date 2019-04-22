@@ -116,9 +116,10 @@ class TicTacToe():
         #self.lines_states: Dict[int, LineState] = dict()
         #print(self.lines)
         #for k in self.lines.keys():
-        #    self.lines_states[k] = LineState(0, 0, 0, 0)
+        #    print(k)
+            #self.lines_states[k] = LineState(0, 0, 0, 0)
 
-        #print(self.lines_states)
+        print(self.lines_states)
 
     @property
     def maintain_lines_states(self) -> bool: 

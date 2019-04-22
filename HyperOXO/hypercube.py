@@ -69,14 +69,12 @@ Cell_coord = Tuple[int, ...]
 Cube_np = TypeVar('Cube_np', np.ndarray, np.ndarray) # Cube_np should really be a numpy array representing h(d, n)
 
 Line_np = TypeVar('Line_np', np.ndarray, np.ndarray) # Line_np should really be a 1d numpy array with n elements
-Line_enum_np = Tuple[int, Line_np]
 Line_coord = List[Cell_coord]
-Line_enum_coord = Tuple[int, Line_coord]
 
 Lines_np = List[Line_np]
-Lines_enum_np = List[Line_enum_np]
+Lines_enum_np = Dict[int, Line_np]
 Lines_coord = List[Line_coord]
-Lines_enum_coord = List[Line_enum_coord]
+Lines_enum_coord = Dict[int, Line_coord]
 
 Scopes_np = DefaultDict[Cell_coord, Lines_np]  
 Scopes_coord = DefaultDict[Cell_coord, Lines_coord]
@@ -583,10 +581,9 @@ def structure_np(d: int, n: int, zeros: bool = True, OFFSET: int = 0) -> Structu
     return (hc, lines, scopes)
 
 
-def get_lines_enum_np(hc: Cube_np) -> Generator[Line_enum_np, None, None]:
+def get_lines_enum_np(hc: Cube_np) -> Lines_enum_np:
     """ 
-    get_lines_enum_np(hc: Cube_np) -> 
-        Generator[Line_enum_np, None, None]:
+    get_lines_enum_np(hc: Cube_np) -> Lines_enum_np
     
     Returns emunerated lines of a hypercube
 
@@ -595,7 +592,7 @@ def get_lines_enum_np(hc: Cube_np) -> Generator[Line_enum_np, None, None]:
     hc
         The hypercube whose lines are to be calculated
 
-    Yields
+    Returns
     -------
     
         Enumerated numpy.ndarray views of the lines in `hc`.
@@ -611,15 +608,17 @@ def get_lines_enum_np(hc: Cube_np) -> Generator[Line_enum_np, None, None]:
     >>> hc
     array([[0, 1],
            [2, 3]])
-    >>> lines = list(get_lines_enum_np(hc))
+    >>> lines = get_lines_enum_np(hc)
     >>> lines
-    [(0, array([0, 2])), (1, array([1, 3])), (2, array([0, 1])), (3, array([2, 3])), (4, array([0, 3])), (5, array([2, 1]))]
+    {0: array([0, 2]), 1: array([1, 3]), 2: array([0, 1]), 3: array([2, 3]), 4: array([0, 3]), 5: array([2, 1])}
     """
     
+    lines: Lines_enum_np = dict()
     idx = 0
     for line in get_lines_np(hc):
-        yield (idx, line)
+        lines[idx] = line
         idx += 1
+    return lines
 
 
 def get_scopes_enum_np(lines: Lines_enum_np, d: int) -> Scopes_enum:
@@ -659,9 +658,9 @@ def get_scopes_enum_np(lines: Lines_enum_np, d: int) -> Scopes_enum:
     >>> hc
     array([[0, 1],
            [2, 3]])
-    >>> lines = list(get_lines_enum_np(hc))
+    >>> lines = get_lines_enum_np(hc)
     >>> lines
-    [(0, array([0, 2])), (1, array([1, 3])), (2, array([0, 1])), (3, array([2, 3])), (4, array([0, 3])), (5, array([2, 1]))]
+    {0: array([0, 2]), 1: array([1, 3]), 2: array([0, 1]), 3: array([2, 3]), 4: array([0, 3]), 5: array([2, 1])}
     >>> scopes = get_scopes_enum_np(lines, 2)
     >>> pprint(scopes) #doctest: +NORMALIZE_WHITESPACE
     defaultdict(<class 'list'>,
@@ -671,16 +670,15 @@ def get_scopes_enum_np(lines: Lines_enum_np, d: int) -> Scopes_enum:
                  (1, 1): [1, 3, 4]})
     """
 
-    n = lines[0][1].size
+    n = lines[0].size
     shape = [n] * d
     scopes: Scopes_enum = DefaultDict(list)
 
-    for line in lines:
+    for idx, line in lines.items():
         for j in range(n):
-            cell = np.unravel_index(line[1][j], shape)
-            scopes[cell].append(line[0]) 
+            cell = np.unravel_index(line[j], shape)
+            scopes[cell].append(idx) 
     return scopes
-
 
 def structure_enum_np(d: int, n: int, zeros: bool = True, OFFSET: int = 0) -> Structure_enum_np:
     """ 
@@ -724,7 +722,7 @@ def structure_enum_np(d: int, n: int, zeros: bool = True, OFFSET: int = 0) -> St
     array([[0, 0],
            [0, 0]])
     >>> struct[1]
-    [(0, array([0, 0])), (1, array([0, 0])), (2, array([0, 0])), (3, array([0, 0])), (4, array([0, 0])), (5, array([0, 0]))]
+    {0: array([0, 0]), 1: array([0, 0]), 2: array([0, 0]), 3: array([0, 0]), 4: array([0, 0]), 5: array([0, 0])}
     >>> pprint(struct[2]) #doctest: +NORMALIZE_WHITESPACE
     defaultdict(<class 'list'>,
                 {(0, 0): [0, 2, 4],
@@ -736,7 +734,7 @@ def structure_enum_np(d: int, n: int, zeros: bool = True, OFFSET: int = 0) -> St
     array([[0, 1],
            [2, 3]])
     >>> struct[1]
-    [(0, array([0, 2])), (1, array([1, 3])), (2, array([0, 1])), (3, array([2, 3])), (4, array([0, 3])), (5, array([2, 1]))]
+    {0: array([0, 2]), 1: array([1, 3]), 2: array([0, 1]), 3: array([2, 3]), 4: array([0, 3]), 5: array([2, 1])}
     >>> pprint(struct[2]) #doctest: +NORMALIZE_WHITESPACE
     defaultdict(<class 'list'>,
                 {(0, 0): [0, 2, 4],
@@ -750,7 +748,7 @@ def structure_enum_np(d: int, n: int, zeros: bool = True, OFFSET: int = 0) -> St
     # function populates the arrays with values 0,1,2, ...
     dtype = np.int64 if n ** d > 2 ** 31 - OFFSET - 1 else np.int32
     hc = np.arange(n ** d, dtype = dtype).reshape([n] * d)
-    lines = list(get_lines_enum_np(hc))
+    lines = get_lines_enum_np(hc)
     scopes = get_scopes_enum_np(lines, d)
     if zeros:
         hc.fill(0)
@@ -1043,10 +1041,9 @@ def structure_coord(d: int, n: int) -> Structure_coord:
     return (lines, scopes)
 
 
-def get_lines_enum_coord(d: int, n: int) -> Generator[Line_enum_coord, None, None]: 
+def get_lines_enum_coord(d: int, n: int) -> Lines_enum_coord: 
     """ 
-    get_lines_enum_coord(d: int, n: int) -> 
-        Generator[Line_enum_coord, None, None]:
+    get_lines_enum_coord(d: int, n: int) -> Lines_enum_coord:
 
     Returns enumerated lines of a hypercube
 
@@ -1068,15 +1065,17 @@ def get_lines_enum_coord(d: int, n: int) -> Generator[Line_enum_coord, None, Non
 
     Examples
     --------
-    >>> lines = list(get_lines_enum_coord(2, 2))
+    >>> lines = get_lines_enum_coord(2, 2)
     >>> lines
-    [(0, [(0, 0), (1, 0)]), (1, [(0, 1), (1, 1)]), (2, [(0, 0), (0, 1)]), (3, [(1, 0), (1, 1)]), (4, [(0, 0), (1, 1)]), (5, [(0, 1), (1, 0)])]
+    {0: [(0, 0), (1, 0)], 1: [(0, 1), (1, 1)], 2: [(0, 0), (0, 1)], 3: [(1, 0), (1, 1)], 4: [(0, 0), (1, 1)], 5: [(0, 1), (1, 0)]}
     """
     
+    lines: Lines_enum_coord = dict()
     idx = 0
     for line in get_lines_coord(d, n):
-        yield (idx, line)
+        lines[idx] = line
         idx += 1
+    return lines
 
 
 def get_scopes_enum_coord(lines: Lines_enum_coord, d: int) -> Scopes_enum:
@@ -1110,14 +1109,14 @@ def get_scopes_enum_coord(lines: Lines_enum_coord, d: int) -> Scopes_enum:
     Examples
     --------
     >>> from pprint import pprint
-    >>> lines = list(get_lines_enum_coord(2, 2))
+    >>> lines = get_lines_enum_coord(2, 2)
     >>> pprint(lines) #doctest: +NORMALIZE_WHITESPACE
-    [(0, [(0, 0), (1, 0)]),
-     (1, [(0, 1), (1, 1)]),
-     (2, [(0, 0), (0, 1)]),
-     (3, [(1, 0), (1, 1)]),
-     (4, [(0, 0), (1, 1)]),
-     (5, [(0, 1), (1, 0)])]
+    {0: [(0, 0), (1, 0)],
+     1: [(0, 1), (1, 1)],
+     2: [(0, 0), (0, 1)],
+     3: [(1, 0), (1, 1)],
+     4: [(0, 0), (1, 1)],
+     5: [(0, 1), (1, 0)]}
     >>> scopes = get_scopes_enum_coord(lines, 2)
     >>> pprint(scopes) #doctest: +NORMALIZE_WHITESPACE
     defaultdict(<class 'list'>,
@@ -1127,14 +1126,14 @@ def get_scopes_enum_coord(lines: Lines_enum_coord, d: int) -> Scopes_enum:
                  (1, 1): [1, 3, 4]})
     """
 
-    n = len(lines[0][1])
+    n = len(lines[0])
     scopes: Scopes_enum = DefaultDict(list)
     cells = it.product(range(n), repeat = d) # get all possible cells
 
     for cell in cells:
-        for line in lines:
-            if cell in line[1]:
-                scopes[cell].append(line[0])
+        for idx, line in lines.items():
+            if cell in line:
+                scopes[cell].append(idx)
     return scopes
 
 
@@ -1167,7 +1166,7 @@ def structure_enum_coord(d: int, n: int) -> Structure_enum_coord:
     >>> from pprint import pprint
     >>> struct = structure_enum_coord(2, 2) 
     >>> struct[0]
-    [(0, [(0, 0), (1, 0)]), (1, [(0, 1), (1, 1)]), (2, [(0, 0), (0, 1)]), (3, [(1, 0), (1, 1)]), (4, [(0, 0), (1, 1)]), (5, [(0, 1), (1, 0)])]
+    {0: [(0, 0), (1, 0)], 1: [(0, 1), (1, 1)], 2: [(0, 0), (0, 1)], 3: [(1, 0), (1, 1)], 4: [(0, 0), (1, 1)], 5: [(0, 1), (1, 0)]}
     >>> pprint(struct[1]) #doctest: +NORMALIZE_WHITESPACE
     defaultdict(<class 'list'>,
                 {(0, 0): [0, 2, 4],
@@ -1176,7 +1175,7 @@ def structure_enum_coord(d: int, n: int) -> Structure_enum_coord:
                  (1, 1): [1, 3, 4]})
     """
 
-    lines = list(get_lines_enum_coord(d, n))
+    lines = get_lines_enum_coord(d, n)
     scopes = get_scopes_enum_coord(lines, d)
     return (lines, scopes)
 
