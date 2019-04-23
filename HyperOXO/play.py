@@ -64,7 +64,6 @@ def choose_strategy(ttt: TicTacToe, p: int) -> Strategy:
         except Exception as e:
             print(f'Invalid selection: {e}')
 
-
 def require_move_confirmation() -> bool: 
     print('')
     resp = input_q("Require player confirmation before next move? (y/n): ")

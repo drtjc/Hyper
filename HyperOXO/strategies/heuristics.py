@@ -1,47 +1,76 @@
 from strategy import Strategy, Cell_coord
-from tictactoe import TicTacToe
-from typing import Union, Optional
+from tictactoe import TicTacToe, LineState
+from random import randrange
+from typing import Union, Optional, List, DefaultDict
 
 
 class Heuristics(Strategy):
 
-    @classmethod
-    def validate(cls, d: int, n: int, moves_per_turn: int, drop: bool) -> bool:
-        #if d == 3 and n == 4 and moves_per_turn == 1 and drop == False:
-        #    return True
-        #return False
-        return True
-
     def __init__(self, ttt: TicTacToe) -> None:
         super().__init__(ttt)
-
+        self.scopes_scores: DefaultDict[Cell_coord, int] = DefaultDict(int)
+        self.reset()
 
     def reset(self) -> None:
-        pass
+        self.prior_score = 0 # score for prior move
+        # calculate scope scores for an empty board
+        self._calc_scopes_scores()        
 
-    def move(self, cell: Optional[Cell_coord]) -> Union[Cell_coord, str]: 
-        return (1,)
+    def move(self, cell: Optional[Cell_coord]) -> Union[Cell_coord, str]:     
+        if cell is not None:
+            # update scopes scores for previous move
+            ### TO DO unless previous move was by same player - get rid of multiple moves??                
+            self.prior_score = self.scopes_scores[cell]
+            self.scopes_scores[cell] = -1
+            self._calc_scope_score(cell)
+            
+        print(self.scopes_scores)
+        tc = self._calc_top_cells()
+        print(tc)
+        m = tc[randrange(len(tc))]
+        self.scopes_scores[m] = -1
+        self.ttt.move(m)
 
-    def undo(self):
-        pass
+        return m ## should protocol to be return nothing    
 
 
+        ## for cell played, need to calculate all scope lines scores,
+        # and then any cell with those lines in scope
+        # basically, any cell (incl one played) and all those in scoped lines
+        # need a line idx to cell coords
 
-    # def get_lines_state(self) -> int:
-    #     # list of tuples - each tuple containg number of +ves and -eves in a line
-    #     ##TJC do we want also how many are consecutive??
-    #     # return idx of winning line if there is one
-    #     self.lines_state.clear()
-    #     for c, line in enumerate(self.lines):
-    #         #state = (sum(line > self._MOVE_BASE), sum(line < -self._MOVE_BASE))
-    #         state = LineState(sum(line > self._MOVE_BASE), -1, sum(line < -self._MOVE_BASE), -1)
-    #         self.lines_state.append(state)
-    #         if state[0] == self.n or state[2] == self.n:
-    #             self.win_line = line
-    #             return c
+    def undo(self): ##does this really need to be double undo?? 
+        prior_cell = self.ttt.moves_played[-1][1]
+        self.scopes_scores[prior_cell] = self.prior_score
+        super().undo()
 
-    #             ## could check scope of last move first for winning line
 
-    #     return -1 # no winning line
+    def _calc_line_score(self, line_state: LineState) -> int:
+        if self.ttt.active_player: # player 2
+            me_total_marks = line_state.P2_total_marks
+            you_total_marks = line_state.P1_total_marks
+        else: # player 1
+            me_total_marks = line_state.P1_total_marks
+            you_total_marks = line_state.P2_total_marks
+        
+        if me_total_marks > 0 and you_total_marks > 0:
+            print("h")
+            return 0 # nobody can win on this line
+        else:
+            return 1
+
+    def _calc_scope_score(self, cell: Cell_coord) -> None:
+        self.scopes_scores[cell] = 0
+        for idx in self.ttt.scopes[cell]:
+            self.scopes_scores[cell] += self._calc_line_score(self.ttt.lines_states[idx])
+
+    def _calc_scopes_scores(self) -> None:
+        for cell in self.ttt.scopes.keys():
+            self._calc_scope_score(cell)
+
+    def _calc_top_cells(self) -> List[Cell_coord]:        
+        unplayed_scores = {k: v for k, v in self.scopes_scores.items() if k in self.ttt.unplayed}
+        max_score = max(unplayed_scores.values())
+        return [k for k, v in unplayed_scores.items() if v == max_score]
 
 
