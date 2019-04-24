@@ -576,6 +576,7 @@ def structure_np(d: int, n: int, zeros: bool = True, OFFSET: int = 0) -> Structu
     >>> struct[0]
     array([[0, 0],
            [0, 0]])
+    
     >>> struct[1] #doctest: +NORMALIZE_WHITESPACE
     [array([0, 0]), array([0, 0]), array([0, 0]), array([0, 0]),
      array([0, 0]), array([0, 0])]
@@ -597,6 +598,7 @@ def structure_np(d: int, n: int, zeros: bool = True, OFFSET: int = 0) -> Structu
     >>> struct[0]
     array([[0, 1],
            [2, 3]])
+    
     >>> struct[1] #doctest: +NORMALIZE_WHITESPACE
     [array([0, 2]), array([1, 3]), array([0, 1]), array([2, 3]),
      array([0, 3]), array([2, 1])]
@@ -650,13 +652,19 @@ def get_lines_enum_np(hc: Cube_np) -> Lines_enum_np:
     Examples
     --------
     >>> import numpy as np
+    >>> from pprint import pprint
     >>> hc = np.arange(4).reshape(2, 2)
     >>> hc
     array([[0, 1],
            [2, 3]])
     >>> lines = get_lines_enum_np(hc)
-    >>> lines
-    {0: array([0, 2]), 1: array([1, 3]), 2: array([0, 1]), 3: array([2, 3]), 4: array([0, 3]), 5: array([2, 1])}
+    >>> pprint(lines)  #doctest: +SKIP
+    {0: array([0, 2]), 1: array([1, 3]), 2: array([0, 1]), 
+     3: array([2, 3]), 4: array([0, 3]), 5: array([2, 1])}
+
+    >>> sorted(lines.items()) #doctest: +NORMALIZE_WHITESPACE
+    [(0, array([0, 2])), (1, array([1, 3])), (2, array([0, 1])),
+     (3, array([2, 3])), (4, array([0, 3])), (5, array([2, 1]))]
     """
     
     lines: Lines_enum_np = dict()
@@ -705,15 +713,25 @@ def get_scopes_enum_np(lines: Lines_enum_np, d: int) -> Scopes_enum:
     array([[0, 1],
            [2, 3]])
     >>> lines = get_lines_enum_np(hc)
-    >>> lines
-    {0: array([0, 2]), 1: array([1, 3]), 2: array([0, 1]), 3: array([2, 3]), 4: array([0, 3]), 5: array([2, 1])}
+    >>> pprint(lines)  #doctest: +SKIP
+    {0: array([0, 2]), 1: array([1, 3]), 2: array([0, 1]),
+     3: array([2, 3]), 4: array([0, 3]), 5: array([2, 1])}
+
+    >>> sorted(lines.items()) #doctest: +NORMALIZE_WHITESPACE
+    [(0, array([0, 2])), (1, array([1, 3])), (2, array([0, 1])),
+     (3, array([2, 3])), (4, array([0, 3])), (5, array([2, 1]))]
+
     >>> scopes = get_scopes_enum_np(lines, 2)
-    >>> pprint(scopes) #doctest: +NORMALIZE_WHITESPACE
+    >>> pprint(scopes) #doctest: +SKIP
     defaultdict(<class 'list'>,
                 {(0, 0): [0, 2, 4],
                  (0, 1): [1, 2, 5],
                  (1, 0): [0, 3, 5],
                  (1, 1): [1, 3, 4]})
+
+    >>> sorted(scopes.items()) #doctest: +NORMALIZE_WHITESPACE
+    [((0, 0), [0, 2, 4]), ((0, 1), [1, 2, 5]),
+     ((1, 0), [0, 3, 5]), ((1, 1), [1, 3, 4])]
     """
 
     n = lines[0].size
@@ -767,26 +785,49 @@ def structure_enum_np(d: int, n: int, zeros: bool = True, OFFSET: int = 0) -> St
     >>> struct[0]
     array([[0, 0],
            [0, 0]])
-    >>> struct[1]
-    {0: array([0, 0]), 1: array([0, 0]), 2: array([0, 0]), 3: array([0, 0]), 4: array([0, 0]), 5: array([0, 0])}
-    >>> pprint(struct[2]) #doctest: +NORMALIZE_WHITESPACE
+    
+    >>> pprint(struct[1]) #doctest: +SKIP
+    {0: array([0, 0]), 1: array([0, 0]), 2: array([0, 0]),
+     3: array([0, 0]), 4: array([0, 0]), 5: array([0, 0])}
+    
+    >>> sorted(struct[1].items()) #doctest: +NORMALIZE_WHITESPACE
+    [(0, array([0, 0])), (1, array([0, 0])), (2, array([0, 0])),
+     (3, array([0, 0])), (4, array([0, 0])), (5, array([0, 0]))]
+
+    >>> pprint(struct[2]) #doctest: +SKIP
     defaultdict(<class 'list'>,
                 {(0, 0): [0, 2, 4],
                  (0, 1): [1, 2, 5],
                  (1, 0): [0, 3, 5],
                  (1, 1): [1, 3, 4]})
+    
+    >>> sorted(struct[2].items()) #doctest: +NORMALIZE_WHITESPACE
+    [((0, 0), [0, 2, 4]), ((0, 1), [1, 2, 5]),
+     ((1, 0), [0, 3, 5]), ((1, 1), [1, 3, 4])]
+
     >>> struct = structure_enum_np(2, 2, False) 
     >>> struct[0]
     array([[0, 1],
            [2, 3]])
-    >>> struct[1]
-    {0: array([0, 2]), 1: array([1, 3]), 2: array([0, 1]), 3: array([2, 3]), 4: array([0, 3]), 5: array([2, 1])}
-    >>> pprint(struct[2]) #doctest: +NORMALIZE_WHITESPACE
+    
+    >>> pprint(struct[1]) #doctest: +SKIP
+    {0: array([0, 2]), 1: array([1, 3]), 2: array([0, 1]),
+     3: array([2, 3]), 4: array([0, 3]), 5: array([2, 1])}
+    
+    >>> sorted(struct[1].items()) #doctest: +NORMALIZE_WHITESPACE
+    [(0, array([0, 2])), (1, array([1, 3])), (2, array([0, 1])),
+     (3, array([2, 3])), (4, array([0, 3])), (5, array([2, 1]))]
+
+    >>> pprint(struct[2]) #doctest: +SKIP
     defaultdict(<class 'list'>,
                 {(0, 0): [0, 2, 4],
                  (0, 1): [1, 2, 5],
                  (1, 0): [0, 3, 5],
                  (1, 1): [1, 3, 4]})
+
+    >>> sorted(struct[2].items()) #doctest: +NORMALIZE_WHITESPACE
+    [((0, 0), [0, 2, 4]), ((0, 1), [1, 2, 5]),
+     ((1, 0), [0, 3, 5]), ((1, 1), [1, 3, 4])]        
     """
 
     # number of cells is n^d. If this greater than (2^31 - OFFSET - 1)
