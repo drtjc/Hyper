@@ -1,18 +1,20 @@
 from strategy import Strategy, Cell_coord
 from tictactoe import TicTacToe, LineState
 from random import randrange
-from typing import Union, Optional, List, DefaultDict
+from typing import Union, Optional, List, DefaultDict, Dict, Set
 
 
 class Heuristics(Strategy):
 
     def __init__(self, ttt: TicTacToe) -> None:
         super().__init__(ttt)
+        self.lines_scores: Dict = {}
         self.scopes_scores: DefaultDict[Cell_coord, int] = DefaultDict(int)
         self.reset()
 
     def reset(self) -> None:
-        self.prior_score = 0 # score for prior move
+        self.prior_score = 0 # score for prior move    
+        
         # calculate scope scores for an empty board
         self._calc_scopes_scores()        
 
@@ -45,7 +47,9 @@ class Heuristics(Strategy):
         super().undo()
 
 
-    def _calc_line_score(self, line_state: LineState) -> int:
+    def _calc_line_score(self, idx: int) -> None:
+        line_state = self.ttt.lines_states[idx]
+
         if self.ttt.active_player: # player 2
             me_total_marks = line_state.P2_total_marks
             you_total_marks = line_state.P1_total_marks
@@ -54,15 +58,15 @@ class Heuristics(Strategy):
             you_total_marks = line_state.P2_total_marks
         
         if me_total_marks > 0 and you_total_marks > 0:
-            print("h")
-            return 0 # nobody can win on this line
+            self.lines_scores[idx] = 0            
         else:
-            return 1
+            self.lines_scores[idx] = 0            
 
     def _calc_scope_score(self, cell: Cell_coord) -> None:
         self.scopes_scores[cell] = 0
         for idx in self.ttt.scopes[cell]:
-            self.scopes_scores[cell] += self._calc_line_score(self.ttt.lines_states[idx])
+            self._calc_line_score(idx)
+            self.scopes_scores[cell] += self.lines_scores[idx]
 
     def _calc_scopes_scores(self) -> None:
         for cell in self.ttt.scopes.keys():
@@ -74,3 +78,13 @@ class Heuristics(Strategy):
         return [k for k, v in unplayed_scores.items() if v == max_score]
 
 
+# need to find all lines affected
+    def _calc_affected_cells(self, cell: Cell_coord) -> List[Cell_coord]:
+        a_cells: Set[Cell_coord] = set()
+        return []
+        
+        # for each line in scope of cell 
+        # add each cell in line
+
+        # need to find all cells that belong to line
+        

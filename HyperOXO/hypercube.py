@@ -25,10 +25,13 @@ For a given h(d, n), 1 <= m <= n, a m-agonal always has n cells.
 The term line is used to refer to any m-agonal in general.
 
 A cell apppears in multiple lines, which are refered to as the 
-scope of the cell.
+scope of the cell, or the scoped lines of the cell.
 
 The combination of lines and cell scopes is referred to
 as the structure of the hypercube.
+
+For a given cell, we define its connected cells as those cells that
+appear in the scoped lines of the given cell.
 
 We define a slice as a sub-cube of a hypercube. For example,
 consder h(2,3), a 3x3 hypercube. Let the dimensions be denoted as 
@@ -85,6 +88,8 @@ Structure_np = Tuple[Cube_np, Lines_np, Scopes_np]
 Structure_enum_np = Tuple[Cube_np, Lines_enum_np, Scopes_enum]
 Structure_coord = Tuple[Lines_coord, Scopes_coord]
 Structure_enum_coord = Tuple[Lines_enum_coord, Scopes_enum]
+
+Connected_cells_cord = DefaultDict[Cell_coord, List[Cell_coord]]
 
 
 def num_lines_grouped(d: int, n: int) -> Generator[int, None, None]: 
@@ -157,6 +162,7 @@ def num_lines_grouped(d: int, n: int) -> Generator[int, None, None]:
     --------
     >>> list(num_lines_grouped(2, 3))
     [6, 2]
+    
     >>> list(num_lines_grouped(3, 4))
     [48, 24, 4]
     """
@@ -236,6 +242,7 @@ def get_diagonals_np(hc: Cube_np) -> Generator[Line_np, None, None]:
     >>> diagonals = list(get_diagonals_np(hc))
     >>> diagonals
     [array([0, 7]), array([1, 6]), array([4, 3]), array([5, 2])]
+    
     >>> hc[0, 0, 0] = 99
     >>> diagonals
     [array([99,  7]), array([1, 6]), array([4, 3]), array([5, 2])]
@@ -316,11 +323,14 @@ def get_lines_grouped_np(hc: Cube_np) -> Generator[Lines_np, None, None]:
     array([[0, 1],
            [2, 3]])
     >>> lines = list(get_lines_grouped_np(hc))
-    >>> lines
-    [[array([0, 2]), array([1, 3]), array([0, 1]), array([2, 3])], [array([0, 3]), array([2, 1])]]
+    >>> lines #doctest: +NORMALIZE_WHITESPACE
+    [[array([0, 2]), array([1, 3]), array([0, 1]), array([2, 3])],
+     [array([0, 3]), array([2, 1])]]
+    
     >>> hc[0, 0] = 99
-    >>> lines
-    [[array([99,  2]), array([1, 3]), array([99,  1]), array([2, 3])], [array([99,  3]), array([2, 1])]]
+    >>> lines #doctest: +NORMALIZE_WHITESPACE
+    [[array([99,  2]), array([1, 3]), array([99,  1]), array([2, 3])],
+     [array([99,  3]), array([2, 1])]]
     """
     
     for i in range(hc.ndim):
@@ -371,6 +381,7 @@ def get_lines_i_np(hc: Cube_np, i: int) -> Generator[Lines_np, None, None]:
     >>> lines = list(get_lines_i_np(hc, 1))
     >>> lines
     [[array([0, 3]), array([2, 1])]]
+    
     >>> hc[0, 0] = 99
     >>> lines
     [[array([99,  3]), array([2, 1])]]
@@ -421,13 +432,16 @@ def get_lines_np(hc: Cube_np) -> Generator[Line_np, None, None]:
     array([[0, 1],
            [2, 3]])
     >>> lines = list(get_lines_np(hc))
-    >>> lines
-    [array([0, 2]), array([1, 3]), array([0, 1]), array([2, 3]), array([0, 3]), array([2, 1])]
+    >>> lines #doctest: +NORMALIZE_WHITESPACE
+    [array([0, 2]), array([1, 3]), array([0, 1]), array([2, 3]),
+     array([0, 3]), array([2, 1])]
     >>> len(lines)
     6
+    
     >>> hc[0, 0] = 99
-    >>> lines
-    [array([99,  2]), array([1, 3]), array([99,  1]), array([2, 3]), array([99,  3]), array([2, 1])]
+    >>> lines #doctest: +NORMALIZE_WHITESPACE
+    [array([99,  2]), array([1, 3]), array([99,  1]), array([2, 3]),
+     array([99,  3]), array([2, 1])]
     """
 
     grouped = get_lines_grouped_np(hc)
@@ -479,22 +493,37 @@ def get_scopes_np(lines: Lines_np, d: int) -> Scopes_np:
     array([[0, 1],
            [2, 3]])
     >>> lines = list(get_lines_np(hc))
-    >>> lines
-    [array([0, 2]), array([1, 3]), array([0, 1]), array([2, 3]), array([0, 3]), array([2, 1])]
+    >>> lines #doctest: +NORMALIZE_WHITESPACE
+    [array([0, 2]), array([1, 3]), array([0, 1]), array([2, 3]),
+     array([0, 3]), array([2, 1])]
+    
     >>> scopes = get_scopes_np(lines, 2)
-    >>> pprint(scopes) #doctest: +NORMALIZE_WHITESPACE
+    >>> pprint(scopes) #doctest: +SKIP
     defaultdict(<class 'list'>,
                 {(0, 0): [array([0, 2]), array([0, 1]), array([0, 3])],
                  (0, 1): [array([1, 3]), array([0, 1]), array([2, 1])],
                  (1, 0): [array([0, 2]), array([2, 3]), array([2, 1])],
                  (1, 1): [array([1, 3]), array([2, 3]), array([0, 3])]})
+    
+    >>> sorted(scopes.items()) #doctest: +NORMALIZE_WHITESPACE
+    [((0, 0), [array([0, 2]), array([0, 1]), array([0, 3])]),
+     ((0, 1), [array([1, 3]), array([0, 1]), array([2, 1])]),
+     ((1, 0), [array([0, 2]), array([2, 3]), array([2, 1])]),
+     ((1, 1), [array([1, 3]), array([2, 3]), array([0, 3])])]
+    
     >>> hc[0, 0] = 99
-    >>> pprint(scopes) #doctest: +NORMALIZE_WHITESPACE
+    >>> pprint(scopes) #doctest: +SKIP
     defaultdict(<class 'list'>,
-                {(0, 0): [array([99,  2]), array([99,  1]), array([99,  3])],
-                 (0, 1): [array([1, 3]), array([99,  1]), array([2, 1])],
-                 (1, 0): [array([99,  2]), array([2, 3]), array([2, 1])],
-                 (1, 1): [array([1, 3]), array([2, 3]), array([99,  3])]})  
+        {(0, 0): [array([99,  2]), array([99,  1]), array([99,  3])],
+         (0, 1): [array([1, 3]), array([99,  1]), array([2, 1])],
+         (1, 0): [array([99,  2]), array([2, 3]), array([2, 1])],
+         (1, 1): [array([1, 3]), array([2, 3]), array([99,  3])]})
+
+    >>> sorted(scopes.items()) #doctest: +NORMALIZE_WHITESPACE
+    [((0, 0), [array([99,  2]), array([99,  1]), array([99,  3])]),
+     ((0, 1), [array([1, 3]), array([99,  1]), array([2, 1])]),
+     ((1, 0), [array([99,  2]), array([2, 3]), array([2, 1])]),
+     ((1, 1), [array([1, 3]), array([2, 3]), array([99,  3])])]
     """
     
     n = lines[0].size
@@ -547,26 +576,43 @@ def structure_np(d: int, n: int, zeros: bool = True, OFFSET: int = 0) -> Structu
     >>> struct[0]
     array([[0, 0],
            [0, 0]])
-    >>> struct[1]
-    [array([0, 0]), array([0, 0]), array([0, 0]), array([0, 0]), array([0, 0]), array([0, 0])]
-    >>> pprint(struct[2]) #doctest: +NORMALIZE_WHITESPACE
+    >>> struct[1] #doctest: +NORMALIZE_WHITESPACE
+    [array([0, 0]), array([0, 0]), array([0, 0]), array([0, 0]),
+     array([0, 0]), array([0, 0])]
+    
+    >>> pprint(struct[2]) #doctest: +SKIP
     defaultdict(<class 'list'>,
                 {(0, 0): [array([0, 0]), array([0, 0]), array([0, 0])],
                  (0, 1): [array([0, 0]), array([0, 0]), array([0, 0])],
                  (1, 0): [array([0, 0]), array([0, 0]), array([0, 0])],
                  (1, 1): [array([0, 0]), array([0, 0]), array([0, 0])]})
+    
+    >>> sorted(struct[2].items()) #doctest: +NORMALIZE_WHITESPACE
+    [((0, 0), [array([0, 0]), array([0, 0]), array([0, 0])]),
+     ((0, 1), [array([0, 0]), array([0, 0]), array([0, 0])]),
+     ((1, 0), [array([0, 0]), array([0, 0]), array([0, 0])]),
+     ((1, 1), [array([0, 0]), array([0, 0]), array([0, 0])])]
+    
     >>> struct = structure_np(2, 2, False) 
     >>> struct[0]
     array([[0, 1],
            [2, 3]])
-    >>> struct[1]
-    [array([0, 2]), array([1, 3]), array([0, 1]), array([2, 3]), array([0, 3]), array([2, 1])]
-    >>> pprint(struct[2]) #doctest: +NORMALIZE_WHITESPACE
+    >>> struct[1] #doctest: +NORMALIZE_WHITESPACE
+    [array([0, 2]), array([1, 3]), array([0, 1]), array([2, 3]),
+     array([0, 3]), array([2, 1])]
+    
+    >>> pprint(struct[2]) #doctest: +SKIP
     defaultdict(<class 'list'>,
                 {(0, 0): [array([0, 2]), array([0, 1]), array([0, 3])],
                  (0, 1): [array([1, 3]), array([0, 1]), array([2, 1])],
                  (1, 0): [array([0, 2]), array([2, 3]), array([2, 1])],
                  (1, 1): [array([1, 3]), array([2, 3]), array([0, 3])]})
+
+    >>> sorted(struct[2].items()) #doctest: +NORMALIZE_WHITESPACE
+    [((0, 0), [array([0, 2]), array([0, 1]), array([0, 3])]),
+     ((0, 1), [array([1, 3]), array([0, 1]), array([2, 1])]),
+     ((1, 0), [array([0, 2]), array([2, 3]), array([2, 1])]),
+     ((1, 1), [array([1, 3]), array([2, 3]), array([0, 3])])]             
     """
 
     # number of cells is n^d. If this greater than (2^31 - OFFSET - 1)
@@ -1252,6 +1298,85 @@ def get_scope_cell_coord(d: int, n: int, cell: Cell_coord) -> Generator[Line_coo
                     # we only want lines that are winning lines
                     if len(line) == n:
                         yield line
+
+
+def connected_cells_coord(lines: Lines_enum_coord, scopes: Scopes_enum) -> Connected_cells_cord:
+    """
+    connected_cells_coord(lines: Lines_enum_coord, scopes: Scopes_enum) 
+        -> Connected_cells_cord:    
+    
+    Calculate the connected cells for a cube.
+
+    Parameters
+    ----------
+    lines
+        The enumerated lines of the hypercube
+    scopes
+        The enumerated scopes of the hypercube
+
+    Returns
+    ------
+
+        A dictionary with keys beings cell coordinates and values the
+        connected cell coordinates.
+
+    See Also
+    --------
+    structure_enum_coord
+
+    Examples
+    --------
+    >>> from pprint import pprint
+    >>> struct = structure_enum_coord(2, 3) 
+    >>> pprint(struct[0])
+    {0: [(0, 0), (1, 0), (2, 0)],
+     1: [(0, 1), (1, 1), (2, 1)],
+     2: [(0, 2), (1, 2), (2, 2)],
+     3: [(0, 0), (0, 1), (0, 2)],
+     4: [(1, 0), (1, 1), (1, 2)],
+     5: [(2, 0), (2, 1), (2, 2)],
+     6: [(0, 0), (1, 1), (2, 2)],
+     7: [(0, 2), (1, 1), (2, 0)]}
+    >>> pprint(struct[1]) #doctest: +NORMALIZE_WHITESPACE
+    defaultdict(<class 'list'>,
+                {(0, 0): [0, 3, 6],
+                 (0, 1): [1, 3],
+                 (0, 2): [2, 3, 7],
+                 (1, 0): [0, 4],
+                 (1, 1): [1, 4, 6, 7],
+                 (1, 2): [2, 4],
+                 (2, 0): [0, 5, 7],
+                 (2, 1): [1, 5],
+                 (2, 2): [2, 5, 6]})
+    >>> connected_cells = connected_cells_coord(*struct)
+    >>> pprint(connected_cells)  #doctest: +NORMALIZE_WHITESPACE
+    defaultdict(<class 'list'>,
+                {(0, 0): [(0, 1), (0, 0), (2, 0), (1, 1), (2, 2), (1, 0), (0, 2)],
+                 (0, 1): [(0, 1), (0, 0), (2, 1), (1, 1), (0, 2)],
+                 (0, 2): [(1, 2), (0, 1), (0, 0), (2, 0), (1, 1), (2, 2), (0, 2)],
+                 (1, 0): [(1, 2), (0, 0), (2, 0), (1, 0), (1, 1)],
+                 (1, 1): [(0, 1),
+                          (1, 2),
+                          (0, 0),
+                          (0, 2),
+                          (2, 1),
+                          (2, 0),
+                          (2, 2),
+                          (1, 0),
+                          (1, 1)],
+                 (1, 2): [(1, 2), (0, 2), (2, 2), (1, 0), (1, 1)],
+                 (2, 0): [(0, 0), (2, 1), (2, 0), (1, 1), (2, 2), (1, 0), (0, 2)],
+                 (2, 1): [(0, 1), (2, 1), (2, 0), (2, 2), (1, 1)],
+                 (2, 2): [(1, 2), (0, 0), (2, 1), (2, 0), (1, 1), (2, 2), (0, 2)]})   
+    """
+
+    connected_cells: Connected_cells_cord = DefaultDict(list)
+
+    for cell, lines_enums in scopes.items():
+        for line_enum in lines_enums:
+            connected_cells[cell].extend(lines[line_enum])
+        connected_cells[cell] = list(set(connected_cells[cell]))
+    return connected_cells
 
 
 def scopes_size(scopes: Scopes) -> Counter:
