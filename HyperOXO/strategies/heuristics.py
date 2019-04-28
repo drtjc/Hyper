@@ -20,6 +20,7 @@ class Heuristics(Strategy):
     
     def move(self, cell: Optional[Cell_coord]) -> Union[Cell_coord, str]:     
 
+
         if cell is not None:
             self.prior_score = self.scopes_scores[cell]
             
@@ -28,7 +29,11 @@ class Heuristics(Strategy):
             self._update_lines_scores(cell)
             self._update_connected_scopes_scores(cell)
 
+        print(self.scopes_scores)
+
         tc = self._top_cells()
+
+        print(tc)
         m = tc[randrange(len(tc))]
         self.ttt.move(m)
 
@@ -46,17 +51,13 @@ class Heuristics(Strategy):
     def _update_line_score(self, idx: int) -> None:
         line_state = self.ttt.lines_states[idx]
 
-        if self.ttt.active_player: # player 2
-            me_total_marks = line_state.P2_total_marks
-            you_total_marks = line_state.P1_total_marks
-        else: # player 1
-            me_total_marks = line_state.P1_total_marks
-            you_total_marks = line_state.P2_total_marks
-        
-        if you_total_marks > 0:
+        if line_state.Inactive_total_marks > 0:
             self.lines_scores[idx] = 0            
         else:
             self.lines_scores[idx] = 1            
+
+
+
 
     def _update_lines_scores(self, cell: Cell_coord) -> None:
         for idx in self.ttt.scopes[cell]:

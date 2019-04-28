@@ -62,10 +62,10 @@ class Move(NamedTuple):
 
 
 class LineState(NamedTuple):
-    P1_total_marks: int
-    P1_consecutive_marks: int
-    P2_total_marks: int
-    P2_consecutive_marks: int
+    Active_total_marks: int
+    Active_consecutive_marks: int
+    Inactive_total_marks: int
+    Inactive_consecutive_marks: int
 
 
 class TicTacToe():
@@ -175,7 +175,7 @@ class TicTacToe():
         
         return self.GameState_str[self.state].replace('p1', self.names[0]).replace('p2', self.names[1])
 
-    ## TJC
+    ## TJC add connected cells
     def memory(self) -> Memory:
         m = self.board.nbytes, getsizeof(self.lines), getsizeof(self.scopes)
         return Memory(self.board.dtype, *m, sum(m))
@@ -411,7 +411,10 @@ class TicTacToe():
         P2_consecutive_marks = max((len(list(seq)) for val, seq in 
             groupby(line, key = lambda x: x < -self._MOVE_BASE) if val), default = 0)
         
-        ls = LineState(P1_total_marks, P1_consecutive_marks, P2_total_marks, P2_consecutive_marks)
+        if self.active_player: # Player 2
+            ls = LineState(P2_total_marks, P2_consecutive_marks, P1_total_marks, P1_consecutive_marks)
+        else: # Player 1
+            ls = LineState(P1_total_marks, P1_consecutive_marks, P2_total_marks, P2_consecutive_marks)
         return ls
 
     def calc_lines_states(self, cell: Cell_coord) -> None:
