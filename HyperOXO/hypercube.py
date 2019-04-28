@@ -27,8 +27,8 @@ The term line is used to refer to any m-agonal in general.
 A cell apppears in multiple lines, which are refered to as the 
 scope of the cell, or the scoped lines of the cell.
 
-The combination of lines and cell scopes is referred to
-as the structure of the hypercube.
+The combination of lines and scopes is referred to as the structure
+of the hypercube.
 
 For a given cell, we define its connected cells as those cells that
 appear in the scoped lines of the given cell.
@@ -89,8 +89,7 @@ Structure_enum_np = Tuple[Cube_np, Lines_enum_np, Scopes_enum]
 Structure_coord = Tuple[Lines_coord, Scopes_coord]
 Structure_enum_coord = Tuple[Lines_enum_coord, Scopes_enum]
 
-Connected_cells_cord = DefaultDict[Cell_coord, List[Cell_coord]]
-
+Connected_cells = DefaultDict[Cell_coord, List[Cell_coord]]
 
 def num_lines_grouped(d: int, n: int) -> Generator[int, None, None]: 
     """ 
@@ -1341,7 +1340,11 @@ def get_scope_cell_coord(d: int, n: int, cell: Cell_coord) -> Generator[Line_coo
                         yield line
 
 
-def connected_cells_coord(lines: Lines_enum_coord, scopes: Scopes_enum) -> Connected_cells_cord:
+
+
+
+
+def connected_cells_coord(lines: Lines_enum_coord, scopes: Scopes_enum) -> Connected_cells:
     """
     connected_cells_coord(lines: Lines_enum_coord, scopes: Scopes_enum) 
         -> Connected_cells_cord:    
@@ -1411,13 +1414,113 @@ def connected_cells_coord(lines: Lines_enum_coord, scopes: Scopes_enum) -> Conne
                  (2, 2): [(1, 2), (0, 0), (2, 1), (2, 0), (1, 1), (2, 2), (0, 2)]})   
     """
 
-    connected_cells: Connected_cells_cord = DefaultDict(list)
+    connected_cells: Connected_cells = DefaultDict(list)
 
     for cell, lines_enums in scopes.items():
         for line_enum in lines_enums:
             connected_cells[cell].extend(lines[line_enum])
         connected_cells[cell] = list(set(connected_cells[cell]))
     return connected_cells
+
+
+
+
+def connected_cells_np(lines: Lines_enum_np, scopes: Scopes_enum, d: int) -> Connected_cells:
+    """
+    connected_cells_coord(lines: Lines_enum_coord, scopes: Scopes_enum) 
+        -> Connected_cells_cord:    
+    
+    Calculate the connected cells for a cube.
+
+    Parameters
+    ----------
+    lines
+        The enumerated lines of the hypercube
+    scopes
+        The enumerated scopes of the hypercube
+
+    Returns
+    ------
+
+        A dictionary with keys beings cell coordinates and values the
+        connected cell coordinates.
+
+    See Also
+    --------
+    structure_enum_coord
+
+    Examples
+    --------
+    >>> from pprint import pprint
+    >>> d = 2
+    >>> n = 3
+    >>> struct = structure_enum_np(d, n, False) 
+    >>> pprint(struct[1])
+    {0: array([0, 3, 6]),
+     1: array([1, 4, 7]),
+     2: array([2, 5, 8]),
+     3: array([0, 1, 2]),
+     4: array([3, 4, 5]),
+     5: array([6, 7, 8]),
+     6: array([0, 4, 8]),
+     7: array([6, 4, 2])}
+    >>> pprint(struct[2]) #doctest: +NORMALIZE_WHITESPACE
+    defaultdict(<class 'list'>,
+                {(0, 0): [0, 3, 6],
+                 (0, 1): [1, 3],
+                 (0, 2): [2, 3, 7],
+                 (1, 0): [0, 4],
+                 (1, 1): [1, 4, 6, 7],
+                 (1, 2): [2, 4],
+                 (2, 0): [0, 5, 7],
+                 (2, 1): [1, 5],
+                 (2, 2): [2, 5, 6]})
+    >>> connected_cells = connected_cells_np(struct[1], struct[2], d)
+    >>> pprint(connected_cells)  #doctest: +NORMALIZE_WHITESPACE
+    defaultdict(<class 'list'>,
+                {(0, 0): [(0, 1), (0, 0), (2, 0), (1, 1), (2, 2), (1, 0), (0, 2)],
+                 (0, 1): [(0, 1), (0, 0), (2, 1), (1, 1), (0, 2)],
+                 (0, 2): [(1, 2), (0, 1), (0, 0), (2, 0), (1, 1), (2, 2), (0, 2)],
+                 (1, 0): [(1, 2), (0, 0), (2, 0), (1, 0), (1, 1)],
+                 (1, 1): [(0, 1),
+                          (1, 2),
+                          (0, 0),
+                          (0, 2),
+                          (2, 1),
+                          (2, 0),
+                          (2, 2),
+                          (1, 0),
+                          (1, 1)],
+                 (1, 2): [(1, 2), (0, 2), (2, 2), (1, 0), (1, 1)],
+                 (2, 0): [(0, 0), (0, 2), (2, 1), (2, 0), (2, 2), (1, 0), (1, 1)],
+                 (2, 1): [(0, 1), (2, 1), (2, 0), (2, 2), (1, 1)],
+                 (2, 2): [(1, 2), (0, 0), (2, 1), (2, 0), (1, 1), (2, 2), (0, 2)]})  
+    """
+
+    n = lines[0].size
+    shape = [n] * d
+    connected_cells: Connected_cells = DefaultDict(list)
+
+    for cell, lines_enums in scopes.items():
+        for line_enum in lines_enums:
+                for j in range(n):
+                    cc = np.unravel_index(lines[line_enum][j], shape)
+                    connected_cells[cell].append(cc)
+        connected_cells[cell] = list(set(connected_cells[cell]))
+    return connected_cells
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 def scopes_size(scopes: Scopes) -> Counter:

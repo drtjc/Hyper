@@ -2,13 +2,13 @@ from numpy import unravel_index
 from itertools import groupby
 from sys import getsizeof
 from enum import Enum, auto
-from typing import NamedTuple, List, Tuple, Union, Any, Dict
+from typing import NamedTuple, List, Tuple, Union, Any, Dict, Optional
 from colorama import init, Fore, Back, Style
 init()
 
 
 import hypercube as hc
-from hypercube import Line_np, Cell_coord
+from hypercube import Line_np, Cell_coord, Connected_cells
 
 
 class Error(Exception):
@@ -77,7 +77,7 @@ class TicTacToe():
     GameState_str = {GameState.WIN_P1: 'p1 wins', GameState.WIN_P2: 'p2 wins',
                      GameState.TIE: "It's a tie", GameState.IN_PROGRESS: 'In progress'}
 
-    def __init__(self, d: int, n: int, moves_per_turn: int = 1, drop: bool = False) -> None:
+    def __init__(self, d: int, n: int, moves_per_turn: int = 1, drop: bool = False, calc_connected_cells = True) -> None:
 
         try:            
             self.board, self.lines, self.scopes = hc.structure_enum_np(d, n, zeros = False, OFFSET = self._MOVE_BASE)
@@ -92,11 +92,17 @@ class TicTacToe():
         self.drop = drop
         self._names = 'Player 1', 'Player 2'
         self._marks = 'O', 'X'
-        self.reset()
         self.color_last_move = Fore.BLUE
         self.color_win_line = Back.MAGENTA
         self._maintain_lines_states = True
 
+        if calc_connected_cells:
+            self.connected_cells: Optional[Connected_cells] = hc.connected_cells_np(self.lines, self.scopes, d)
+        else:
+            self.connected_cells = None
+
+        self.reset()
+    
     def reset(self) -> None:
         """ Reset the board. """
         self.state = GameState.IN_PROGRESS  
