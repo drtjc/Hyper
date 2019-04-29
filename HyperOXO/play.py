@@ -94,7 +94,8 @@ def confirm_move(ttt: TicTacToe, s: Tuple[Strategy, Strategy]) -> None:
 
 def restart(ttt: TicTacToe, s: Tuple[Strategy, Strategy], req_move_conf: bool) -> None:
     s[0].reset()
-    s[1].reset()  
+    s[1].reset()
+    ttt.reset()  
     ttt.display()
     while ttt.state == GameState.IN_PROGRESS:
         
@@ -111,7 +112,7 @@ def restart(ttt: TicTacToe, s: Tuple[Strategy, Strategy], req_move_conf: bool) -
         if req_move_conf and not ttt.forfeited:
             confirm_move(ttt, s)
 
-    # game has finished without user resart or new game
+    # game has finished without user restart or new game
     print(ttt.state_str())
     play_again(ttt, s, req_move_conf)
 
@@ -150,4 +151,5 @@ if __name__ == "__main__":
 
 
 ## do we need undo
+## what if multiple moves per turn
 ## what about restart but with players switching who goes first

@@ -19,9 +19,10 @@ class Heuristics(Strategy):
         # calculate scores for an empty board
         #self._update_all_lines_scores() ## but who is active
         #self._update_all_scopes_scores()    
-
+        #super().reset() ## do we strategy to do the reset??
     
     def move(self, cell: Optional[Cell_coord]) -> Union[Cell_coord, str]:     
+
 
 
         if cell is not None and not self.first_move:
@@ -31,7 +32,7 @@ class Heuristics(Strategy):
             ### TO DO unless previous move was by same player - get rid of multiple moves??                
             #self._update_lines_scores(cell)
             #self._update_connected_scopes_scores(cell)
-
+            # should update for all cells added since last time (including move(s) made by this player)
             self._update_all_lines_scores()
             self._update_all_scopes_scores()    
 
@@ -76,18 +77,21 @@ class Heuristics(Strategy):
     def _update_line_score(self, idx: int) -> None:
         line_state = self.ttt.lines_states[idx]
 
+        # if win then definitely take??
+
         if line_state.Active_total_marks and line_state.Inactive_total_marks:
             # no score if not a potential winning or losing line
             self.lines_scores[idx] = 0            
         elif line_state.Inactive_total_marks:
             # possible losing line
-            self.lines_scores[idx] = 2 ** (2 * (line_state.Inactive_total_marks + 1) - 3)
+            self.lines_scores[idx] = 10 ** (2 * (line_state.Inactive_total_marks + 1) - 3)
         else:
             # possible winning line
-            self.lines_scores[idx] = 2 ** (2 * (line_state.Inactive_total_marks + 1) - 2)
+            self.lines_scores[idx] = 10 ** (2 * (line_state.Inactive_total_marks + 1) - 2)
 
 
         #vW1 = 1, S2=2, W2=4, S3 = 8, W3 = 16, ... , Si = 2^(2i-3), Wi = 2^(2i-2), ... 
+        #vW1 = 1, S2=10, W2=100, S3 = 1000, W3 = 10000, ... , Si = 10^(2i-3), Wi = 10^(2i-2), ... 
 
 
     def _update_lines_scores(self, cell: Cell_coord) -> None:
