@@ -15,7 +15,7 @@ class Heuristics(Strategy):
     def reset(self) -> None:
         
         self.first_move = True
-        #self.prior_score = 0 # score for prior move            
+        self.prior_move: Optional[Cell_coord] = None             
         # calculate scores for an empty board
         #self._update_all_lines_scores() ## but who is active
         #self._update_all_scopes_scores()    
@@ -23,7 +23,7 @@ class Heuristics(Strategy):
     
     def move(self, cell: Optional[Cell_coord]) -> Union[Cell_coord, str]:     
 
-
+        #first = self.ttt.moves_played[self.ttt.active_player]
 
         if cell is not None and not self.first_move:
             #self.prior_score = self.scopes_scores[cell]
@@ -57,6 +57,12 @@ class Heuristics(Strategy):
 
         print(tc)
         m = tc[randrange(len(tc))]
+        self.prior_move = m
+        ## or update lines and scores now
+        #self._update_lines_scores(m)
+        #self._update_connected_scopes_scores(m)
+
+
 
         # doesn't the move also change the scores
 
@@ -94,6 +100,9 @@ class Heuristics(Strategy):
         #vW1 = 1, S2=10, W2=100, S3 = 1000, W3 = 10000, ... , Si = 10^(2i-3), Wi = 10^(2i-2), ... 
 
 
+
+    ## have these functions take list of cells.
+    # find uniquely affects lines / cells
     def _update_lines_scores(self, cell: Cell_coord) -> None:
         for idx in self.ttt.scopes[cell]:
             self._update_line_score(idx)
