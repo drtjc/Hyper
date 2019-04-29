@@ -147,3 +147,7 @@ if __name__ == "__main__":
     print(msg)
 
     new_game()
+
+
+## do we need undo
+## what about restart but with players switching who goes first
