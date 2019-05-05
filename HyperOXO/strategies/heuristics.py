@@ -72,11 +72,6 @@ class Heuristics(Strategy):
         return m ## should protocol to be return nothing    
 
 
-    def undo(self): ##does this really need to be double undo?? 
-        #prior_cell = self.ttt.moves_played[-1][1]
-        #self.scopes_scores[prior_cell] = self.prior_score
-        #super().undo()
-        pass
 
 
 

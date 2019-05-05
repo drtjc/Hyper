@@ -64,11 +64,6 @@ def choose_strategy(ttt: TicTacToe, p: int) -> Strategy:
         except Exception as e:
             print(f'Invalid selection: {e}')
 
-def require_move_confirmation() -> bool: 
-    print('')
-    resp = input_q("Require player confirmation before next move? (y/n): ")
-    return resp.upper() in ['TRUE', 'T', 'YES', 'Y']
-
 
 def confirm_move(ttt: TicTacToe, s: Tuple[Strategy, Strategy]) -> None:
     while True:
@@ -83,7 +78,7 @@ def confirm_move(ttt: TicTacToe, s: Tuple[Strategy, Strategy]) -> None:
                 ttt.display()
                 return
             elif resp.upper() in ['RESTART', 'R']:
-                restart(ttt, s, True)
+                restart(ttt, s)
                 return
             elif resp.upper() in ['NEWGAME', 'N']:
                 new_game()
@@ -92,7 +87,7 @@ def confirm_move(ttt: TicTacToe, s: Tuple[Strategy, Strategy]) -> None:
             print(f'{e}')
 
 
-def restart(ttt: TicTacToe, s: Tuple[Strategy, Strategy], req_move_conf: bool) -> None:
+def restart(ttt: TicTacToe, s: Tuple[Strategy, Strategy]) -> None:
     s[0].reset()
     s[1].reset()
     ttt.reset()  
@@ -109,30 +104,26 @@ def restart(ttt: TicTacToe, s: Tuple[Strategy, Strategy], req_move_conf: bool) -
         s[ttt.active_player].move(m)        
         ttt.display()
 
-        if req_move_conf and not ttt.forfeited:
-            confirm_move(ttt, s)
-
     # game has finished without user restart or new game
     print(ttt.state_str())
-    play_again(ttt, s, req_move_conf)
+    play_again(ttt, s)
 
 
 def new_game():
     ttt = create_board()
     choose_names(ttt)
     s = choose_strategy(ttt, 0), choose_strategy(ttt, 1)
-    req_move_conf = require_move_confirmation()
-    restart(ttt, s, req_move_conf)
+    restart(ttt, s)
 
 
-def play_again(ttt: TicTacToe, s: Tuple[Strategy, Strategy], req_move_conf: bool) -> None:
+def play_again(ttt: TicTacToe, s: Tuple[Strategy, Strategy]) -> None:
     while True:
         print('')
         resp = input_q("Restart(r), new game(n) or quit(q): ")
 
         try:
             if resp.upper() in ['RESTART', 'R']:
-                restart(ttt, s, req_move_conf)
+                restart(ttt, s)
                 return
             elif resp.upper() in ['NEWGAME', 'N']:
                 new_game()

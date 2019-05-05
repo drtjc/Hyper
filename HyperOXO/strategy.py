@@ -22,10 +22,6 @@ class Strategy(abc.ABC):
     def move(self, cell: Optional[Cell_coord]) -> Union[Cell_coord, str]: 
         """ Calculate the move to be played """
 
-    def undo(self):
-        """ Undo last move played """
-        self.ttt.undo()
-
     @classmethod
     def __subclasshook__(cls, C):
         if cls is Strategy:
@@ -33,7 +29,6 @@ class Strategy(abc.ABC):
             validate_found = False
             reset_found = False
             move_found = False
-            undo_found = False
             for B in C.__mro__:
                 for attr in B.__dict__:
                     if attr == "validate":
@@ -45,10 +40,7 @@ class Strategy(abc.ABC):
                     if attr == "move":
                         move_found = True
                     
-                    if attr == "undo":                        
-                        undo_found = True
-                    
-                    if validate_found and reset_found and move_found and undo_found:
+                    if validate_found and reset_found and move_found:
                         return True
 
         return NotImplemented

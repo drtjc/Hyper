@@ -29,7 +29,5 @@ class SCH:
         #print("SCH")
         return (4,)
 
-    def undo(self) -> None:
-        return None
 
   
