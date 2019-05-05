@@ -5,17 +5,17 @@ from typing import Union, Optional, Tuple
 
 class Interactive(Strategy):
     
-    def move(self, cell: Optional[Cell_coord]) -> Union[Cell_coord, str]: 
+    def move(self) -> None: 
         while True:
             resp = input('Enter move: ')
             if resp.upper() in ["Q", "QUIT", "F", "FORFEIT"]:
                 self.ttt.forfeit()
-                return str(-1) 
-
-            try:
-                self.ttt.move(resp)
-                return resp
-            except DuplicateMoveError as e:
-                print(e)
-            except UnknownMoveError as e:
-                print(e)
+                return 
+            else:
+                try:
+                    self.ttt.move(resp)
+                    return
+                except DuplicateMoveError as e:
+                    print(e)
+                except UnknownMoveError as e:
+                    print(e)

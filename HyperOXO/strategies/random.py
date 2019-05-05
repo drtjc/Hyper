@@ -6,7 +6,7 @@ from typing import Union, Optional, Tuple
 
 class Random(Strategy):
     
-    def move(self, cell: Optional[Cell_coord]) -> Union[Cell_coord, str]:     
+    def move(self) -> None:     
         m = self.ttt.unplayed[randrange(len(self.ttt.unplayed))]
         self.ttt.move(m)
-        return m
+    

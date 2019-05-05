@@ -1,6 +1,6 @@
 import abc
-from tictactoe import TicTacToe, Cell_coord
-from typing import Tuple, Union, Optional
+from tictactoe import TicTacToe, Cell_coord, Move
+from typing import Tuple, Union, Optional, List
 
 
 class Strategy(abc.ABC):
@@ -19,8 +19,10 @@ class Strategy(abc.ABC):
         self.ttt.reset()
 
     @abc.abstractmethod
-    def move(self, cell: Optional[Cell_coord]) -> Union[Cell_coord, str]: 
+    def move(self) -> None: 
         """ Calculate the move to be played """
+        moves = self.ttt.moves[-self.ttt.moves_per_turn:]
+        self.opponent_moves: Optional[List[Cell_coord]] = [m.Cell for m in moves]
 
     @classmethod
     def __subclasshook__(cls, C):

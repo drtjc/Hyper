@@ -21,7 +21,15 @@ class Heuristics(Strategy):
         #self._update_all_scopes_scores()    
         #super().reset() ## do we strategy to do the reset??
     
-    def move(self, cell: Optional[Cell_coord]) -> Union[Cell_coord, str]:     
+    def move(self) -> None:     
+
+        super().move() # calculates self.opponent_moves
+        
+        print(self.opponent_moves)
+        if self.opponent_moves:
+            cell = self.opponent_moves[0]
+        else:
+            cell = None
 
         #first = self.ttt.moves_played[self.ttt.active_player]
 
@@ -69,7 +77,7 @@ class Heuristics(Strategy):
 
         self.ttt.move(m)
 
-        return m ## should protocol to be return nothing    
+        #return m ## should protocol to be return nothing    
 
 
 

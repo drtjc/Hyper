@@ -74,12 +74,16 @@ def restart(ttt: TicTacToe, s: Tuple[Strategy, Strategy]) -> None:
         
         print(f'\nActive player: {ttt.names[ttt.active_player]}')
         
-        try:
-            m: Optional[Cell_coord] = ttt.moves[-1][1]
-        except IndexError:
-            m = None
+        #try:
+        #    mm = ttt.moves[-ttt.moves_per_turn]
+        #    yy = [m[1] for m in mm]
 
-        s[ttt.active_player].move(m)        
+            #m: Optional[Cell_coord] = ttt.moves[-1][1]
+        #except IndexError:
+        #    m = None
+
+        #s[ttt.active_player].move(m)        
+        s[ttt.active_player].move()
         ttt.display()
 
     # game has finished without user restart or new game
