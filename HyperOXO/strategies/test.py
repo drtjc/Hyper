@@ -7,7 +7,7 @@ from typing import Union, Optional
 class Testv:
     
     @classmethod
-    def validate(cls, d: int, n: int, moves_per_turn: int, drop: bool) -> bool:
+    def validate(cls, d: int, n: int, moves_per_turn: int) -> bool:
         return True
 
 import hypercube as hc

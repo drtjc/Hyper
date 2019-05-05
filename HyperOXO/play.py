@@ -47,7 +47,7 @@ def choose_strategy(ttt: TicTacToe, p: int) -> Strategy:
     idx = 0
     for i, (k, v) in enumerate(st.strategies_cls.items(), 1):
         try:
-            if v.validate(ttt.d, ttt.n, ttt.moves_per_turn, ttt.drop):
+            if v.validate(ttt.d, ttt.n, ttt.moves_per_turn):
                 idx += 1
                 msg = msg + '  ' + str(idx) + '. ' + k + '\n'
                 idx_cls[str(idx)] = v
@@ -63,28 +63,6 @@ def choose_strategy(ttt: TicTacToe, p: int) -> Strategy:
             return idx_cls[s](ttt)
         except Exception as e:
             print(f'Invalid selection: {e}')
-
-
-def confirm_move(ttt: TicTacToe, s: Tuple[Strategy, Strategy]) -> None:
-    while True:
-        print('')
-        resp = input_q("Move(m), undo(u), restart(r), new game(n) or quit(q): ")
-
-        try:
-            if resp.upper() in ['MOVE', 'M', '']:
-                return
-            elif resp.upper() in ['UNDO', 'U']:
-                ttt.undo()
-                ttt.display()
-                return
-            elif resp.upper() in ['RESTART', 'R']:
-                restart(ttt, s)
-                return
-            elif resp.upper() in ['NEWGAME', 'N']:
-                new_game()
-                return
-        except Exception as e:
-            print(f'{e}')
 
 
 def restart(ttt: TicTacToe, s: Tuple[Strategy, Strategy]) -> None:
@@ -119,10 +97,15 @@ def new_game():
 def play_again(ttt: TicTacToe, s: Tuple[Strategy, Strategy]) -> None:
     while True:
         print('')
-        resp = input_q("Restart(r), new game(n) or quit(q): ")
+        resp = input_q("Replay(r), swap(s), new game(n) or quit(q): ")
 
         try:
-            if resp.upper() in ['RESTART', 'R']:
+            if resp.upper() in ['REPLAY', 'R']:
+                restart(ttt, s)
+                return
+            if resp.upper() in ['SWAP', 'S']:
+                ttt.names = ttt.names[1], ttt.names[0]
+                s = s[1], s[0]
                 restart(ttt, s)
                 return
             elif resp.upper() in ['NEWGAME', 'N']:
@@ -141,6 +124,5 @@ if __name__ == "__main__":
     new_game()
 
 
-## do we need undo
 ## what if multiple moves per turn
 ## what about restart but with players switching who goes first

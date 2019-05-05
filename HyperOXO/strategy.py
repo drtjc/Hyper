@@ -6,7 +6,7 @@ from typing import Tuple, Union, Optional
 class Strategy(abc.ABC):
 
     @classmethod
-    def validate(cls, d: int, n: int, moves_per_turn: int, drop: bool) -> bool:
+    def validate(cls, d: int, n: int, moves_per_turn: int) -> bool:
         """ Are the supplied game paramters valid for the strategy? """
         return True
 

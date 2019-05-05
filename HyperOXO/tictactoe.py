@@ -77,7 +77,7 @@ class TicTacToe():
     GameState_str = {GameState.WIN_P1: 'p1 wins', GameState.WIN_P2: 'p2 wins',
                      GameState.TIE: "It's a tie", GameState.IN_PROGRESS: 'In progress'}
 
-    def __init__(self, d: int, n: int, moves_per_turn: int = 1, drop: bool = False, calc_connected_cells = True) -> None:
+    def __init__(self, d: int, n: int, moves_per_turn: int = 1, calc_connected_cells = True) -> None:
 
         try:            
             self.board, self.lines, self.scopes = hc.structure_enum_np(d, n, zeros = False, OFFSET = self._MOVE_BASE)
@@ -89,7 +89,6 @@ class TicTacToe():
         self.n = n
         self.shape = [n] * d
         self.moves_per_turn = moves_per_turn
-        self.drop = drop
         self._names = 'Player 1', 'Player 2'
         self._marks = 'O', 'X'
         self.color_last_move = Fore.BLUE
@@ -279,11 +278,6 @@ class TicTacToe():
             raise UnknownMoveError("Invalid cell argument was provided", cell)
 
         # we now have a validly defined cell
-        if self.drop:
-            pass
-        else:
-            pass
-
         # check if cell has already been played
         if abs(v) > self._MOVE_BASE:
             raise DuplicateMoveError("The cell has already been played", cell)
