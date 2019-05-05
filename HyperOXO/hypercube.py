@@ -743,6 +743,7 @@ def get_scopes_enum_np(lines: Lines_enum_np, d: int) -> Scopes_enum:
             scopes[cell].append(idx) 
     return scopes
 
+
 def structure_enum_np(d: int, n: int, zeros: bool = True, OFFSET: int = 0) -> Structure_enum_np:
     """ 
     structure_enum_np(d: int, n: int, zeros: bool = True, 
@@ -841,6 +842,120 @@ def structure_enum_np(d: int, n: int, zeros: bool = True, OFFSET: int = 0) -> St
     return (hc, lines, scopes)
 
 
+def connected_cells_np(lines: Lines_enum_np, scopes: Scopes_enum, d: int) -> Connected_cells:
+    """
+    connected_cells_np(lines: Lines_enum_np, 
+                       scopes: Scopes_enum, d: int) -> Connected_cells:
+        
+    Calculate the connected cells for a cube.
+
+    Parameters
+    ----------
+    lines
+        The enumerated lines of the hypercube
+    scopes
+        The enumerated scopes of the hypercube
+
+    Returns
+    ------
+
+        A dictionary with keys beings cell coordinates and values the
+        connected cell coordinates.
+
+    See Also
+    --------
+    structure_enum_np
+
+    Examples
+    --------
+    >>> from pprint import pprint
+    >>> d = 2
+    >>> n = 3
+    >>> struct = structure_enum_np(d, n, False) 
+    >>> struct[1] #doctest: +NORMALIZE_WHITESPACE
+    {0: array([0, 3, 6]),
+     1: array([1, 4, 7]),
+     2: array([2, 5, 8]),
+     3: array([0, 1, 2]),
+     4: array([3, 4, 5]),
+     5: array([6, 7, 8]),
+     6: array([0, 4, 8]),
+     7: array([6, 4, 2])}
+    
+    >>> pprint(struct[2]) #doctest: +SKIP
+    defaultdict(<class 'list'>,
+                {(0, 0): [0, 3, 6],
+                 (0, 1): [1, 3],
+                 (0, 2): [2, 3, 7],
+                 (1, 0): [0, 4],
+                 (1, 1): [1, 4, 6, 7],
+                 (1, 2): [2, 4],
+                 (2, 0): [0, 5, 7],
+                 (2, 1): [1, 5],
+                 (2, 2): [2, 5, 6]})
+    
+    >>> sorted(struct[2].items()) #doctest: +NORMALIZE_WHITESPACE
+    [((0, 0), [0, 3, 6]), 
+     ((0, 1), [1, 3]), 
+     ((0, 2), [2, 3, 7]), 
+     ((1, 0), [0, 4]), 
+     ((1, 1), [1, 4, 6, 7]), 
+     ((1, 2), [2, 4]), 
+     ((2, 0), [0, 5, 7]), 
+     ((2, 1), [1, 5]), 
+     ((2, 2), [2, 5, 6])]    
+
+    >>> connected_cells = connected_cells_np(struct[1], struct[2], d)
+    >>> pprint(connected_cells)  #doctest: +SKIP
+    defaultdict(<class 'list'>,
+                {(0, 0): [(0, 1), (0, 0), (2, 0), (1, 1), (2, 2), 
+                          (1, 0), (0, 2)],
+                 (0, 1): [(0, 1), (0, 0), (2, 1), (1, 1), (0, 2)],
+                 (0, 2): [(1, 2), (0, 1), (0, 0), (2, 0), (1, 1), 
+                          (2, 2), (0, 2)],
+                 (1, 0): [(1, 2), (0, 0), (2, 0), (1, 0), (1, 1)],
+                 (1, 1): [(0, 1),
+                          (1, 2),
+                          (0, 0),
+                          (0, 2),
+                          (2, 1),
+                          (2, 0),
+                          (2, 2),
+                          (1, 0),
+                          (1, 1)],
+                 (1, 2): [(1, 2), (0, 2), (2, 2), (1, 0), (1, 1)],
+                 (2, 0): [(0, 0), (0, 2), (2, 1), (2, 0), (2, 2), 
+                          (1, 0), (1, 1)],
+                 (2, 1): [(0, 1), (2, 1), (2, 0), (2, 2), (1, 1)],
+                 (2, 2): [(1, 2), (0, 0), (2, 1), (2, 0), (1, 1), 
+                          (2, 2), (0, 2)]})
+
+    >>> sorted(connected_cells.items()) #doctest: +NORMALIZE_WHITESPACE
+    [((0, 0), [(0, 1), (0, 0), (2, 0), (1, 1), (2, 2), (1, 0), (0, 2)]),
+     ((0, 1), [(0, 1), (0, 0), (2, 1), (1, 1), (0, 2)]), 
+     ((0, 2), [(1, 2), (0, 1), (0, 0), (2, 0), (1, 1), (2, 2), (0, 2)]),
+     ((1, 0), [(1, 2), (0, 0), (2, 0), (1, 0), (1, 1)]), 
+     ((1, 1), [(0, 1), (1, 2), (0, 0), (0, 2), (2, 1), (2, 0), 
+               (2, 2), (1, 0), (1, 1)]), 
+     ((1, 2), [(1, 2), (0, 2), (2, 2), (1, 0), (1, 1)]), 
+     ((2, 0), [(0, 0), (0, 2), (2, 1), (2, 0), (2, 2), (1, 0), (1, 1)]),
+     ((2, 1), [(0, 1), (2, 1), (2, 0), (2, 2), (1, 1)]),
+     ((2, 2), [(1, 2), (0, 0), (2, 1), (2, 0), (1, 1), (2, 2), (0, 2)])]  
+    """
+
+    n = lines[0].size
+    shape = [n] * d
+    connected_cells: Connected_cells = DefaultDict(list)
+
+    for cell, lines_enums in scopes.items():
+        for line_enum in lines_enums:
+                for j in range(n):
+                    cc = np.unravel_index(lines[line_enum][j], shape)
+                    connected_cells[cell].append(cc)
+        connected_cells[cell] = list(set(connected_cells[cell]))
+    return connected_cells
+
+
 def get_diagonals_coord(d: int, n: int) -> Generator[Line_coord, None, None]:
     """ 
     get_diagonals_coord(d: int, n: int) -> 
@@ -924,8 +1039,9 @@ def get_lines_grouped_coord(d: int, n: int) -> Generator[Lines_coord, None, None
     Examples
     --------
     >>> lines = list(get_lines_grouped_coord(2, 2))
-    >>> lines
-    [[[(0, 0), (1, 0)], [(0, 1), (1, 1)], [(0, 0), (0, 1)], [(1, 0), (1, 1)]], [[(0, 0), (1, 1)], [(0, 1), (1, 0)]]]
+    >>> lines #doctest: +NORMALIZE_WHITESPACE
+    [[[(0, 0), (1, 0)], [(0, 1), (1, 1)], [(0, 0), (0, 1)], 
+     [(1, 0), (1, 1)]], [[(0, 0), (1, 1)], [(0, 1), (1, 0)]]]
     """
     
     for i in range(d): 
@@ -967,8 +1083,9 @@ def get_lines_i_coord(d: int, n: int, i: int) -> Generator[Lines_coord, None, No
     Examples
     --------
     >>> lines = list(get_lines_grouped_coord(2, 2))
-    >>> lines
-    [[[(0, 0), (1, 0)], [(0, 1), (1, 1)], [(0, 0), (0, 1)], [(1, 0), (1, 1)]], [[(0, 0), (1, 1)], [(0, 1), (1, 0)]]]
+    >>> lines #doctest: +NORMALIZE_WHITESPACE
+    [[[(0, 0), (1, 0)], [(0, 1), (1, 1)], [(0, 0), (0, 1)], 
+     [(1, 0), (1, 1)]], [[(0, 0), (1, 1)], [(0, 1), (1, 0)]]]
     """
     
     lines = []
@@ -1016,8 +1133,9 @@ def get_lines_coord(d: int, n: int) -> Generator[Line_coord, None, None]:
     Examples
     --------
     >>> lines = list(get_lines_coord(2, 2))
-    >>> lines
-    [[(0, 0), (1, 0)], [(0, 1), (1, 1)], [(0, 0), (0, 1)], [(1, 0), (1, 1)], [(0, 0), (1, 1)], [(0, 1), (1, 0)]]
+    >>> lines #doctest: +NORMALIZE_WHITESPACE
+    [[(0, 0), (1, 0)], [(0, 1), (1, 1)], [(0, 0), (0, 1)], 
+     [(1, 0), (1, 1)], [(0, 0), (1, 1)], [(0, 1), (1, 0)]]
     >>> len(lines)
     6
     """
@@ -1058,20 +1176,27 @@ def get_scopes_coord(lines: Lines_coord, d: int) -> Scopes_coord:
     --------
     >>> from pprint import pprint
     >>> lines = list(get_lines_coord(2, 2))
-    >>> pprint(lines) #doctest: +NORMALIZE_WHITESPACE
+    >>> lines #doctest: +NORMALIZE_WHITESPACE
     [[(0, 0), (1, 0)],
      [(0, 1), (1, 1)],
      [(0, 0), (0, 1)],
      [(1, 0), (1, 1)],
      [(0, 0), (1, 1)],
      [(0, 1), (1, 0)]]
+    
     >>> scopes = get_scopes_coord(lines, 2)
-    >>> pprint(scopes) #doctest: +NORMALIZE_WHITESPACE
+    >>> pprint(scopes) #doctest: +SKIP
     defaultdict(<class 'list'>,
-                {(0, 0): [[(0, 0), (1, 0)], [(0, 0), (0, 1)], [(0, 0), (1, 1)]],
-                 (0, 1): [[(0, 1), (1, 1)], [(0, 0), (0, 1)], [(0, 1), (1, 0)]],
-                 (1, 0): [[(0, 0), (1, 0)], [(1, 0), (1, 1)], [(0, 1), (1, 0)]],
-                 (1, 1): [[(0, 1), (1, 1)], [(1, 0), (1, 1)], [(0, 0), (1, 1)]]})
+     {(0, 0): [[(0, 0), (1, 0)], [(0, 0), (0, 1)], [(0, 0), (1, 1)]],
+      (0, 1): [[(0, 1), (1, 1)], [(0, 0), (0, 1)], [(0, 1), (1, 0)]],
+      (1, 0): [[(0, 0), (1, 0)], [(1, 0), (1, 1)], [(0, 1), (1, 0)]],
+      (1, 1): [[(0, 1), (1, 1)], [(1, 0), (1, 1)], [(0, 0), (1, 1)]]})
+
+    >>> sorted(scopes.items()) #doctest: +NORMALIZE_WHITESPACE
+    [((0, 0), [[(0, 0), (1, 0)], [(0, 0), (0, 1)], [(0, 0), (1, 1)]]), 
+     ((0, 1), [[(0, 1), (1, 1)], [(0, 0), (0, 1)], [(0, 1), (1, 0)]]), 
+     ((1, 0), [[(0, 0), (1, 0)], [(1, 0), (1, 1)], [(0, 1), (1, 0)]]), 
+     ((1, 1), [[(0, 1), (1, 1)], [(1, 0), (1, 1)], [(0, 0), (1, 1)]])]
     """
 
     n = len(lines[0])
@@ -1112,14 +1237,22 @@ def structure_coord(d: int, n: int) -> Structure_coord:
     --------
     >>> from pprint import pprint
     >>> struct = structure_coord(2, 2) 
-    >>> struct[0]
-    [[(0, 0), (1, 0)], [(0, 1), (1, 1)], [(0, 0), (0, 1)], [(1, 0), (1, 1)], [(0, 0), (1, 1)], [(0, 1), (1, 0)]]
-    >>> pprint(struct[1]) #doctest: +NORMALIZE_WHITESPACE
+    >>> struct[0] #doctest: +NORMALIZE_WHITESPACE
+    [[(0, 0), (1, 0)], [(0, 1), (1, 1)], [(0, 0), (0, 1)], 
+     [(1, 0), (1, 1)], [(0, 0), (1, 1)], [(0, 1), (1, 0)]]
+    
+    >>> pprint(struct[1]) #doctest: +SKIP
     defaultdict(<class 'list'>,
-                {(0, 0): [[(0, 0), (1, 0)], [(0, 0), (0, 1)], [(0, 0), (1, 1)]],
-                 (0, 1): [[(0, 1), (1, 1)], [(0, 0), (0, 1)], [(0, 1), (1, 0)]],
-                 (1, 0): [[(0, 0), (1, 0)], [(1, 0), (1, 1)], [(0, 1), (1, 0)]],
-                 (1, 1): [[(0, 1), (1, 1)], [(1, 0), (1, 1)], [(0, 0), (1, 1)]]})
+     {(0, 0): [[(0, 0), (1, 0)], [(0, 0), (0, 1)], [(0, 0), (1, 1)]],
+      (0, 1): [[(0, 1), (1, 1)], [(0, 0), (0, 1)], [(0, 1), (1, 0)]],
+      (1, 0): [[(0, 0), (1, 0)], [(1, 0), (1, 1)], [(0, 1), (1, 0)]],
+      (1, 1): [[(0, 1), (1, 1)], [(1, 0), (1, 1)], [(0, 0), (1, 1)]]})
+
+    >>> sorted(struct[1].items()) #doctest: +NORMALIZE_WHITESPACE
+    [((0, 0), [[(0, 0), (1, 0)], [(0, 0), (0, 1)], [(0, 0), (1, 1)]]), 
+     ((0, 1), [[(0, 1), (1, 1)], [(0, 0), (0, 1)], [(0, 1), (1, 0)]]), 
+     ((1, 0), [[(0, 0), (1, 0)], [(1, 0), (1, 1)], [(0, 1), (1, 0)]]), 
+     ((1, 1), [[(0, 1), (1, 1)], [(1, 0), (1, 1)], [(0, 0), (1, 1)]])]
     """
 
     lines = list(get_lines_coord(d, n))
@@ -1152,8 +1285,13 @@ def get_lines_enum_coord(d: int, n: int) -> Lines_enum_coord:
     Examples
     --------
     >>> lines = get_lines_enum_coord(2, 2)
-    >>> lines
-    {0: [(0, 0), (1, 0)], 1: [(0, 1), (1, 1)], 2: [(0, 0), (0, 1)], 3: [(1, 0), (1, 1)], 4: [(0, 0), (1, 1)], 5: [(0, 1), (1, 0)]}
+    >>> lines  #doctest: +NORMALIZE_WHITESPACE
+    {0: [(0, 0), (1, 0)], 
+     1: [(0, 1), (1, 1)], 
+     2: [(0, 0), (0, 1)], 
+     3: [(1, 0), (1, 1)], 
+     4: [(0, 0), (1, 1)], 
+     5: [(0, 1), (1, 0)]}
     """
     
     lines: Lines_enum_coord = dict()
@@ -1196,20 +1334,27 @@ def get_scopes_enum_coord(lines: Lines_enum_coord, d: int) -> Scopes_enum:
     --------
     >>> from pprint import pprint
     >>> lines = get_lines_enum_coord(2, 2)
-    >>> pprint(lines) #doctest: +NORMALIZE_WHITESPACE
+    >>> lines #doctest: +NORMALIZE_WHITESPACE
     {0: [(0, 0), (1, 0)],
      1: [(0, 1), (1, 1)],
      2: [(0, 0), (0, 1)],
      3: [(1, 0), (1, 1)],
      4: [(0, 0), (1, 1)],
      5: [(0, 1), (1, 0)]}
+    
     >>> scopes = get_scopes_enum_coord(lines, 2)
-    >>> pprint(scopes) #doctest: +NORMALIZE_WHITESPACE
+    >>> pprint(scopes) #doctest: +SKIP
     defaultdict(<class 'list'>,
                 {(0, 0): [0, 2, 4],
                  (0, 1): [1, 2, 5],
                  (1, 0): [0, 3, 5],
                  (1, 1): [1, 3, 4]})
+
+    >>> sorted(scopes.items()) #doctest: +NORMALIZE_WHITESPACE
+    [((0, 0), [0, 2, 4]), 
+     ((0, 1), [1, 2, 5]), 
+      ((1, 0), [0, 3, 5]), 
+      ((1, 1), [1, 3, 4])]
     """
 
     n = len(lines[0])
@@ -1251,19 +1396,139 @@ def structure_enum_coord(d: int, n: int) -> Structure_enum_coord:
     --------
     >>> from pprint import pprint
     >>> struct = structure_enum_coord(2, 2) 
-    >>> struct[0]
-    {0: [(0, 0), (1, 0)], 1: [(0, 1), (1, 1)], 2: [(0, 0), (0, 1)], 3: [(1, 0), (1, 1)], 4: [(0, 0), (1, 1)], 5: [(0, 1), (1, 0)]}
-    >>> pprint(struct[1]) #doctest: +NORMALIZE_WHITESPACE
+    >>> struct[0] #doctest: +NORMALIZE_WHITESPACE
+    {0: [(0, 0), (1, 0)], 
+     1: [(0, 1), (1, 1)], 
+     2: [(0, 0), (0, 1)], 
+     3: [(1, 0), (1, 1)], 
+     4: [(0, 0), (1, 1)], 
+     5: [(0, 1), (1, 0)]}
+    
+    >>> pprint(struct[1]) #doctest: +SKIP
     defaultdict(<class 'list'>,
                 {(0, 0): [0, 2, 4],
                  (0, 1): [1, 2, 5],
                  (1, 0): [0, 3, 5],
                  (1, 1): [1, 3, 4]})
+
+    >>> sorted(struct[1].items()) #doctest: +NORMALIZE_WHITESPACE
+    [((0, 0), [0, 2, 4]), 
+     ((0, 1), [1, 2, 5]), 
+     ((1, 0), [0, 3, 5]), 
+     ((1, 1), [1, 3, 4])]
     """
 
     lines = get_lines_enum_coord(d, n)
     scopes = get_scopes_enum_coord(lines, d)
     return (lines, scopes)
+
+
+def connected_cells_coord(lines: Lines_enum_coord, scopes: Scopes_enum) -> Connected_cells:
+    """
+    connected_cells_coord(lines: Lines_enum_coord, scopes: Scopes_enum) 
+        -> Connected_cells:    
+    
+    Calculate the connected cells for a cube.
+
+    Parameters
+    ----------
+    lines
+        The enumerated lines of the hypercube
+    scopes
+        The enumerated scopes of the hypercube
+
+    Returns
+    ------
+
+        A dictionary with keys beings cell coordinates and values the
+        connected cell coordinates.
+
+    See Also
+    --------
+    structure_enum_coord
+
+    Examples
+    --------
+    >>> from pprint import pprint
+    >>> struct = structure_enum_coord(2, 3) 
+    >>> struct[0] #doctest: +NORMALIZE_WHITESPACE
+    {0: [(0, 0), (1, 0), (2, 0)],
+     1: [(0, 1), (1, 1), (2, 1)],
+     2: [(0, 2), (1, 2), (2, 2)],
+     3: [(0, 0), (0, 1), (0, 2)],
+     4: [(1, 0), (1, 1), (1, 2)],
+     5: [(2, 0), (2, 1), (2, 2)],
+     6: [(0, 0), (1, 1), (2, 2)],
+     7: [(0, 2), (1, 1), (2, 0)]}
+    
+    >>> pprint(struct[1]) #doctest: +SKIP
+    defaultdict(<class 'list'>,
+                {(0, 0): [0, 3, 6],
+                 (0, 1): [1, 3],
+                 (0, 2): [2, 3, 7],
+                 (1, 0): [0, 4],
+                 (1, 1): [1, 4, 6, 7],
+                 (1, 2): [2, 4],
+                 (2, 0): [0, 5, 7],
+                 (2, 1): [1, 5],
+                 (2, 2): [2, 5, 6]})
+    
+    >>> sorted(struct[1].items()) #doctest: +NORMALIZE_WHITESPACE
+    [((0, 0), [0, 3, 6]), 
+     ((0, 1), [1, 3]), 
+     ((0, 2), [2, 3, 7]), 
+     ((1, 0), [0, 4]), 
+     ((1, 1), [1, 4, 6, 7]), 
+     ((1, 2), [2, 4]), 
+     ((2, 0), [0, 5, 7]), 
+     ((2, 1), [1, 5]), 
+     ((2, 2), [2, 5, 6])]    
+    
+    >>> connected_cells = connected_cells_coord(*struct)
+    >>> pprint(connected_cells)  #doctest: +SKIP
+    defaultdict(<class 'list'>,
+                {(0, 0): [(0, 1), (0, 0), (2, 0), (1, 1), (2, 2), 
+                          (1, 0), (0, 2)],
+                 (0, 1): [(0, 1), (0, 0), (2, 1), (1, 1), (0, 2)],
+                 (0, 2): [(1, 2), (0, 1), (0, 0), (2, 0), (1, 1), 
+                          (2, 2), (0, 2)],
+                 (1, 0): [(1, 2), (0, 0), (2, 0), (1, 0), (1, 1)],
+                 (1, 1): [(0, 1),
+                          (1, 2),
+                          (0, 0),
+                          (0, 2),
+                          (2, 1),
+                          (2, 0),
+                          (2, 2),
+                          (1, 0),
+                          (1, 1)],
+                 (1, 2): [(1, 2), (0, 2), (2, 2), (1, 0), (1, 1)],
+                 (2, 0): [(0, 0), (2, 1), (2, 0), (1, 1), (2, 2), 
+                          (1, 0), (0, 2)],
+                 (2, 1): [(0, 1), (2, 1), (2, 0), (2, 2), (1, 1)],
+                 (2, 2): [(1, 2), (0, 0), (2, 1), (2, 0), (1, 1), 
+                          (2, 2), (0, 2)]})
+
+    >>> sorted(connected_cells.items()) #doctest: +NORMALIZE_WHITESPACE
+    [((0, 0), [(0, 1), (0, 0), (2, 0), (1, 1), (2, 2), (1, 0), (0, 2)]),
+     ((0, 1), [(0, 1), (0, 0), (2, 1), (1, 1), (0, 2)]), 
+     ((0, 2), [(1, 2), (0, 1), (0, 0), (2, 0), (1, 1), (2, 2), (0, 2)]),
+     ((1, 0), [(1, 2), (0, 0), (2, 0), (1, 0), (1, 1)]),
+     ((1, 1), [(0, 1), (1, 2), (0, 0), (0, 2), (2, 1), (2, 0), 
+               (2, 2), (1, 0), (1, 1)]), 
+     ((1, 2), [(1, 2), (0, 2), (2, 2), (1, 0), (1, 1)]), 
+     ((2, 0), [(0, 0), (2, 1), (2, 0), (1, 1), (2, 2), (1, 0), (0, 2)]),
+     ((2, 1), [(0, 1), (2, 1), (2, 0), (2, 2), (1, 1)]), 
+     ((2, 2), [(1, 2), (0, 0), (2, 1), (2, 0), (1, 1), (2, 2), (0, 2)])]      
+    """
+
+    connected_cells: Connected_cells = DefaultDict(list)
+
+    for cell, lines_enums in scopes.items():
+        for line_enum in lines_enums:
+            connected_cells[cell].extend(lines[line_enum])
+        connected_cells[cell] = list(set(connected_cells[cell]))
+    return connected_cells
 
 
 def get_scope_cell_coord(d: int, n: int, cell: Cell_coord) -> Generator[Line_coord, None, None]: 
@@ -1304,8 +1569,10 @@ def get_scope_cell_coord(d: int, n: int, cell: Cell_coord) -> Generator[Line_coo
     >>> d = 3
     >>> n = 4
     >>> list(get_scope_cell_coord(d, n, (1,2,3))) # doctest: +NORMALIZE_WHITESPACE
-    [[(0, 2, 3), (1, 2, 3), (2, 2, 3), (3, 2, 3)], [(1, 0, 3), (1, 1, 3), (1, 2, 3), (1, 3, 3)], 
-     [(1, 2, 0), (1, 2, 1), (1, 2, 2), (1, 2, 3)], [(0, 3, 3), (1, 2, 3), (2, 1, 3), (3, 0, 3)]]
+    [[(0, 2, 3), (1, 2, 3), (2, 2, 3), (3, 2, 3)], 
+     [(1, 0, 3), (1, 1, 3), (1, 2, 3), (1, 3, 3)], 
+     [(1, 2, 0), (1, 2, 1), (1, 2, 2), (1, 2, 3)], 
+     [(0, 3, 3), (1, 2, 3), (2, 1, 3), (3, 0, 3)]]
     """
 
     # loop over the numbers of dimensions
@@ -1338,189 +1605,6 @@ def get_scope_cell_coord(d: int, n: int, cell: Cell_coord) -> Generator[Line_coo
                     # we only want lines that are winning lines
                     if len(line) == n:
                         yield line
-
-
-
-
-
-
-def connected_cells_coord(lines: Lines_enum_coord, scopes: Scopes_enum) -> Connected_cells:
-    """
-    connected_cells_coord(lines: Lines_enum_coord, scopes: Scopes_enum) 
-        -> Connected_cells_cord:    
-    
-    Calculate the connected cells for a cube.
-
-    Parameters
-    ----------
-    lines
-        The enumerated lines of the hypercube
-    scopes
-        The enumerated scopes of the hypercube
-
-    Returns
-    ------
-
-        A dictionary with keys beings cell coordinates and values the
-        connected cell coordinates.
-
-    See Also
-    --------
-    structure_enum_coord
-
-    Examples
-    --------
-    >>> from pprint import pprint
-    >>> struct = structure_enum_coord(2, 3) 
-    >>> pprint(struct[0])
-    {0: [(0, 0), (1, 0), (2, 0)],
-     1: [(0, 1), (1, 1), (2, 1)],
-     2: [(0, 2), (1, 2), (2, 2)],
-     3: [(0, 0), (0, 1), (0, 2)],
-     4: [(1, 0), (1, 1), (1, 2)],
-     5: [(2, 0), (2, 1), (2, 2)],
-     6: [(0, 0), (1, 1), (2, 2)],
-     7: [(0, 2), (1, 1), (2, 0)]}
-    >>> pprint(struct[1]) #doctest: +NORMALIZE_WHITESPACE
-    defaultdict(<class 'list'>,
-                {(0, 0): [0, 3, 6],
-                 (0, 1): [1, 3],
-                 (0, 2): [2, 3, 7],
-                 (1, 0): [0, 4],
-                 (1, 1): [1, 4, 6, 7],
-                 (1, 2): [2, 4],
-                 (2, 0): [0, 5, 7],
-                 (2, 1): [1, 5],
-                 (2, 2): [2, 5, 6]})
-    >>> connected_cells = connected_cells_coord(*struct)
-    >>> pprint(connected_cells)  #doctest: +NORMALIZE_WHITESPACE
-    defaultdict(<class 'list'>,
-                {(0, 0): [(0, 1), (0, 0), (2, 0), (1, 1), (2, 2), (1, 0), (0, 2)],
-                 (0, 1): [(0, 1), (0, 0), (2, 1), (1, 1), (0, 2)],
-                 (0, 2): [(1, 2), (0, 1), (0, 0), (2, 0), (1, 1), (2, 2), (0, 2)],
-                 (1, 0): [(1, 2), (0, 0), (2, 0), (1, 0), (1, 1)],
-                 (1, 1): [(0, 1),
-                          (1, 2),
-                          (0, 0),
-                          (0, 2),
-                          (2, 1),
-                          (2, 0),
-                          (2, 2),
-                          (1, 0),
-                          (1, 1)],
-                 (1, 2): [(1, 2), (0, 2), (2, 2), (1, 0), (1, 1)],
-                 (2, 0): [(0, 0), (2, 1), (2, 0), (1, 1), (2, 2), (1, 0), (0, 2)],
-                 (2, 1): [(0, 1), (2, 1), (2, 0), (2, 2), (1, 1)],
-                 (2, 2): [(1, 2), (0, 0), (2, 1), (2, 0), (1, 1), (2, 2), (0, 2)]})   
-    """
-
-    connected_cells: Connected_cells = DefaultDict(list)
-
-    for cell, lines_enums in scopes.items():
-        for line_enum in lines_enums:
-            connected_cells[cell].extend(lines[line_enum])
-        connected_cells[cell] = list(set(connected_cells[cell]))
-    return connected_cells
-
-
-
-
-def connected_cells_np(lines: Lines_enum_np, scopes: Scopes_enum, d: int) -> Connected_cells:
-    """
-    connected_cells_coord(lines: Lines_enum_coord, scopes: Scopes_enum) 
-        -> Connected_cells_cord:    
-    
-    Calculate the connected cells for a cube.
-
-    Parameters
-    ----------
-    lines
-        The enumerated lines of the hypercube
-    scopes
-        The enumerated scopes of the hypercube
-
-    Returns
-    ------
-
-        A dictionary with keys beings cell coordinates and values the
-        connected cell coordinates.
-
-    See Also
-    --------
-    structure_enum_coord
-
-    Examples
-    --------
-    >>> from pprint import pprint
-    >>> d = 2
-    >>> n = 3
-    >>> struct = structure_enum_np(d, n, False) 
-    >>> pprint(struct[1])
-    {0: array([0, 3, 6]),
-     1: array([1, 4, 7]),
-     2: array([2, 5, 8]),
-     3: array([0, 1, 2]),
-     4: array([3, 4, 5]),
-     5: array([6, 7, 8]),
-     6: array([0, 4, 8]),
-     7: array([6, 4, 2])}
-    >>> pprint(struct[2]) #doctest: +NORMALIZE_WHITESPACE
-    defaultdict(<class 'list'>,
-                {(0, 0): [0, 3, 6],
-                 (0, 1): [1, 3],
-                 (0, 2): [2, 3, 7],
-                 (1, 0): [0, 4],
-                 (1, 1): [1, 4, 6, 7],
-                 (1, 2): [2, 4],
-                 (2, 0): [0, 5, 7],
-                 (2, 1): [1, 5],
-                 (2, 2): [2, 5, 6]})
-    >>> connected_cells = connected_cells_np(struct[1], struct[2], d)
-    >>> pprint(connected_cells)  #doctest: +NORMALIZE_WHITESPACE
-    defaultdict(<class 'list'>,
-                {(0, 0): [(0, 1), (0, 0), (2, 0), (1, 1), (2, 2), (1, 0), (0, 2)],
-                 (0, 1): [(0, 1), (0, 0), (2, 1), (1, 1), (0, 2)],
-                 (0, 2): [(1, 2), (0, 1), (0, 0), (2, 0), (1, 1), (2, 2), (0, 2)],
-                 (1, 0): [(1, 2), (0, 0), (2, 0), (1, 0), (1, 1)],
-                 (1, 1): [(0, 1),
-                          (1, 2),
-                          (0, 0),
-                          (0, 2),
-                          (2, 1),
-                          (2, 0),
-                          (2, 2),
-                          (1, 0),
-                          (1, 1)],
-                 (1, 2): [(1, 2), (0, 2), (2, 2), (1, 0), (1, 1)],
-                 (2, 0): [(0, 0), (0, 2), (2, 1), (2, 0), (2, 2), (1, 0), (1, 1)],
-                 (2, 1): [(0, 1), (2, 1), (2, 0), (2, 2), (1, 1)],
-                 (2, 2): [(1, 2), (0, 0), (2, 1), (2, 0), (1, 1), (2, 2), (0, 2)]})  
-    """
-
-    n = lines[0].size
-    shape = [n] * d
-    connected_cells: Connected_cells = DefaultDict(list)
-
-    for cell, lines_enums in scopes.items():
-        for line_enum in lines_enums:
-                for j in range(n):
-                    cc = np.unravel_index(lines[line_enum][j], shape)
-                    connected_cells[cell].append(cc)
-        connected_cells[cell] = list(set(connected_cells[cell]))
-    return connected_cells
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 def scopes_size(scopes: Scopes) -> Counter:
@@ -1579,7 +1663,8 @@ def scopes_size_cell(scopes: Scopes) -> DefaultDict[int, List[Cell_coord]]:
     Returns
     -------
 
-        Dictonary of scopes lengths (key) and the list of cells with scopes of that length.
+        Dictonary of scopes lengths (key) and the list of cells with
+        scopes of that length.
             
     See Also
     --------
@@ -1592,29 +1677,52 @@ def scopes_size_cell(scopes: Scopes) -> DefaultDict[int, List[Cell_coord]]:
     >>> import numpy as np
     >>> from pprint import pprint
     >>> scopes = structure_np(2, 3)[2] 
-    >>> pprint(scopes_size_cell(scopes))
+    >>> pprint(scopes_size_cell(scopes)) #doctest: +SKIP
     defaultdict(<class 'list'>,
                 {2: [(1, 0), (0, 1), (2, 1), (1, 2)],
                  3: [(0, 0), (2, 0), (0, 2), (2, 2)],
                  4: [(1, 1)]})
+
+    >>> sorted(scopes_size_cell(scopes).items()) #doctest: +NORMALIZE_WHITESPACE
+    [(2, [(1, 0), (0, 1), (2, 1), (1, 2)]), 
+     (3, [(0, 0), (2, 0), (0, 2), (2, 2)]), 
+     (4, [(1, 1)])]
+    
     >>> scopes = structure_enum_np(2, 3)[2] 
-    >>> pprint(scopes_size_cell(scopes))
+    >>> pprint(scopes_size_cell(scopes)) #doctest: +SKIP
     defaultdict(<class 'list'>,
                 {2: [(1, 0), (0, 1), (2, 1), (1, 2)],
                  3: [(0, 0), (2, 0), (0, 2), (2, 2)],
                  4: [(1, 1)]})
+    
+    >>> sorted(scopes_size_cell(scopes).items()) #doctest: +NORMALIZE_WHITESPACE
+    [(2, [(1, 0), (0, 1), (2, 1), (1, 2)]), 
+     (3, [(0, 0), (2, 0), (0, 2), (2, 2)]), 
+     (4, [(1, 1)])]
+    
     >>> scopes = structure_coord(2, 3)[1] 
-    >>> pprint(scopes_size_cell(scopes))
+    >>> pprint(scopes_size_cell(scopes)) #doctest: +SKIP
     defaultdict(<class 'list'>,
                 {2: [(0, 1), (1, 0), (1, 2), (2, 1)],
                  3: [(0, 0), (0, 2), (2, 0), (2, 2)],
                  4: [(1, 1)]})
+    
+    >>> sorted(scopes_size_cell(scopes).items()) #doctest: +NORMALIZE_WHITESPACE
+    [(2, [(0, 1), (1, 0), (1, 2), (2, 1)]), 
+     (3, [(0, 0), (0, 2), (2, 0), (2, 2)]), 
+     (4, [(1, 1)])]
+    
     >>> scopes = structure_enum_coord(2, 3)[1] 
-    >>> pprint(scopes_size_cell(scopes))
+    >>> pprint(scopes_size_cell(scopes)) #doctest: +SKIP
     defaultdict(<class 'list'>,
                 {2: [(0, 1), (1, 0), (1, 2), (2, 1)],
                  3: [(0, 0), (0, 2), (2, 0), (2, 2)],
                  4: [(1, 1)]})
+
+    >>> sorted(scopes_size_cell(scopes).items()) #doctest: +NORMALIZE_WHITESPACE
+    [(2, [(0, 1), (1, 0), (1, 2), (2, 1)]), 
+     (3, [(0, 0), (0, 2), (2, 0), (2, 2)]), 
+     (4, [(1, 1)])] 
     """
 
     scopes_size_cell: DefaultDict[int, List[Cell_coord]] = DefaultDict(list)
@@ -1801,8 +1909,7 @@ def join_multiline(iter: Iterable[str], divider: str = ' ', divide_empty_lines: 
     """ 
     join_multiline(iter: Iterable[str], divider: str = ' ', 
                    divide_empty_lines: bool = False, 
-                   fill_value: str = '_') -> 
-        str
+                   fill_value: str = '_') -> str
     
     Join multiline string line by line.
 
@@ -1828,7 +1935,8 @@ def join_multiline(iter: Iterable[str], divider: str = ' ', divide_empty_lines: 
 
     Examples
     --------
-    >>> # note that newline has to be escaped to work in doctest examples below.
+    >>> # note that newline has to be escaped to work in doctest 
+        examples below.
     >>> ml_1 = 'AA\\nMM\\nXX'
     >>> ml_2 = 'BB\\nNN\\nYY'
     >>> ml_3 = 'CC\\nOO\\nZZ'
@@ -1856,12 +1964,13 @@ def join_multiline(iter: Iterable[str], divider: str = ' ', divide_empty_lines: 
     AA_BB_CC
     <BLANKLINE>
     MM_NN_ZZ    
-    >>> ml = join_multiline([ml_1, ml_2, ml_3], divider = '_', divide_empty_lines = True)
+    >>> ml = join_multiline([ml_1, ml_2, ml_3], '_', True)
     >>> print(ml) #doctest: +NORMALIZE_WHITESPACE
     AA_BB_CC
     __
     MM_NN_ZZ
     """
+    
     # for each multiline block, split into individual lines
     spl = [x.split('\n') for x in iter]
     
@@ -2116,10 +2225,11 @@ def str_to_tuple(d: int, n: int, cell: str, offset: int = 1) -> Cell_coord:
     ValueError: One or more coordinates are not valid
     >>> d = 3
     >>> n = 10
-    >>> str_to_tuple(d, n, '123')
+    >>> str_to_tuple(d, n, '123') #doctest: +NORMALIZE_WHITESPACE
     Traceback (most recent call last):
         ...
-    ValueError: Board is too big for each dimension to be specified by single digit
+    ValueError: Board is too big for each dimension to be specified 
+                by single digit
     """
 
     cell = str(cell)
