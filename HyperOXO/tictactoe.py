@@ -96,7 +96,7 @@ class TicTacToe():
         self.shape = [n] * d
         self.moves_per_turn = moves_per_turn
         self._names = 'Player 1', 'Player 2'
-        self._marks = 'O', 'X'
+        self._marks = 'X', 'O'
         self.color_last_move = Fore.BLUE
         self.color_win_line = Back.MAGENTA
         self._maintain_lines_states = True
