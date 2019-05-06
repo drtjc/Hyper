@@ -10,7 +10,6 @@ class Heuristics(Strategy):
         super().__init__(ttt)
         self.lines_scores: Dict = {}
         self.scopes_scores: DefaultDict[Cell_coord, int] = DefaultDict(int)
-        self.reset()
 
     def move(self) -> None:     
         super().move() # calculates self.opponent_moves
