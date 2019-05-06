@@ -17,10 +17,11 @@ def create_board() -> TicTacToe:
         print('')
         d = input_q("Number of dimensions: ")
         n = input_q("Size of board: ")
-
+        m = input_q("Number of moves per turn: ")
+        
         try:
             ##TJC thread this in case takes a long time??
-            return TicTacToe(int(d), int(n))
+            return TicTacToe(int(d), int(n), int(m))
         except MemoryError:
             print("The board is too big to fit into available memory")
         except Exception as e:
@@ -70,19 +71,8 @@ def restart(ttt: TicTacToe, s: Tuple[Strategy, Strategy]) -> None:
     s[1].reset()
     ttt.reset()  
     ttt.display()
-    while ttt.state == GameState.IN_PROGRESS:
-        
+    while ttt.state == GameState.IN_PROGRESS:     
         print(f'\nActive player: {ttt.names[ttt.active_player]}')
-        
-        #try:
-        #    mm = ttt.moves[-ttt.moves_per_turn]
-        #    yy = [m[1] for m in mm]
-
-            #m: Optional[Cell_coord] = ttt.moves[-1][1]
-        #except IndexError:
-        #    m = None
-
-        #s[ttt.active_player].move(m)        
         s[ttt.active_player].move()
         ttt.display()
 

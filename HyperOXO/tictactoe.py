@@ -6,18 +6,17 @@ from typing import NamedTuple, List, Tuple, Union, Any, Dict, Optional
 from colorama import init, Fore, Back, Style
 init()
 
-
 import hypercube as hc
 from hypercube import Line_np, Cell_coord, Connected_cells
 
 
 class Error(Exception):
-    """ Base class for exceptions in this module."""
+    """ Base class for exceptions in this module """
     pass
 
 
 class DuplicateMoveError(Error):
-    """ Raised if a cell has already been played."""
+    """ Raised if a cell has already been played """
 
     def __init__(self, message: str, cell: Any):
         self.message = message
@@ -25,7 +24,7 @@ class DuplicateMoveError(Error):
 
 
 class UnknownMoveError(Error):
-    """ Raised if cell is not a valid cell."""
+    """ Raised if cell is not a valid cell """
 
     def __init__(self, message: str, cell: Any):
         self.message = message
@@ -33,14 +32,14 @@ class UnknownMoveError(Error):
 
 
 class GameOverError(Error):
-    """ Raised if a move is played when the game is not in progress."""
+    """ Raised if a move is played when the game is not in progress """
 
     def __init__(self, message: str):
         self.message = message
 
 
 class GameState(Enum):
-    """ Enumeration used to store state of game."""
+    """ Enumeration used to store state of game """
 
     WIN_P1 = auto()
     WIN_P2 = auto()
@@ -49,19 +48,26 @@ class GameState(Enum):
 
 
 class Memory(NamedTuple):
+    """ Data structures of tictactoe """
+
     dtype: int
     board: int
     lines: int
     scopes: int
+    connected_cells: int
     total: int
 
 
 class Move(NamedTuple):
+    """ Played move """
+
     Player: int
     Cell: Cell_coord
 
 
 class LineState(NamedTuple):
+    """ State (number of marks) of line """
+
     Active_total_marks: int
     Active_consecutive_marks: int
     Inactive_total_marks: int

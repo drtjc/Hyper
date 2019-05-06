@@ -21,7 +21,11 @@ class Strategy(abc.ABC):
     @abc.abstractmethod
     def move(self) -> None: 
         """ Calculate the move to be played """
-        moves = self.ttt.moves[-self.ttt.moves_per_turn:]
+        if self.ttt.active_moves == 0:
+            moves = self.ttt.moves[-self.ttt.moves_per_turn:]
+        else:    
+            moves = self.ttt.moves[-(self.ttt.moves_per_turn + self.ttt.active_moves):-self.ttt.active_moves]
+            
         self.opponent_moves: Optional[List[Cell_coord]] = [m.Cell for m in moves]
 
     @classmethod
