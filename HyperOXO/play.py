@@ -17,11 +17,11 @@ def create_board() -> TicTacToe:
         print('')
         d = input_q("Number of dimensions: ")
         n = input_q("Size of board: ")
-        m = input_q("Number of moves per turn: ")
+        mt = input_q("Number of moves per turn: ")
+        m = input_q("Misere (win if opponent gets n in a row): ")
         
         try:
-            ##TJC thread this in case takes a long time??
-            return TicTacToe(int(d), int(n), int(m))
+            return TicTacToe(int(d), int(n), int(mt), m[0].upper() in ['Y', 'T'])
         except MemoryError:
             print("The board is too big to fit into available memory")
         except Exception as e:
@@ -48,7 +48,7 @@ def choose_strategy(ttt: TicTacToe, p: int) -> Strategy:
     idx = 0
     for i, (k, v) in enumerate(st.strategies_cls.items(), 1):
         try:
-            if v.validate(ttt.d, ttt.n, ttt.moves_per_turn):
+            if v.validate(ttt.d, ttt.n, ttt.moves_per_turn, True):
                 idx += 1
                 msg = msg + '  ' + str(idx) + '. ' + k + '\n'
                 idx_cls[str(idx)] = v

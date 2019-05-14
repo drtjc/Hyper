@@ -6,8 +6,8 @@ from typing import Tuple, Union, Optional, List
 class Strategy(abc.ABC):
 
     @classmethod
-    def validate(cls, d: int, n: int, moves_per_turn: int) -> bool:
-        """ Are the supplied game paramters valid for the strategy? """
+    def validate(cls, d: int, n: int, moves_per_turn: int, misere: bool) -> bool:
+        """ Are the supplied game parameters valid for the strategy? """
         return True
 
     def __init__(self, ttt: TicTacToe) -> None:
@@ -22,7 +22,7 @@ class Strategy(abc.ABC):
     def move(self) -> None: 
         """ Calculate the move to be played.
         
-        Call this function before own implementation.
+        If needed, call this function first in concrete implementation.
         """
         
         # store the opponents last move(s)

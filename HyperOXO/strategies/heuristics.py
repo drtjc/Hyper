@@ -17,8 +17,8 @@ class Heuristics(Strategy):
         self._update_all_scopes_scores()
 
         # pick best move (randomly if more than one)    
-        tc = self._top_cells()
-        m = tc[randrange(len(tc))]
+        bc = self._best_cells()
+        m = bc[randrange(len(bc))]
         self.ttt.move(m)
 
     ## HEURISTIC SCORING ###############################################
@@ -55,9 +55,9 @@ class Heuristics(Strategy):
         for cell in self.ttt.scopes.keys():
             self._update_scope_score(cell)
 
-    def _top_cells(self) -> List[Cell_coord]:
+    def _best_cells(self) -> List[Cell_coord]:
         unplayed_scores = {k: v for k, v in self.scopes_scores.items() if k in self.ttt.unplayed}
-        max_score = max(unplayed_scores.values())
-        return [k for k, v in unplayed_scores.items() if v == max_score]
+        best_score = max(unplayed_scores.values()) if not self.ttt.misere else min(unplayed_scores.values())
+        return [k for k, v in unplayed_scores.items() if v == best_score]
 
 
