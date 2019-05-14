@@ -194,7 +194,21 @@ def num_lines(d: int, n: int) -> int:
 
     Notes
     -----
-    Calls the function num_lines_grouped
+    There are two ways to calculate the number of lines:
+    1. Call the function num_lines_grouped and sum the number of lines
+    spanning each dimension.
+    2. Directly, using the formula: 
+    
+        ((n+2)**d-n**d)/2
+
+    Sketch of proof:
+    Embed the n**d hypercube in an (n+2)**d hypercube which extends one
+    cell further in each dimension. Then each winning line in the n**d
+    hypercube terminates in exactly two "border" cells of the enlarged
+    hypercube, and these two borders are unique to that line. Moreover,
+    every border cell is at the end of a line, so that (n+2)**d border
+    cells are in two-to-one correspondence with the winning lines.
+    (See Hypercube -Tic-Tac-Toe: Solomon W.Golomb and Alfred W. Hales) 
 
     Examples
     --------
@@ -204,7 +218,8 @@ def num_lines(d: int, n: int) -> int:
     76
     """
     
-    return sum(list(num_lines_grouped(d, n)))
+    # return sum(list(num_lines_grouped(d, n)))
+    return int(((n+2)**d-n**d)/2)
 
 
 def get_diagonals_np(hc: Cube_np) -> Generator[Line_np, None, None]:

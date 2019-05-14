@@ -20,13 +20,20 @@ class Strategy(abc.ABC):
 
     @abc.abstractmethod
     def move(self) -> None: 
-        """ Calculate the move to be played """
+        """ Calculate the move to be played.
+        
+        Call this function before own implementation.
+        """
+        
+        # store the opponents last move(s)
         if self.ttt.active_moves == 0:
             moves = self.ttt.moves[-self.ttt.moves_per_turn:]
         else:    
             moves = self.ttt.moves[-(self.ttt.moves_per_turn + self.ttt.active_moves):-self.ttt.active_moves]
-            
         self.opponent_moves: Optional[List[Cell_coord]] = [m.Cell for m in moves]
+        
+        # make move in current players turn easily available
+        self.move_in_turn = self.ttt.active_moves + 1
 
     @classmethod
     def __subclasshook__(cls, C):

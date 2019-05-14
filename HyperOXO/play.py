@@ -117,6 +117,3 @@ if __name__ == "__main__":
 
     new_game()
 
-
-## what if multiple moves per turn
-## what about restart but with players switching who goes first

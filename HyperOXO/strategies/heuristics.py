@@ -14,7 +14,9 @@ class Heuristics(Strategy):
     def move(self) -> None:     
         super().move() # calculates self.opponent_moves
         self._update_all_lines_scores()
-        self._update_all_scopes_scores()    
+        self._update_all_scopes_scores()
+
+        # pick best move (randomly if more than one)    
         tc = self._top_cells()
         m = tc[randrange(len(tc))]
         self.ttt.move(m)
